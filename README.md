@@ -7,9 +7,7 @@ The CLI application, called as pdcli will have three sub-commands:
 - pdcli alerts
 - pdcli oncall
 
-# Installation
-
-# Activating shell completions
+## Activating shell completions
 Run the following to see instructions for various shells:
 `$ pdcli completion --help`
 
