@@ -33,7 +33,7 @@ tools:
 
 .PHONY: generate
 generate: tools
-	go generate -x ./cmd/... ./pkg/...
+	go generate -x ./cmd/...
 
 .PHONY: cmds
 cmds: generate
@@ -47,11 +47,11 @@ install:
 
 .PHONY: test tests
 test tests: cmds
-	ginkgo -r cmd pkg tests
+	ginkgo -r cmd tests
 
 .PHONY: fmt
 fmt:
-	gofmt -s -l -w cmd pkg tests
+	gofmt -s -l -w cmd tests
 
 .PHONY: lint
 lint:
