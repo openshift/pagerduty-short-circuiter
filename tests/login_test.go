@@ -5,7 +5,7 @@ import (
     "github.com/openshift/pagerduty-short-circuiter/cmd/pdcli/login"
 )
 
-func TestWc(t *testing.T) {
+func TestPdcli(t *testing.T) {
 
 	assertCorrectMessage := func(t testing.TB, actual, expected string) {
 		t.Helper()
