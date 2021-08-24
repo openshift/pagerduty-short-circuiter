@@ -46,8 +46,8 @@ install:
 	go install ./cmd/pdcli
 
 .PHONY: build
-install:
-	go build ./cmd/pdcli
+build:
+	go build -o ./cmd/pdlci
 
 .PHONY: test tests
 test tests: cmds
