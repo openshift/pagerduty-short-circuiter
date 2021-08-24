@@ -41,13 +41,13 @@ cmds: generate
 		go build -o "$${cmd}" "./cmd/$${cmd}" || exit 1; \
 	done
 
-.PHONY: install
-install:
-	go install ./cmd/pdcli
-
 .PHONY: build
 build:
 	go build -o pdcli
+
+.PHONY: install
+install:
+	go install ./pdcli
 
 .PHONY: test tests
 test tests: cmds
