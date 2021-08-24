@@ -45,6 +45,10 @@ cmds: generate
 install:
 	go install ./cmd/pdcli
 
+.PHONY: build
+install:
+	go build ./cmd/pdcli
+
 .PHONY: test tests
 test tests: cmds
 	ginkgo -r cmd tests
