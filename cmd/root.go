@@ -17,23 +17,15 @@ package cmd
 
 import (
 	"github.com/spf13/cobra"
+    "github.com/openshift/pagerduty-short-circuiter/cmd/pdcli/login"
 )
 
-var cfgFile string
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "pdcli",
 	Short: "A CLI application called pdcli short for pagerDuty CLI.",
-	Long: `A CLI application called pdcli short for pagerDuty CLI. It can be used reduce the time taken, from the time, SRE receives a PD alert to the time where troubleshooting on the cluster actually begins. 
-	
-	There are 3 main sub commands:
-	
-            1. pdcli login
-            
-            2. pdcli alerts
-            
-            3. pdcli oncall
+	Long: `It can be used reduce the time taken, from the time, SRE receives a PD alert to the time where troubleshooting on the cluster actually begins. 
             
 `,
 	// Uncomment the following line if your bare application
@@ -48,8 +40,8 @@ func Execute() {
 }
 
 func init() {
-	cobra.OnInitialize(initConfig)
-
+	//cobra.OnInitialize(initConfig)
+    rootCmd.AddCommand(login.Cmd)
 	// Here you will define your flags and configuration settings.
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
@@ -59,6 +51,4 @@ func init() {
 }
 
 // initConfig reads in config file and ENV variables if set.
-func initConfig() {
 
-}

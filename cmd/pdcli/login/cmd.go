@@ -13,7 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package cmd
+package login
 
 import (
 	"fmt"
@@ -22,30 +22,22 @@ import (
 )
 
 // pdcli/login/cmdCmd represents the pdcli/login/cmd command
-var pdcli/login/cmdCmd = &cobra.Command{
-	Use:   "pdcli/login/cmd",
+var Cmd = &cobra.Command{
+	Use:   "login",
 	Short: "A brief description of your command",
 	Long: `A longer description that spans multiple lines and likely contains examples
 and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("pdcli/login/cmd called")
+		fmt.Println("logged in")
 	},
 }
-
 func init() {
-	rootCmd.AddCommand(pdcli/login/cmdCmd)
-
+	//cobra.OnInitialize(initConfig)
 	// Here you will define your flags and configuration settings.
+	// Cobra supports persistent flags, which, if defined here,
+	// will be global for your application.
 
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// pdcli/login/cmdCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// pdcli/login/cmdCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	// Cobra also supports local flags, which will only run
+	// when this action is called directly.
 }

@@ -15,7 +15,7 @@ limitations under the License.
 */
 package main
 
-import "pdcli/cmd"
+import "github.com/openshift/pagerduty-short-circuiter/cmd"
 
 func main() {
 	cmd.Execute()

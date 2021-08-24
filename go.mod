@@ -1,4 +1,4 @@
-module pdcli
+module github.com/openshift/pagerduty-short-circuiter
 
 go 1.15
 
