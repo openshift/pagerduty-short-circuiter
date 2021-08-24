@@ -19,7 +19,7 @@ $ git clone https://github.com/openshift/pagerduty-short-circuiter.git
 ```
 $ make build
 ```
-This command will build the PagerDuty CLI binary, named `pdcli`. This binary will be placed in cmd/pdcli folder of your project directory.
+This command will build the PagerDuty CLI binary, named `pdcli`. This binary will be created in the root of your project folder.
 
 ## Maintainers
 - Krishnanunni B (krb@redhat.com)
