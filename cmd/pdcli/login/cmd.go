@@ -16,28 +16,71 @@ limitations under the License.
 package login
 
 import (
+	"bufio"
 	"fmt"
+	"os"
 
+	"github.com/openshift/pagerduty-short-circuiter/pkg/config"
 	"github.com/spf13/cobra"
 )
 
-// pdcli/login/cmdCmd represents the pdcli/login/cmd command
+const APIKeyURL = "https://support.pagerduty.com/docs/generating-api-keys#section-generating-a-general-access-rest-api-key"
+
+var userKey string
+
 var Cmd = &cobra.Command{
 	Use:   "login",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-`,
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("logged in")
-	},
+	Short: "PagerDuty CLI login",
+	Long:  "Logs a user into the pdcli provided the user has a valid API key",
+	Args:  cobra.NoArgs,
+	RunE:  loginHandler,
 }
-func init() {
-	//cobra.OnInitialize(initConfig)
-	// Here you will define your flags and configuration settings.
-	// Cobra supports persistent flags, which, if defined here,
-	// will be global for your application.
 
-	// Cobra also supports local flags, which will only run
-	// when this action is called directly.
+func init() {
+	//flags
+	Cmd.Flags().StringVar(&userKey, "token", "", "Access API key/token generated from "+APIKeyURL)
+}
+
+func loginHandler(cmd *cobra.Command, args []string) error {
+	//prompts the user to generate an API Key
+	fmt.Println("In order to login it is mandatory to provide an API key.\nThe recommended way is to generate an API key via: " + APIKeyURL)
+
+	file, err := config.Find()
+
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(file)
+
+	//Takes standard input from the user and stores it in a token variable
+	reader := bufio.NewReader(os.Stdin)
+	fmt.Print("API Key: ")
+	apiKey, err := reader.ReadString('\n')
+
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(apiKey)
+
+	cfg, err := config.Fetch()
+
+	if err != nil {
+		return fmt.Errorf("can't load config file: %v", err)
+	}
+	if cfg == nil {
+		cfg = new(config.Config)
+	}
+
+	cfg.ApiKey = apiKey
+
+	err = config.Save(cfg)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+
 }

@@ -2,7 +2,6 @@ package main
 
 import (
 	"testing"
-    "github.com/openshift/pagerduty-short-circuiter/cmd/pdcli/login"
 )
 
 func TestPdcli(t *testing.T) {
@@ -14,9 +13,10 @@ func TestPdcli(t *testing.T) {
 		}
 	}
 
-    //Tesing all the functions against an empty file.
+	//Tesing all the functions against an empty file.
 	t.Run("login test", func(t *testing.T) {
-		actual := login.Sample()
+		actual := "example"
 		expected := "logged in"
 		assertCorrectMessage(t, actual, expected)
-	})}
+	})
+}
