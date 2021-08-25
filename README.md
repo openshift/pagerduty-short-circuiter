@@ -32,7 +32,7 @@ This command will build the PagerDuty CLI binary, named `pdcli`. This binary wil
 ```
 $ make test tests
 ```
-This command runs all the command tests. The test suite uses the [Ginkgo](https://onsi.github.io/ginkgo/) to run comprehensive tests using Behavior-Driven Development (“BDD”) style via [Ginkgo framework](https://onsi.github.io/ginkgo/).
+This command runs all the command tests. The test suite uses the [Ginkgo](https://onsi.github.io/ginkgo/) to run comprehensive tests using Behavior-Driven Development.
 
 ## Maintainers
 - Krishnanunni B (krb@redhat.com)
