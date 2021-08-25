@@ -42,35 +42,39 @@ func init() {
 }
 
 func loginHandler(cmd *cobra.Command, args []string) error {
-	//prompts the user to generate an API Key
-	fmt.Println("In order to login it is mandatory to provide an API key.\nThe recommended way is to generate an API key via: " + APIKeyURL)
 
-	file, err := config.Find()
-
-	if err != nil {
-		return err
-	}
-
-	fmt.Println(file)
-
-	//Takes standard input from the user and stores it in a token variable
-	reader := bufio.NewReader(os.Stdin)
-	fmt.Print("API Key: ")
-	apiKey, err := reader.ReadString('\n')
-
-	if err != nil {
-		return err
-	}
-
-	fmt.Println(apiKey)
-
+	//load configuration info
 	cfg, err := config.Fetch()
 
 	if err != nil {
 		return fmt.Errorf("can't load config file: %v", err)
 	}
+
 	if cfg == nil {
 		cfg = new(config.Config)
+	}
+
+	if cfg.ApiKey == "" {
+		generateNewKey(cfg)
+	} else {
+		fmt.Println("Login Successful.")
+	}
+
+	return nil
+
+}
+
+func generateNewKey(cfg *config.Config) (string, error) {
+	//prompts the user to generate an API Key
+	fmt.Println("In order to login it is mandatory to provide an API key.\nThe recommended way is to generate an API key via: " + APIKeyURL)
+
+	//Takes standard input from the user and stores it in a variable
+	reader := bufio.NewReader(os.Stdin)
+	fmt.Print("API Key: ")
+	apiKey, err := reader.ReadString('\n')
+
+	if err != nil {
+		return "", err
 	}
 
 	cfg.ApiKey = apiKey
@@ -78,9 +82,8 @@ func loginHandler(cmd *cobra.Command, args []string) error {
 	err = config.Save(cfg)
 
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	return nil
-
+	return apiKey, nil
 }
