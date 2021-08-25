@@ -49,9 +49,13 @@ build:
 install:
 	go install ./pdcli
 
-.PHONY: test tests
-test tests: cmds
+.PHONY: test
+test: cmds
 	ginkgo -r cmd tests
+
+.PHONY: test $(FILE)
+test $(FILE):
+	@go test $@
 
 .PHONY: fmt
 fmt:

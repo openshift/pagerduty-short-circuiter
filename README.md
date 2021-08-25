@@ -1,5 +1,5 @@
 # PagerDuty Short Circuiter
-`pdcli` is an integration of go-pagerduty and ocm-container which lets you spawn ocm-container with automatic cluster login and other features based on the pagerDuty alert.
+`pdcli` is an integration of [go-pagerduty](https://github.com/PagerDuty/go-pagerduty) and [ocm-container](https://github.com/openshift/ocm-container) which lets you spawn ocm-container with automatic cluster login and other features based on the pagerDuty alert.
 
 ***Note that pdcli is not a reinvention of another pagerDuty CLI tool instead it is a wrapper over go-pagerduty and provides you with all go-pagerduty cli features and much more.***
 
@@ -29,10 +29,13 @@ $ make build
 This command will build the PagerDuty CLI binary, named `pdcli`. This binary will be created in the root of your project folder.
 
 ## Running Tests
+The test suite uses the [Ginkgo](https://onsi.github.io/ginkgo/) to run comprehensive tests using Behavior-Driven Development.
+
 ```
-$ make test tests
+$ make test
 ```
-This command runs all the command tests. The test suite uses the [Ginkgo](https://onsi.github.io/ginkgo/) to run comprehensive tests using Behavior-Driven Development.
+This command runs all the tests present within the 'tests' folder by default.
+
 
 ## Maintainers
 - Krishnanunni B (krb@redhat.com)
@@ -42,7 +45,7 @@ This command runs all the command tests. The test suite uses the [Ginkgo](https:
 - Pooja Rani (prani@redhat.com)
 
 ## Feedback
-Please help us improve. To contact the SRE-P team:
+Please help us improve. Contact the Red Hat SRE-P team via:
 
 - @sd-sre-platform in slack channel #sd-sre-platform (CoreOS workspace)
-- Or reach out to the maintainers.
+- Or reach out to the [OWNERS](https://github.com/openshift/pagerduty-short-circuiter/blob/main/OWNERS).
