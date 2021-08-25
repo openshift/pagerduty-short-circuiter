@@ -1,8 +1,15 @@
 # PagerDuty Short Circuiter
-This project contains PagerDuty CLI to reduce the time taken from when SRE receives a PD alert to when troubleshooting on the cluster actually begins.
+`pdcli` is an integration of go-pagerduty and ocm-container which lets you spawn ocm-container with automatic cluster login and other features based on the pagerDuty alert.
 
-- The document of the project design can be found [here](https://docs.google.com/document/d/1VV3bN3WBI-DrJ59jOciA5tyvnxhldSVW-lDGNu2ONiw/edit?usp=sharing).
-- Jira Epics for this project can be found [here](https://issues.redhat.com/browse/OSD-8102).
+***Note that pdcli is not a reinvention of another pagerDuty CLI tool instead it is a wrapper over go-pagerduty and provides you with all go-pagerduty cli features and much more.***
+
+## Features:
+
+- Users can select the alert, which they want to work upon, through CLI, and they will be able to quickly login to the cluster, using ocm-container, without having to copy-paste information from the alert metadata and will be taken straight to the problematic namespace.
+- Users will be provided with alert metadata in the terminal.
+- Can query who is oncall.
+- `pdcli` requires zero configuration, just one-time login is required.
+- Sets helpful environment variables inside ocm-container like $NAMESPACE, $JOB, $POD, $INSTANCE, $VERSION based on the alert metadata.
 
 ## Installation
 
@@ -14,12 +21,18 @@ Example:
 ```
 $ mkdir $GOPATH/src/github.com/openshift/pagerduty-short-circuiter
 $ cd $GOPATH/src/github.com/openshift/pagerduty-short-circuiter
-$ git clone https://github.com/openshift/pagerduty-short-circuiter.git
+$ git clone https://github.com/openshift/pagerduty-short-circuiter.git .
 ```
 ```
 $ make build
 ```
 This command will build the PagerDuty CLI binary, named `pdcli`. This binary will be created in the root of your project folder.
+
+## Running Tests
+```
+$ make test tests
+```
+This command runs all the command tests. The test suite uses the [Ginkgo](https://onsi.github.io/ginkgo/) to run comprehensive tests using Behavior-Driven Development (“BDD”) style via [Ginkgo framework](https://onsi.github.io/ginkgo/).
 
 ## Maintainers
 - Krishnanunni B (krb@redhat.com)
