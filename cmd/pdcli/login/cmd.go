@@ -32,10 +32,11 @@ var userKey string
 
 var Cmd = &cobra.Command{
 	Use:   "login",
-	Short: "PagerDuty CLI login",
-	Long:  "Logs a user into the pdcli provided the user has a valid API key",
-	Args:  cobra.NoArgs,
-	RunE:  loginHandler,
+	Short: "Login to the PagerDuty CLI",
+	Long: `Running the pdcli login command will send a request to PagerDuty REST API provided a valid API key.
+The PagerDuty REST API supports authenticating via the user API token.`,
+	Args: cobra.NoArgs,
+	RunE: loginHandler,
 }
 
 func init() {
@@ -58,7 +59,7 @@ func loginHandler(cmd *cobra.Command, args []string) error {
 		cfg = new(config.Config)
 	}
 
-	// if the key flag is present
+	// if the key flag is given
 	if userKey != "" {
 		cfg.ApiKey, err = validateKey(userKey)
 
