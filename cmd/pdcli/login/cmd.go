@@ -121,7 +121,7 @@ func validateKey(apiKey string) (string, error) {
 	apiKey = strings.TrimSpace(apiKey)
 
 	//compare string with regex
-	match, _ := regexp.MatchString("[a-zA-Z0-9_-]{20}", apiKey)
+	match, _ := regexp.MatchString("^[a-z|A-Z0-9_-]{20}$", apiKey)
 
 	if !match {
 		return "", fmt.Errorf("invalid API key")
