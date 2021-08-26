@@ -13,9 +13,10 @@ type Config struct {
 	ApiKey string `json:"api_key,omitempty"`
 }
 
-// Find returns the location of the pdcli configuration file.
+// Find returns the location of the pdcli configuration file
+// If the config file path doesn't exist a new directory is created
 func Find() (string, error) {
-	//Fetches the user home directory
+	//locates the user home directory
 	homedir, err := os.UserHomeDir()
 
 	if err != nil {
@@ -49,6 +50,30 @@ func Find() (string, error) {
 	return configPath, nil
 }
 
+// Save saves the given configuration data to the config file
+func Save(cfg *Config) error {
+	file, err := Find()
+
+	if err != nil {
+		return err
+	}
+
+	data, err := json.MarshalIndent(cfg, "", "  ")
+
+	if err != nil {
+		return fmt.Errorf("cannot marshal config: %v", err)
+	}
+
+	err = ioutil.WriteFile(file, data, 0600)
+
+	if err != nil {
+		return fmt.Errorf("cannot save file '%s': %v", file, err)
+	}
+
+	return nil
+}
+
+// Fetch loads the config file
 func Fetch() (config *Config, err error) {
 	//Locate the config file
 	configFile, err := Find()
@@ -68,7 +93,7 @@ func Fetch() (config *Config, err error) {
 	configData, err := ioutil.ReadFile(configFile)
 
 	if err != nil {
-		err = fmt.Errorf("can't read config file")
+		err = fmt.Errorf("cannot read config file")
 		return
 	}
 
@@ -87,27 +112,4 @@ func Fetch() (config *Config, err error) {
 	}
 
 	return
-}
-
-// Save saves the given configuration to the configuration file.
-func Save(cfg *Config) error {
-	file, err := Find()
-
-	if err != nil {
-		return err
-	}
-
-	data, err := json.MarshalIndent(cfg, "", "  ")
-
-	if err != nil {
-		return fmt.Errorf("can't marshal config: %v", err)
-	}
-
-	err = ioutil.WriteFile(file, data, 0600)
-
-	if err != nil {
-		return fmt.Errorf("can't write file '%s': %v", file, err)
-	}
-
-	return nil
 }

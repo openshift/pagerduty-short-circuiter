@@ -19,6 +19,8 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"regexp"
+	"strings"
 
 	"github.com/openshift/pagerduty-short-circuiter/pkg/config"
 	"github.com/spf13/cobra"
@@ -38,33 +40,54 @@ var Cmd = &cobra.Command{
 
 func init() {
 	//flags
-	Cmd.Flags().StringVar(&userKey, "token", "", "Access API key/token generated from "+APIKeyURL)
+	Cmd.Flags().StringVar(&userKey, "key", "", "Access API key/token generated from "+APIKeyURL+"\nUse this option to overwrite the existing API key.")
 }
 
+// loginHandler handles the login flow into pdcli
 func loginHandler(cmd *cobra.Command, args []string) error {
 
 	//load configuration info
 	cfg, err := config.Fetch()
 
 	if err != nil {
-		return fmt.Errorf("can't load config file: %v", err)
+		return fmt.Errorf("cannot load config file: %v", err)
 	}
 
+	// check if config file is empty
 	if cfg == nil {
 		cfg = new(config.Config)
 	}
 
-	if cfg.ApiKey == "" {
-		generateNewKey(cfg)
+	// if the key flag is present
+	if userKey != "" {
+		cfg.ApiKey, err = validateKey(userKey)
+
+		if err != nil {
+			return err
+		}
+
+		config.Save(cfg)
+
+		return nil
+	}
+
+	// API key is not found in the config file
+	if len(cfg.ApiKey) == 0 {
+		err = generateNewKey(cfg)
+
+		if err != nil {
+			return err
+		}
+
 	} else {
-		fmt.Println("Login Successful.")
+		fmt.Println("Login Successful")
 	}
 
 	return nil
-
 }
 
-func generateNewKey(cfg *config.Config) (string, error) {
+// generateNewKey prompts the user to create a new API key and saves it to the config file
+func generateNewKey(cfg *config.Config) error {
 	//prompts the user to generate an API Key
 	fmt.Println("In order to login it is mandatory to provide an API key.\nThe recommended way is to generate an API key via: " + APIKeyURL)
 
@@ -74,15 +97,33 @@ func generateNewKey(cfg *config.Config) (string, error) {
 	apiKey, err := reader.ReadString('\n')
 
 	if err != nil {
-		return "", err
+		return err
 	}
 
-	cfg.ApiKey = apiKey
+	cfg.ApiKey, err = validateKey(apiKey)
+
+	if err != nil {
+		return err
+	}
 
 	err = config.Save(cfg)
 
 	if err != nil {
-		return "", err
+		return err
+	}
+
+	return nil
+}
+
+// validateKey sanitizes and validates the API key string
+func validateKey(apiKey string) (string, error) {
+	apiKey = strings.TrimSpace(apiKey)
+
+	//compare string with regex
+	match, _ := regexp.MatchString("[a-zA-Z0-9_-]{20}", apiKey)
+
+	if !match {
+		return "", fmt.Errorf("invalid API key")
 	}
 
 	return apiKey, nil
