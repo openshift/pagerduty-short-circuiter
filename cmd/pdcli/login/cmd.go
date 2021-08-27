@@ -17,11 +17,13 @@ package login
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"os"
 	"regexp"
 	"strings"
 
+	"github.com/PagerDuty/go-pagerduty"
 	"github.com/openshift/pagerduty-short-circuiter/pkg/config"
 	"github.com/spf13/cobra"
 )
@@ -51,7 +53,8 @@ func loginHandler(cmd *cobra.Command, args []string) error {
 	cfg, err := config.Fetch()
 
 	if err != nil {
-		return fmt.Errorf("cannot load config file: %v", err)
+		err = fmt.Errorf("cannot load config file: %v", err)
+		return err
 	}
 
 	// check if config file is empty
@@ -59,7 +62,7 @@ func loginHandler(cmd *cobra.Command, args []string) error {
 		cfg = new(config.Config)
 	}
 
-	// if the key flag is given
+	// if the key flag is provided
 	if userKey != "" {
 		cfg.ApiKey, err = validateKey(userKey)
 
@@ -67,7 +70,17 @@ func loginHandler(cmd *cobra.Command, args []string) error {
 			return err
 		}
 
-		config.Save(cfg)
+		err = config.Save(cfg)
+
+		if err != nil {
+			return err
+		}
+
+		err = login(cfg.ApiKey)
+
+		if err != nil {
+			return err
+		}
 
 		return nil
 	}
@@ -81,7 +94,11 @@ func loginHandler(cmd *cobra.Command, args []string) error {
 		}
 
 	} else {
-		fmt.Println("Login Successful")
+		err = login(cfg.ApiKey)
+
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -121,11 +138,35 @@ func validateKey(apiKey string) (string, error) {
 	apiKey = strings.TrimSpace(apiKey)
 
 	//compare string with regex
-	match, _ := regexp.MatchString("^[a-z|A-Z0-9_-]{20}$", apiKey)
+	match, _ := regexp.MatchString("^[a-z|A-Z0-9+_-]{20}$", apiKey)
 
 	if !match {
 		return "", fmt.Errorf("invalid API key")
 	}
 
 	return apiKey, nil
+}
+
+//login handles PagerDuty REST API authentication via an user API token
+//Requests that cannot be authenticated will return a `401 Unauthorized` error response
+func login(apiKey string) error {
+	client := pagerduty.NewClient(apiKey)
+
+	user, err := client.GetCurrentUser(pagerduty.GetCurrentUserOptions{})
+
+	if err != nil {
+		var apiError pagerduty.APIError
+
+		//`401 Unauthorized` error response
+		if errors.As(err, &apiError) {
+			err = fmt.Errorf("login failed\n%v Unauthorized", apiError.StatusCode)
+			return err
+		}
+
+		return err
+	} else {
+		fmt.Printf("Successfully logged in as user: %s\n", user.Name)
+	}
+
+	return nil
 }
