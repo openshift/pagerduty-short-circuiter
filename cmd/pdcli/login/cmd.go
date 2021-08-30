@@ -13,6 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+
 package login
 
 import (
@@ -20,8 +21,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"regexp"
-	"strings"
 
 	"github.com/PagerDuty/go-pagerduty"
 	"github.com/openshift/pagerduty-short-circuiter/pkg/config"
@@ -30,7 +29,9 @@ import (
 
 const APIKeyURL = "https://support.pagerduty.com/docs/generating-api-keys#section-generating-a-general-access-rest-api-key"
 
-var userKey string
+var loginArgs struct {
+	apiKey string
+}
 
 var Cmd = &cobra.Command{
 	Use:   "login",
@@ -43,33 +44,36 @@ The PagerDuty REST API supports authenticating via the user API token.`,
 
 func init() {
 	//flags
-	Cmd.Flags().StringVar(&userKey, "key", "", "Access API key/token generated from "+APIKeyURL+"\nUse this option to overwrite the existing API key.")
+	Cmd.Flags().StringVar(&loginArgs.apiKey, "key", "", "Access API key/token generated from "+APIKeyURL+"\nUse this option to overwrite the existing API key.")
 }
 
 // loginHandler handles the login flow into pdcli.
 func loginHandler(cmd *cobra.Command, args []string) error {
 
-	//load configuration info
+	// load configuration info
 	cfg, err := config.Fetch()
 
-	if err != nil {
-		err = fmt.Errorf("cannot load config file: %v", err)
-		return err
-	}
-
-	// check if config file is empty
+	// if the config file is located
+	// check if config file is empty, initialize a new config struct
 	if cfg == nil {
 		cfg = new(config.Config)
 	}
 
-	// if the key flag is provided
-	if userKey != "" {
-		cfg.ApiKey, err = validateKey(userKey)
+	// if no config file can be located
+	// initialize a new config struct to parse and save it to a new config file
+	if err != nil {
+		cfg = new(config.Config)
+	}
+
+	// if the key arg is not-empty
+	if loginArgs.apiKey != "" {
+		cfg.ApiKey, err = config.ValidateKey(loginArgs.apiKey)
 
 		if err != nil {
 			return err
 		}
 
+		// Save the key in the config file
 		err = config.Save(cfg)
 
 		if err != nil {
@@ -87,13 +91,24 @@ func loginHandler(cmd *cobra.Command, args []string) error {
 
 	// API key is not found in the config file
 	if len(cfg.ApiKey) == 0 {
+
+		// Create a new API key and store it in the config file
 		err = generateNewKey(cfg)
 
 		if err != nil {
 			return err
 		}
 
+		// Login using the newly generated API Key
+		err = login(cfg.ApiKey)
+
+		if err != nil {
+			return err
+		}
+
 	} else {
+
+		// Login using the existing API key in the configuration file
 		err = login(cfg.ApiKey)
 
 		if err != nil {
@@ -118,7 +133,7 @@ func generateNewKey(cfg *config.Config) error {
 		return err
 	}
 
-	cfg.ApiKey, err = validateKey(apiKey)
+	cfg.ApiKey, err = config.ValidateKey(apiKey)
 
 	if err != nil {
 		return err
@@ -133,22 +148,8 @@ func generateNewKey(cfg *config.Config) error {
 	return nil
 }
 
-// validateKey sanitizes and validates the API key string.
-func validateKey(apiKey string) (string, error) {
-	apiKey = strings.TrimSpace(apiKey)
-
-	//compare string with regex
-	match, _ := regexp.MatchString("^[a-z|A-Z0-9+_-]{20}$", apiKey)
-
-	if !match {
-		return "", fmt.Errorf("invalid API key")
-	}
-
-	return apiKey, nil
-}
-
-//login handles PagerDuty REST API authentication via an user API token.
-//Requests that cannot be authenticated will return a `401 Unauthorized` error response.
+// login handles PagerDuty REST API authentication via an user API token.
+// Requests that cannot be authenticated will return a `401 Unauthorized` error response.
 func login(apiKey string) error {
 	client := pagerduty.NewClient(apiKey)
 
