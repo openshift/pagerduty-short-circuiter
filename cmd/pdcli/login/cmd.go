@@ -46,7 +46,7 @@ func init() {
 	Cmd.Flags().StringVar(&userKey, "key", "", "Access API key/token generated from "+APIKeyURL+"\nUse this option to overwrite the existing API key.")
 }
 
-// loginHandler handles the login flow into pdcli
+// loginHandler handles the login flow into pdcli.
 func loginHandler(cmd *cobra.Command, args []string) error {
 
 	//load configuration info
@@ -104,7 +104,7 @@ func loginHandler(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-// generateNewKey prompts the user to create a new API key and saves it to the config file
+// generateNewKey prompts the user to create a new API key and saves it to the config file.
 func generateNewKey(cfg *config.Config) error {
 	//prompts the user to generate an API Key
 	fmt.Println("In order to login it is mandatory to provide an API key.\nThe recommended way is to generate an API key via: " + APIKeyURL)
@@ -133,7 +133,7 @@ func generateNewKey(cfg *config.Config) error {
 	return nil
 }
 
-// validateKey sanitizes and validates the API key string
+// validateKey sanitizes and validates the API key string.
 func validateKey(apiKey string) (string, error) {
 	apiKey = strings.TrimSpace(apiKey)
 
@@ -147,8 +147,8 @@ func validateKey(apiKey string) (string, error) {
 	return apiKey, nil
 }
 
-//login handles PagerDuty REST API authentication via an user API token
-//Requests that cannot be authenticated will return a `401 Unauthorized` error response
+//login handles PagerDuty REST API authentication via an user API token.
+//Requests that cannot be authenticated will return a `401 Unauthorized` error response.
 func login(apiKey string) error {
 	client := pagerduty.NewClient(apiKey)
 

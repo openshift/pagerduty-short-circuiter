@@ -8,13 +8,13 @@ import (
 	"path/filepath"
 )
 
-// Configuration struct to store user configuration
+// Configuration struct to store user configuration.
 type Config struct {
 	ApiKey string `json:"api_key,omitempty"`
 }
 
-// Find returns the location of the pdcli configuration file
-// If the config file path doesn't exist a new directory is created
+// Find returns the location of the pdcli configuration file.
+// If the config file path doesn't exist a new directory is created.
 func Find() (string, error) {
 	//locates the user home directory
 	homedir, err := os.UserHomeDir()
@@ -50,7 +50,7 @@ func Find() (string, error) {
 	return configPath, nil
 }
 
-// Save saves the given configuration data to the config file
+// Save saves the given configuration data to the config file.
 func Save(cfg *Config) error {
 	file, err := Find()
 
@@ -73,7 +73,7 @@ func Save(cfg *Config) error {
 	return nil
 }
 
-// Fetch loads the config file
+// Fetch loads the configuration file.
 func Fetch() (config *Config, err error) {
 	//Locate the config file
 	configFile, err := Find()
