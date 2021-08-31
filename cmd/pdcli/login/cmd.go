@@ -24,6 +24,7 @@ import (
 
 	"github.com/PagerDuty/go-pagerduty"
 	"github.com/openshift/pagerduty-short-circuiter/pkg/config"
+	"github.com/openshift/pagerduty-short-circuiter/pkg/pdcli"
 	"github.com/spf13/cobra"
 )
 
@@ -151,7 +152,13 @@ func generateNewKey(cfg *config.Config) error {
 // login handles PagerDuty REST API authentication via an user API token.
 // Requests that cannot be authenticated will return a `401 Unauthorized` error response.
 func login(apiKey string) error {
-	client := pagerduty.NewClient(apiKey)
+
+	// PagerDuty client object is created
+	client, err := pdcli.NewConnection().Build()
+
+	if err != nil {
+		return err
+	}
 
 	user, err := client.GetCurrentUser(pagerduty.GetCurrentUserOptions{})
 
