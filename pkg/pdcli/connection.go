@@ -39,7 +39,7 @@ func NewConnection() *ConnectionBuilder {
 func (cb *ConnectionBuilder) Build() (client *pagerduty.Client, err error) {
 	if cb.cfg == nil || cb.client == nil {
 		// Load the configuration file
-		cb.cfg, err = config.Fetch()
+		cb.cfg, err = config.Load()
 
 		if err != nil {
 			err = fmt.Errorf("configuration file not found, run the 'pdcli login' command")
@@ -50,9 +50,6 @@ func (cb *ConnectionBuilder) Build() (client *pagerduty.Client, err error) {
 			err = fmt.Errorf("not logged in, run the 'pdcli login' command")
 			return nil, err
 		}
-
-		// If the config file exists, the API Key is validated
-		_, err = config.ValidateKey(cb.cfg.ApiKey)
 
 		if err != nil {
 			err = fmt.Errorf("invalid API key, run the 'pdcli login' command")

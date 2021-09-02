@@ -24,11 +24,10 @@ import (
 
 	"github.com/PagerDuty/go-pagerduty"
 	"github.com/openshift/pagerduty-short-circuiter/pkg/config"
+	"github.com/openshift/pagerduty-short-circuiter/pkg/constants"
 	"github.com/openshift/pagerduty-short-circuiter/pkg/pdcli"
 	"github.com/spf13/cobra"
 )
-
-const APIKeyURL = "https://support.pagerduty.com/docs/generating-api-keys#section-generating-a-general-access-rest-api-key"
 
 var loginArgs struct {
 	apiKey string
@@ -37,42 +36,39 @@ var loginArgs struct {
 var Cmd = &cobra.Command{
 	Use:   "login",
 	Short: "Login to the PagerDuty CLI",
-	Long: `Running the pdcli login command will send a request to PagerDuty REST API provided a valid API key.
-The PagerDuty REST API supports authenticating via the user API token.`,
+	Long: `The pdcli login command logs a user into PagerDuty CLI given a valid API key is provided. 
+	You will have to login only once, all the pdcli commands are then available even if the terminal restarts.`,
 	Args: cobra.NoArgs,
 	RunE: loginHandler,
 }
 
 func init() {
 	//flags
-	Cmd.Flags().StringVar(&loginArgs.apiKey, "key", "", "Access API key/token generated from "+APIKeyURL+"\nUse this option to overwrite the existing API key.")
+	Cmd.Flags().StringVar(
+		&loginArgs.apiKey,
+		"api-key",
+		"",
+		"Access API key/token generated from "+constants.APIKeyURL+"\nUse this option to overwrite the existing API key.",
+	)
 }
 
 // loginHandler handles the login flow into pdcli.
 func loginHandler(cmd *cobra.Command, args []string) error {
 
-	// load configuration info
-	cfg, err := config.Fetch()
+	// load the configuration info
+	cfg, err := config.Load()
 
-	// if the config file is located
-	// check if config file is empty, initialize a new config struct
-	if cfg == nil {
-		cfg = new(config.Config)
-	}
-
-	// if no config file can be located
-	// initialize a new config struct to parse and save it to a new config file
+	// If no config file can be located
+	// Or if the config file has errors
+	// Or if this is the first time a user is trying to login
+	// A new configuration struct is initialized on login
 	if err != nil {
 		cfg = new(config.Config)
 	}
 
 	// if the key arg is not-empty
 	if loginArgs.apiKey != "" {
-		cfg.ApiKey, err = config.ValidateKey(loginArgs.apiKey)
-
-		if err != nil {
-			return err
-		}
+		cfg.ApiKey = loginArgs.apiKey
 
 		// Save the key in the config file
 		err = config.Save(cfg)
@@ -121,20 +117,14 @@ func loginHandler(cmd *cobra.Command, args []string) error {
 }
 
 // generateNewKey prompts the user to create a new API key and saves it to the config file.
-func generateNewKey(cfg *config.Config) error {
+func generateNewKey(cfg *config.Config) (err error) {
 	//prompts the user to generate an API Key
-	fmt.Println("In order to login it is mandatory to provide an API key.\nThe recommended way is to generate an API key via: " + APIKeyURL)
+	fmt.Println("In order to login it is mandatory to provide an API key.\nThe recommended way is to generate an API key via: " + constants.APIKeyURL)
 
 	//Takes standard input from the user and stores it in a variable
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Print("API Key: ")
-	apiKey, err := reader.ReadString('\n')
-
-	if err != nil {
-		return err
-	}
-
-	cfg.ApiKey, err = config.ValidateKey(apiKey)
+	cfg.ApiKey, err = reader.ReadString('\n')
 
 	if err != nil {
 		return err

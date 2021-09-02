@@ -24,6 +24,8 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+
+	"github.com/openshift/pagerduty-short-circuiter/pkg/constants"
 )
 
 // Configuration struct to store user configuration.
@@ -31,35 +33,17 @@ type Config struct {
 	ApiKey string `json:"api_key,omitempty"`
 }
 
-// Find returns the pdcli configuration filepath string.
-// If the config filepath doesn't exist, the desired config filepath string is returned.
+// Find returns the pdcli configuration filepath.
+// If the config filepath doesn't exist, the desired config filepath string is created and returned.
 func Find() (string, error) {
-	//locates the user home directory
-	homedir, err := os.UserHomeDir()
+	// locate the standard configuration directory
+	configDir, err := os.UserConfigDir()
 
 	if err != nil {
-		return "", fmt.Errorf("cannot locate user home directory")
+		return configDir, fmt.Errorf("cannot locate the user configuration directory")
 	}
 
-	configPath := filepath.Join(homedir, ".config/pagerduty-cli/config.json")
-
-	//Check if the path exists
-	_, err = os.Stat(configPath)
-
-	//If the config path doesn't exist
-	if os.IsNotExist(err) {
-		configDir, err := os.UserConfigDir()
-
-		if err != nil {
-			return configDir, err
-		}
-
-		configPath = filepath.Join(configDir, "pagerduty-cli/config.json")
-
-		if err != nil {
-			return "", err
-		}
-	}
+	configPath := filepath.Join(configDir, constants.ConfigFilepath)
 
 	return configPath, nil
 }
@@ -67,7 +51,15 @@ func Find() (string, error) {
 // Save saves the given configuration data to the config file.
 // It creates a new directory to store the config file.
 func Save(cfg *Config) error {
+
 	file, err := Find()
+
+	if err != nil {
+		return err
+	}
+
+	// check if the API key is valid
+	cfg.ApiKey, err = validateKey(cfg.ApiKey)
 
 	if err != nil {
 		return err
@@ -96,8 +88,8 @@ func Save(cfg *Config) error {
 	return nil
 }
 
-// Fetch loads the configuration file and parses it.
-func Fetch() (config *Config, err error) {
+// Load loads the configuration file and parses it.
+func Load() (config *Config, err error) {
 	//Locate the config filepath
 	configFile, err := Find()
 
@@ -124,6 +116,7 @@ func Fetch() (config *Config, err error) {
 	}
 
 	config = &Config{}
+
 	err = json.Unmarshal(configData, config)
 
 	if err != nil {
@@ -131,15 +124,21 @@ func Fetch() (config *Config, err error) {
 		return nil, err
 	}
 
-	return
+	_, err = validateKey(config.ApiKey)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return config, nil
 }
 
 // ValidateKey sanitizes and validates the API key string.
-func ValidateKey(apiKey string) (string, error) {
+func validateKey(apiKey string) (string, error) {
 	apiKey = strings.TrimSpace(apiKey)
 
 	//compare string with regex
-	match, _ := regexp.MatchString("^[a-z|A-Z0-9+_-]{20}$", apiKey)
+	match, _ := regexp.MatchString(constants.APIKeyRegex, apiKey)
 
 	if !match {
 		return "", fmt.Errorf("invalid API key")
