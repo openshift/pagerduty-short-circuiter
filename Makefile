@@ -21,45 +21,23 @@ export GOPROXY=https://proxy.golang.org
 # Disable CGO so that we always generate static binaries:
 export CGO_ENABLED=0
 
+# Constants
+GOPATH := $(shell go env GOPATH)
+
 # Allow overriding: `make lint container_runner=docker`.
 container_runner:=podman
 
-.PHONY: all
-all: cmds
-
-.PHONY: tools
-tools:
-	which go-bindata || go get github.com/go-bindata/go-bindata/go-bindata
-
-.PHONY: generate
-generate: tools
-	go generate -x ./cmd/...
-
-.PHONY: cmds
-cmds: generate
-	for cmd in $$(ls cmd); do \
-		go build -o "$${cmd}" "./cmd/$${cmd}" || exit 1; \
-	done
-
 .PHONY: build
 build:
-	go build -o pdcli
+	go build -o pdcli ./cmd/pdcli
 
 .PHONY: install
 install:
-	go install ./pdcli
+	go build -o ${GOPATH}/bin/pdcli ./cmd/pdcli
 
 .PHONY: test
-test: cmds
-	ginkgo -r cmd tests
-
-.PHONY: test $(FILE)
-test $(FILE):
-	@go test $@
-
-.PHONY: fmt
-fmt:
-	gofmt -s -l -w cmd tests
+test:
+	ginkgo -v -r tests
 
 .PHONY: lint
 lint:

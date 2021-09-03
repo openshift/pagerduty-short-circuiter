@@ -15,8 +15,6 @@ limitations under the License.
 */
 package main
 
-import "github.com/openshift/pagerduty-short-circuiter/cmd"
-
 func main() {
-	cmd.Execute()
+	Execute()
 }

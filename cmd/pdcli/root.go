@@ -13,24 +13,19 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package cmd
+package main
 
 import (
+	"github.com/openshift/pagerduty-short-circuiter/cmd/pdcli/login"
 	"github.com/spf13/cobra"
-    "github.com/openshift/pagerduty-short-circuiter/cmd/pdcli/login"
 )
-
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "pdcli",
-	Short: "A CLI application called pdcli short for pagerDuty CLI.",
-	Long: `It can be used reduce the time taken, from the time, SRE receives a PD alert to the time where troubleshooting on the cluster actually begins. 
-            
-`,
-	// Uncomment the following line if your bare application
-	// has an action associated with it:
-	// Run: func(cmd *cobra.Command, args []string) { },
+	Use:           "pdcli",
+	Short:         "A CLI application called pdcli short for PagerDuty CLI.",
+	Long:          `It can be used reduce the time taken, from the time, SRE receives a PD alert to the time where troubleshooting on the cluster actually begins. `,
+	SilenceErrors: true,
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -40,15 +35,9 @@ func Execute() {
 }
 
 func init() {
-	//cobra.OnInitialize(initConfig)
-    rootCmd.AddCommand(login.Cmd)
-	// Here you will define your flags and configuration settings.
-	// Cobra supports persistent flags, which, if defined here,
-	// will be global for your application.
+	rootCmd.AddCommand(login.Cmd)
 
-	// Cobra also supports local flags, which will only run
-	// when this action is called directly.
+	//Do not provide the default completion command
+	rootCmd.CompletionOptions.DisableDefaultCmd = true
+
 }
-
-// initConfig reads in config file and ENV variables if set.
-
