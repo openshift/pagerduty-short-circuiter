@@ -36,6 +36,12 @@ type Config struct {
 // Find returns the pdcli configuration filepath.
 // If the config filepath doesn't exist, the desired config filepath string is created and returned.
 func Find() (string, error) {
+
+	// return the test configuration filepath
+	if pdcliConfig := os.Getenv("PDCLI_CONFIG"); pdcliConfig != "" {
+		return pdcliConfig, nil
+	}
+
 	// locate the standard configuration directory
 	configDir, err := os.UserConfigDir()
 
