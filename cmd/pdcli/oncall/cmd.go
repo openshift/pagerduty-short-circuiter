@@ -16,11 +16,16 @@ limitations under the License.
 
 package oncall
 
+
+
 import (
 	"fmt"
 
+
 	"github.com/PagerDuty/go-pagerduty"
 	"github.com/openshift/pagerduty-short-circuiter/pkg/pdcli"
+
+	//"github.com/openshift/pagerduty-short-circuiter/pkg/oncall"
 	"github.com/spf13/cobra"
 )
 
@@ -36,10 +41,13 @@ var Cmd = &cobra.Command{
 
 //Cmd.Flags().StringVar(&OncallArgs.apiKey, "key", "", "Access API key/token generated from "+APIKeyURL+"\nUse this option to overwrite the existing API key.")
 //}
-
-func OnCall() {
+//type oncall struct{
+	//string
+//}
+func OnCall(cmd*cobra.Command, args [] string) {
 
 	var call pagerduty.ListOnCallOptions
+	
 	connection, err := pdcli.NewConnection().Build()
 	if err != nil {
 		fmt.Println(err)
@@ -63,4 +71,3 @@ func OnCall() {
 	//fmt.Printf("User: %v\n", User)
 
 }
-
