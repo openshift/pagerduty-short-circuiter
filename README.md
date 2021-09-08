@@ -66,11 +66,13 @@ This command runs all the tests present within the 'tests' folder by default.
 
 
 ## Maintainers
+- Dominic Finn (dofinn@redhat.com)
 - Krishnanunni B (krb@redhat.com)
 - Mitali Bhalla (mbhalla@redhat.com)
-- Supreeth Basabattini (sbasabat@redhat.com)
-- Dominic Finn (dofinn@redhat.com)
 - Pooja Rani (prani@redhat.com)
+- Supreeth Basabattini (sbasabat@redhat.com)
+- Tomas Dabašinskas (todabasi@redhat.com)
+
 
 ## Feedback
 Please help us improve. Contact the Red Hat SRE-P team via:
