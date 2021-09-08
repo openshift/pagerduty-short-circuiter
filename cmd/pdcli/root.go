@@ -16,6 +16,7 @@ limitations under the License.
 package main
 
 import (
+	"github.com/openshift/pagerduty-short-circuiter/cmd/pdcli/alerts"
 	"github.com/openshift/pagerduty-short-circuiter/cmd/pdcli/login"
 	"github.com/spf13/cobra"
 )
@@ -36,6 +37,7 @@ func Execute() {
 
 func init() {
 	rootCmd.AddCommand(login.Cmd)
+	rootCmd.AddCommand(alerts.Cmd)
 
 	//Do not provide the default completion command
 	rootCmd.CompletionOptions.DisableDefaultCmd = true
