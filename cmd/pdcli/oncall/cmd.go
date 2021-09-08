@@ -44,7 +44,7 @@ var Cmd = &cobra.Command{
 //type oncall struct{
 	//string
 //}
-func OnCall(cmd*cobra.Command, args [] string) {
+func OnCall(cmd*cobra.Command, args [] string) error {
 
 	var call pagerduty.ListOnCallOptions
 	
@@ -54,7 +54,7 @@ func OnCall(cmd*cobra.Command, args [] string) {
 	}
 	etc, err := connection.ListOnCalls(call)
 	if err != nil {
-		return 
+		fmt.Println(err)
 	}
 
 	for _, y := range etc.OnCalls {
@@ -70,4 +70,8 @@ func OnCall(cmd*cobra.Command, args [] string) {
 
 	//fmt.Printf("User: %v\n", User)
 
+	return nil
+
 }
+
+
