@@ -38,11 +38,7 @@ var Cmd = &cobra.Command{
 }
 
 //func init() {
-
-//Cmd.Flags().StringVar(&OncallArgs.apiKey, "key", "", "Access API key/token generated from "+APIKeyURL+"\nUse this option to overwrite the existing API key.")
-//}
-//type oncall struct{
-	//string
+	
 //}
 func OnCall(cmd*cobra.Command, args [] string) error {
 
