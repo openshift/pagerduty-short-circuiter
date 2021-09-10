@@ -54,3 +54,7 @@ clean:
 		*-windows-amd64 \
 		*.sha256 \
 		$(NULL)
+
+.PHONY: tools
+tools: ## Install tools to ${GOPATH}/bin
+	go get -u github.com/onsi/ginkgo/ginkgo
