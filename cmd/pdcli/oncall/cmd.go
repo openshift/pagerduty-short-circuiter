@@ -31,35 +31,30 @@ var Cmd = &cobra.Command{
 	Args:  cobra.NoArgs,
 	RunE:  OnCall,
 }
-
-//func init() {
-
-//}
+//function for getting current primary and secondary oncalls
 func OnCall(cmd *cobra.Command, args []string) error {
 
 	var call pagerduty.ListOnCallOptions
 
-	//var call pagerduty.ListSchedulesOptions
+	
+	call.EscalationPolicyIDs = []string{"PA4586M"}
 
-	//call.EscalationPolicyIDs = []string{"PA4586M"}
-	//call.ScheduleIDs = []string{"P995J2A"}
-	//fmt.Println(call.EscalationPolicyIDs)
+    call.ScheduleIDs = []string{"P995J2A", "P4TU2IT"}
 
-	connection, err := pdcli.NewConnection().Build()
-
+    connection, err := pdcli.NewConnection().Build()
 	if err != nil {
 		fmt.Println(err)
 	}
+	etc,err:=connection.ListOnCalls(call)
+	
+		if err!=nil{
+			return err
+		}
+	//for getting secondary/primary as per schedule and name
+	for _, y  :=  range etc.OnCalls{
 
-	etc, err := connection.ListOnCalls(call)
-	if err != nil {
-		return err
-	}
-	for _, y := range etc.OnCalls {
-		//fmt.Println(y.Schedule.Name)
-		//fmt.Println(y.Schedule)
-		fmt.Println(y.User.ID)
-		fmt.Println(y.Schedule.ID)
+		fmt.Println(y.Schedule.Summary,y.User.Summary)
+		
 	}
 
 
