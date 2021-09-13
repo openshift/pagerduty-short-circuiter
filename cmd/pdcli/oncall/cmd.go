@@ -16,58 +16,53 @@ limitations under the License.
 
 package oncall
 
-
-
 import (
 	"fmt"
 
-
 	"github.com/PagerDuty/go-pagerduty"
 	"github.com/openshift/pagerduty-short-circuiter/pkg/pdcli"
-
-	//"github.com/openshift/pagerduty-short-circuiter/pkg/oncall"
 	"github.com/spf13/cobra"
 )
 
 var Cmd = &cobra.Command{
 	Use:   "oncall",
-	Short: "Oncall to the PagerDuty CLI",
+	Short: "oncall to the PagerDuty CLI",
 	Long:  "Running the pdcli oncall command will display the current primary and secondary oncall SRE",
 	Args:  cobra.NoArgs,
-	//RunE:  OnCall(),
+	RunE:  OnCall,
 }
 
 //func init() {
-	
+
 //}
-func OnCall(cmd*cobra.Command, args [] string) error {
+func OnCall(cmd *cobra.Command, args []string) error {
 
 	var call pagerduty.ListOnCallOptions
-	
+
+	//var call pagerduty.ListSchedulesOptions
+
+	//call.EscalationPolicyIDs = []string{"PA4586M"}
+	//call.ScheduleIDs = []string{"P995J2A"}
+	//fmt.Println(call.EscalationPolicyIDs)
+
 	connection, err := pdcli.NewConnection().Build()
+
 	if err != nil {
 		fmt.Println(err)
 	}
+
 	etc, err := connection.ListOnCalls(call)
 	if err != nil {
-		fmt.Println(err)
-	}
-
-	for _, y := range etc.OnCalls {
-
-		fmt.Println(y.User)
+		return err
 	}
 	for _, y := range etc.OnCalls {
-
-		fmt.Println(y.Schedule)
-		
-
+		//fmt.Println(y.Schedule.Name)
+		//fmt.Println(y.Schedule)
+		fmt.Println(y.User.ID)
+		fmt.Println(y.Schedule.ID)
 	}
 
-	//fmt.Printf("User: %v\n", User)
 
 	return nil
 
 }
-
-

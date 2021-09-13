@@ -15,6 +15,9 @@ limitations under the License.
 */
 package main
 
+//import "github.com/openshift/pagerduty-short-circuiter/cmd/pdcli/oncall"
+
 func main() {
 	Execute()
+
 }
