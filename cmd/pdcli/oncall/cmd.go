@@ -18,10 +18,13 @@ package oncall
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/PagerDuty/go-pagerduty"
+	"github.com/olekukonko/tablewriter"
 	"github.com/openshift/pagerduty-short-circuiter/pkg/pdcli"
 	"github.com/spf13/cobra"
+	//"github.com/olekukonko/tablewriter"
 )
 
 var Cmd = &cobra.Command{
@@ -37,9 +40,10 @@ func OnCall(cmd *cobra.Command, args []string) error {
 	var call pagerduty.ListOnCallOptions
 
 	
-	call.EscalationPolicyIDs = []string{"PA4586M"}
+	//call.EscalationPolicyIDs = []string{"PA4586M"}
 
-    call.ScheduleIDs = []string{"P995J2A", "P4TU2IT"}
+    call.ScheduleIDs = []string{"P995J2A","P4TU2IT"}
+	
 
     connection, err := pdcli.NewConnection().Build()
 	if err != nil {
@@ -51,13 +55,29 @@ func OnCall(cmd *cobra.Command, args []string) error {
 			return err
 		}
 	//for getting secondary/primary as per schedule and name
+	count := 0
 	for _, y  :=  range etc.OnCalls{
+		if count==0 || count ==2{
 
-		fmt.Println(y.Schedule.Summary,y.User.Summary)
+		
+		data:=[][]string{
+			[]string{y.Schedule.Summary,y.User.Summary},
+		
+
+		} 
+		table := tablewriter.NewWriter(os.Stdout)
+		table.SetHeader([]string{"Oncall Role","Name"})
+		table.AppendBulk(data)		
+		table.Render()
+
+		//fmt.Println(y.Schedule.Summary,y.User.Summary)
 		
 	}
+	count+=1
+}
 
 
 	return nil
 
 }
+
