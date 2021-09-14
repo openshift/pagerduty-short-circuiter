@@ -40,7 +40,7 @@ func OnCall(cmd *cobra.Command, args []string) error {
 	var call pagerduty.ListOnCallOptions
 
 	
-	//call.EscalationPolicyIDs = []string{"PA4586M"}
+	
 
     call.ScheduleIDs = []string{"P995J2A","P4TU2IT"}
 	
@@ -62,15 +62,14 @@ func OnCall(cmd *cobra.Command, args []string) error {
 		
 		data:=[][]string{
 			[]string{y.Schedule.Summary,y.User.Summary},
-		
-
 		} 
 		table := tablewriter.NewWriter(os.Stdout)
 		table.SetHeader([]string{"Oncall Role","Name"})
-		table.AppendBulk(data)		
+		table.AppendBulk(data)
+		
 		table.Render()
 
-		//fmt.Println(y.Schedule.Summary,y.User.Summary)
+		
 		
 	}
 	count+=1
