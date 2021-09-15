@@ -21,9 +21,9 @@ const (
 	StatusResolved     = "resolved"
 
 	//ScheduleIDs to fetch Oncalls
-	PrimaryScheduleID1 = "P995J2A"
-	SecondaryScheduleID2 = "P4TU2IT"
-	WeekendScheduleID3 = "P7CC7UN"
+	PrimaryScheduleID = "P995J2A"
+	SecondaryScheduleID = "P4TU2IT"
+	WeekendScheduleID = "P7CC7UN"
 	
 
 )

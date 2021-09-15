@@ -42,7 +42,7 @@ func OnCall(cmd *cobra.Command, args []string) error {
 	
 	
  
-    call.ScheduleIDs = []string{constants.PrimaryScheduleID1,constants.SecondaryScheduleID2,constants.WeekendScheduleID3}
+    call.ScheduleIDs = []string{constants.PrimaryScheduleID,constants.SecondaryScheduleID,constants.WeekendScheduleID}
 	
 
     connection, err := pdcli.NewConnection().Build()
