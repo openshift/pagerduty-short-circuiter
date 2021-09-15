@@ -17,26 +17,26 @@ limitations under the License.
 package alerts
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"os"
 	"sort"
 	"strings"
 
-	"github.com/PagerDuty/go-pagerduty"
-	"github.com/olekukonko/tablewriter"
+	pdApi "github.com/PagerDuty/go-pagerduty"
+	"github.com/openshift/pagerduty-short-circuiter/pkg/client"
 	"github.com/openshift/pagerduty-short-circuiter/pkg/constants"
+	"github.com/openshift/pagerduty-short-circuiter/pkg/output"
 	"github.com/openshift/pagerduty-short-circuiter/pkg/pdcli"
 	"github.com/spf13/cobra"
 )
 
-type alert struct {
-	incidentID string
-	name       string
-	clusterID  string
-	severity   string
-	status     string
+type Alert struct {
+	IncidentID string
+	Name       string
+	ClusterID  string
+	Severity   string
+	Status     string
 }
 
 var args struct {
@@ -77,18 +77,17 @@ func init() {
 
 // alertsHandler is the main alerts command handler.
 func alertsHandler(cmd *cobra.Command, args []string) error {
-	var incidentAlerts []alert
-	var alerts []alert
+	var incidentAlerts []Alert
+	var alerts []Alert
 
-	// Establish a secure connection with the PagerDuty API
-	connection, err := pdcli.NewConnection().Build()
+	client, err := pdcli.NewConnection().Build()
 
 	if err != nil {
 		return err
 	}
 
 	// Get incident IDs
-	incidentIDs, err := getIncidents(connection)
+	incidentIDs, err := GetIncidents(client)
 
 	if err != nil {
 		return err
@@ -97,7 +96,7 @@ func alertsHandler(cmd *cobra.Command, args []string) error {
 	for _, id := range incidentIDs {
 
 		// An incident can have more than one alert
-		incidentAlerts, err = getIncidentAlerts(connection, id)
+		incidentAlerts, err = GetIncidentAlerts(client, id)
 
 		if err != nil {
 			return err
@@ -112,19 +111,19 @@ func alertsHandler(cmd *cobra.Command, args []string) error {
 }
 
 // getIncidents returns a string slice consisting IDs of the first 10 incidents.
-func getIncidents(client *pagerduty.Client) ([]string, error) {
+func GetIncidents(c client.PagerDutyClient) ([]string, error) {
 
 	var incidentIDs []string
 	var status []string
 	var teams []string
 	var users []string
 
-	var opts pagerduty.ListIncidentsOptions
+	var opts pdApi.ListIncidentsOptions
 
-	var aerr pagerduty.APIError
+	var aerr pdApi.APIError
 
 	// Get current user details
-	user, err := client.GetCurrentUser(pagerduty.GetCurrentUserOptions{})
+	user, err := c.GetCurrentUser(pdApi.GetCurrentUserOptions{})
 
 	if err != nil {
 		if errors.As(err, &aerr) {
@@ -168,7 +167,7 @@ func getIncidents(client *pagerduty.Client) ([]string, error) {
 		opts.Urgencies = []string{"high"}
 	}
 
-	incidents, err := client.ListIncidentsWithContext(context.Background(), opts)
+	incidents, err := c.ListIncidents(opts)
 
 	if err != nil {
 		if errors.As(err, &aerr) {
@@ -197,16 +196,14 @@ func getIncidents(client *pagerduty.Client) ([]string, error) {
 }
 
 // getIncidentAlerts returns all the alerts belong to a particular incident.
-func getIncidentAlerts(client *pagerduty.Client, incidentID string) ([]alert, error) {
+func GetIncidentAlerts(c client.PagerDutyClient, incidentID string) ([]Alert, error) {
 
-	var alerts []alert
+	var alerts []Alert
 
-	var opts pagerduty.ListIncidentAlertsOptions
-
-	incidentAlerts, err := client.ListIncidentAlertsWithContext(context.Background(), incidentID, opts)
+	incidentAlerts, err := c.ListIncidentAlerts(incidentID)
 
 	if err != nil {
-		var aerr pagerduty.APIError
+		var aerr pdApi.APIError
 
 		if errors.As(err, &aerr) {
 			if aerr.RateLimited() {
@@ -223,13 +220,13 @@ func getIncidentAlerts(client *pagerduty.Client, incidentID string) ([]alert, er
 
 	for _, p := range incidentAlerts.Alerts {
 
-		tempAlertObj := alert{}
+		tempAlertObj := Alert{}
 
-		tempAlertObj.incidentID = incidentID
-		tempAlertObj.name = p.Summary
-		tempAlertObj.severity = p.Severity
-		tempAlertObj.status = p.Status
-		tempAlertObj.clusterID = fmt.Sprint(p.Body["details"].(map[string]interface{})["cluster_id"])
+		tempAlertObj.IncidentID = incidentID
+		tempAlertObj.Name = p.Summary
+		tempAlertObj.Severity = p.Severity
+		tempAlertObj.Status = p.Status
+		tempAlertObj.ClusterID = fmt.Sprint(p.Body["details"].(map[string]interface{})["cluster_id"])
 
 		alerts = append(alerts, tempAlertObj)
 	}
@@ -238,19 +235,23 @@ func getIncidentAlerts(client *pagerduty.Client, incidentID string) ([]alert, er
 }
 
 // printAlerts prints all the alerts to the console in a tabular format.
-func printAlerts(alerts []alert) {
+func printAlerts(alerts []Alert) {
 
-	var tableData [][]string
 	var headers []string
 
+	// columns returned by the columns flag
 	columns := strings.Split(args.columns, ",")
 
 	columnsMap := make(map[string]bool)
-	headersMap := make(map[int]string)
 
 	for _, c := range columns {
 		columnsMap[c] = true
 	}
+
+	// Initializing a new table printer
+	table := output.NewTable()
+
+	headersMap := make(map[int]string)
 
 	for _, alert := range alerts {
 
@@ -261,34 +262,34 @@ func printAlerts(alerts []alert) {
 		if columnsMap["incident.id"] {
 			i++
 			headersMap[i] = "INCIDENT ID"
-			values = append(values, alert.incidentID)
+			values = append(values, alert.IncidentID)
 		}
 
 		if columnsMap["name"] {
 			i++
-			headersMap[i] = "NAME"
-			values = append(values, alert.name)
+			headersMap[i] = "ALERT"
+			values = append(values, alert.Name)
 		}
 
 		if columnsMap["cluster.id"] {
 			i++
 			headersMap[i] = "CLUSTER ID"
-			values = append(values, alert.clusterID)
+			values = append(values, alert.ClusterID)
 		}
 
 		if columnsMap["status"] {
 			i++
 			headersMap[i] = "STATUS"
-			values = append(values, alert.status)
+			values = append(values, alert.Status)
 		}
 
 		if columnsMap["severity"] {
 			i++
 			headersMap[i] = "SEVERITY"
-			values = append(values, alert.severity)
+			values = append(values, alert.Severity)
 		}
 
-		tableData = append(tableData, values)
+		table.AddRow(values)
 	}
 
 	keys := make([]int, 0)
@@ -303,9 +304,7 @@ func printAlerts(alerts []alert) {
 		headers = append(headers, headersMap[v])
 	}
 
-	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader(headers)
-	table.AppendBulk(tableData)
-	table.SetBorder(false)
-	table.Render()
+	table.SetHeaders(headers)
+	table.SetData()
+	table.Print()
 }
