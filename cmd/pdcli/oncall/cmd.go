@@ -1,12 +1,9 @@
 /*
 Copyright © 2021 Red Hat, Inc
-
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
-
     http://www.apache.org/licenses/LICENSE-2.0
-
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,12 +16,12 @@ package oncall
 import (
 	"fmt"
 	"os"
-
+	
 	"github.com/PagerDuty/go-pagerduty"
 	"github.com/olekukonko/tablewriter"
+	"github.com/openshift/pagerduty-short-circuiter/pkg/constants"
 	"github.com/openshift/pagerduty-short-circuiter/pkg/pdcli"
 	"github.com/spf13/cobra"
-	//"github.com/olekukonko/tablewriter"
 )
 
 var Cmd = &cobra.Command{
@@ -36,13 +33,12 @@ var Cmd = &cobra.Command{
 }
 //function for getting current primary and secondary oncalls
 func OnCall(cmd *cobra.Command, args []string) error {
-
+    
 	var call pagerduty.ListOnCallOptions
-
-	
 	
 
-    call.ScheduleIDs = []string{"P995J2A","P4TU2IT"}
+
+    call.ScheduleIDs = []string{constants.ScheduleID1,constants.ScheduleID2,constants.ScheduleID3}
 	
 
     connection, err := pdcli.NewConnection().Build()
@@ -54,29 +50,29 @@ func OnCall(cmd *cobra.Command, args []string) error {
 		if err!=nil{
 			return err
 		}
+		
 	//for getting secondary/primary as per schedule and name
-	count := 0
-	for _, y  :=  range etc.OnCalls{
-		if count==0 || count ==2{
+	
+	var data[][]string
+	    //call.Limit=3
+	
+		primary := etc.OnCalls[0]
 
-		
-		data:=[][]string{
-			[]string{y.Schedule.Summary,y.User.Summary},
-		} 
-		table := tablewriter.NewWriter(os.Stdout)
-		table.SetHeader([]string{"Oncall Role","Name"})
-		table.AppendBulk(data)
-		
-		table.Render()
+		data = append(data, []string{primary.Schedule.Summary, primary.User.Summary})
 
-		
-		
-	}
-	count+=1
+		secondary := etc.OnCalls[2]
+
+		data = append(data, []string{secondary.Schedule.Summary, secondary.User.Summary})
+	
+
+	table := tablewriter.NewWriter(os.Stdout)
+	table.SetHeader([]string{"Oncall Role", "Name"})
+
+	for _, v := range data {
+    	table.Append(v)
 }
-
-
+	table.Render()
+	
 	return nil
 
 }
-
