@@ -17,6 +17,7 @@ import (
 	"fmt"
 	"os"
 	
+	
 	"github.com/PagerDuty/go-pagerduty"
 	"github.com/olekukonko/tablewriter"
 	"github.com/openshift/pagerduty-short-circuiter/pkg/constants"
@@ -32,13 +33,16 @@ var Cmd = &cobra.Command{
 	RunE:  OnCall,
 }
 //function for getting current primary and secondary oncalls
+
+
+	
 func OnCall(cmd *cobra.Command, args []string) error {
     
 	var call pagerduty.ListOnCallOptions
 	
-
-
-    call.ScheduleIDs = []string{constants.ScheduleID1,constants.ScheduleID2,constants.ScheduleID3}
+	
+ 
+    call.ScheduleIDs = []string{constants.PrimaryScheduleID1,constants.SecondaryScheduleID2,constants.WeekendScheduleID3}
 	
 
     connection, err := pdcli.NewConnection().Build()
@@ -54,8 +58,6 @@ func OnCall(cmd *cobra.Command, args []string) error {
 	//for getting secondary/primary as per schedule and name
 	
 	var data[][]string
-	    //call.Limit=3
-	
 		primary := etc.OnCalls[0]
 
 		data = append(data, []string{primary.Schedule.Summary, primary.User.Summary})
@@ -67,11 +69,12 @@ func OnCall(cmd *cobra.Command, args []string) error {
 
 	table := tablewriter.NewWriter(os.Stdout)
 	table.SetHeader([]string{"Oncall Role", "Name"})
-
-	for _, v := range data {
-    	table.Append(v)
-}
+	table.AppendBulk(data)
 	table.Render()
+
+    	
+
+		
 	
 	return nil
 
