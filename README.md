@@ -56,6 +56,27 @@ pdcli login --api-key <api-key>
 ```
 Once logged in you need not login ever again unless there is a change in the API key.
 
+## View Alerts
+
+To view the alerts triggered by PagerDuty, use the command:
+
+```
+pdcli alerts
+```
+This will list all the high alerts assigned to **self** by default.
+
+You can modify the alerts returned with the `assigned-to` option, you can either choose to list alerts which are assigned to *self, team* or *silentTest*.
+
+When you use the option `assigned-to=team`, it will fetch all the alerts assigned to **Platform-SRE** team.
+
+### Options
+```
+--assigned-to          Filter alerts based on user or team (default "self")
+--columns string       Specify which columns to display separated by commas without any space in between (default "incident.id,name,cluster.id,status,severity")
+--high                 View all high alerts (default true)
+--low                  View all low alerts
+```
+
 ## Running Tests
 The test suite uses the [Ginkgo](https://onsi.github.io/ginkgo/) to run comprehensive tests using Behavior-Driven Development.
 
@@ -67,7 +88,6 @@ This command runs all the tests present within the 'tests' folder by default.
 
 ## Maintainers
 - Dominic Finn (dofinn@redhat.com)
-- Krishnanunni B (krb@redhat.com)
 - Mitali Bhalla (mbhalla@redhat.com)
 - Pooja Rani (prani@redhat.com)
 - Supreeth Basabattini (sbasabat@redhat.com)
