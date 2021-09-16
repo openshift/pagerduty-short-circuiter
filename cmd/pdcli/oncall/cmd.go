@@ -14,10 +14,8 @@ limitations under the License.
 package oncall
 
 import (
-	"fmt"
 	"os"
-	
-	
+
 	"github.com/PagerDuty/go-pagerduty"
 	"github.com/olekukonko/tablewriter"
 	"github.com/openshift/pagerduty-short-circuiter/pkg/constants"
@@ -32,40 +30,43 @@ var Cmd = &cobra.Command{
 	Args:  cobra.NoArgs,
 	RunE:  OnCall,
 }
-//function for getting current primary and secondary oncalls
+
+//Oncall implements the fetching of current roles and names of users
 func OnCall(cmd *cobra.Command, args []string) error {
-    
+
 	var call pagerduty.ListOnCallOptions
 
-    call.ScheduleIDs = []string{constants.PrimaryScheduleID,constants.SecondaryScheduleID}
-	
-    connection, err := pdcli.NewConnection().Build()
+	call.ScheduleIDs = []string{constants.PrimaryScheduleID, constants.SecondaryScheduleID}
+
+	// Establish a secure connection with the PagerDuty API
+	connection, err := pdcli.NewConnection().Build()
 	if err != nil {
-		fmt.Println(err)
+		return err
 	}
-	etc,err:=connection.ListOnCalls(call)
-	
-		if err!=nil{
-			return err
-		}
-		
-	//for getting secondary/primary as per schedule and name
-	
-	var data[][]string
-		primary := etc.OnCalls[0]
+	etc, err := connection.ListOnCalls(call)
 
-		data = append(data, []string{primary.Schedule.Summary, primary.User.Summary})
+	if err != nil {
+		return err
+	}
 
-		secondary := etc.OnCalls[5]
+	//
 
-		data = append(data, []string{secondary.Schedule.Summary, secondary.User.Summary})
-	
-	//for printing roles and names in a tabular form
+	var data [][]string
+	//Oncalls contains all the information about the user
+	primary := etc.OnCalls[0]
+
+	data = append(data, []string{primary.Schedule.Summary, primary.User.Summary})
+
+	secondary := etc.OnCalls[5]
+
+	data = append(data, []string{secondary.Schedule.Summary, secondary.User.Summary})
+
+	//prints all the alerts to the console in a tabular format.
 	table := tablewriter.NewWriter(os.Stdout)
 	table.SetHeader([]string{"Oncall Role", "Name"})
 	table.AppendBulk(data)
 	table.Render()
+	
 
 	return nil
-
 }
