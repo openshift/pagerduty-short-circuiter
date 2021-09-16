@@ -33,18 +33,12 @@ var Cmd = &cobra.Command{
 	RunE:  OnCall,
 }
 //function for getting current primary and secondary oncalls
-
-
-	
 func OnCall(cmd *cobra.Command, args []string) error {
     
 	var call pagerduty.ListOnCallOptions
-	
-	
- 
-    call.ScheduleIDs = []string{constants.PrimaryScheduleID,constants.SecondaryScheduleID,constants.WeekendScheduleID}
-	
 
+    call.ScheduleIDs = []string{constants.PrimaryScheduleID,constants.SecondaryScheduleID}
+	
     connection, err := pdcli.NewConnection().Build()
 	if err != nil {
 		fmt.Println(err)
@@ -62,20 +56,16 @@ func OnCall(cmd *cobra.Command, args []string) error {
 
 		data = append(data, []string{primary.Schedule.Summary, primary.User.Summary})
 
-		secondary := etc.OnCalls[2]
+		secondary := etc.OnCalls[5]
 
 		data = append(data, []string{secondary.Schedule.Summary, secondary.User.Summary})
 	
-
+	//for printing roles and names in a tabular form
 	table := tablewriter.NewWriter(os.Stdout)
 	table.SetHeader([]string{"Oncall Role", "Name"})
 	table.AppendBulk(data)
 	table.Render()
 
-    	
-
-		
-	
 	return nil
 
 }

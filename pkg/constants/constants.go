@@ -23,7 +23,7 @@ const (
 	//ScheduleIDs to fetch Oncalls
 	PrimaryScheduleID = "P995J2A"
 	SecondaryScheduleID = "P4TU2IT"
-	WeekendScheduleID = "P7CC7UN"
+	
 	
 
 )
