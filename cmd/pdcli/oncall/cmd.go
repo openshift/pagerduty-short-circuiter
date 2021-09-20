@@ -49,7 +49,7 @@ func OnCall(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	//
+
 
 	var data [][]string
 	//Oncalls contains all the information about the user
@@ -61,7 +61,7 @@ func OnCall(cmd *cobra.Command, args []string) error {
 
 	data = append(data, []string{secondary.Schedule.Summary, secondary.User.Summary})
 
-	//prints all the alerts to the console in a tabular format.
+	//prints all oncall role and name to the console in a tabular format.
 	table := tablewriter.NewWriter(os.Stdout)
 	table.SetHeader([]string{"Oncall Role", "Name"})
 	table.AppendBulk(data)
