@@ -66,6 +66,8 @@ func OnCall(cmd *cobra.Command, args []string) error {
 	table.SetHeader([]string{"Oncall Role", "Name"})
 	table.AppendBulk(data)
 	table.Render()
+
+	
 	
 
 	return nil
