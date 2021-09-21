@@ -15,6 +15,8 @@ package oncall
 
 import (
 	"os"
+	
+	
 
 	"github.com/PagerDuty/go-pagerduty"
 	"github.com/olekukonko/tablewriter"
@@ -35,6 +37,7 @@ var Cmd = &cobra.Command{
 func OnCall(cmd *cobra.Command, args []string) error {
 
 	var call pagerduty.ListOnCallOptions
+	
 
 	call.ScheduleIDs = []string{constants.PrimaryScheduleID, constants.SecondaryScheduleID}
 
@@ -54,18 +57,24 @@ func OnCall(cmd *cobra.Command, args []string) error {
 	var data [][]string
 	//Oncalls contains all the information about the user
 	primary := etc.OnCalls[0]
-
-	data = append(data, []string{primary.Schedule.Summary, primary.User.Summary})
+	
+	data = append(data, []string{primary.Schedule.Summary, primary.User.Summary,primary.Start,primary.End})
 
 	secondary := etc.OnCalls[5]
 
-	data = append(data, []string{secondary.Schedule.Summary, secondary.User.Summary})
+	data = append(data, []string{secondary.Schedule.Summary, secondary.User.Summary,secondary.Start,secondary.End})
 
 	//prints all oncall role and name to the console in a tabular format.
 	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"Oncall Role", "Name"})
+	table.SetHeader([]string{"Oncall Role", "Name","From","Till"})
 	table.AppendBulk(data)
 	table.Render()
+
+
+	
+	//var user_data [][] string
+
+	
 
 	
 	
