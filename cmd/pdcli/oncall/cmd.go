@@ -15,6 +15,7 @@ package oncall
 
 import (
 	"os"
+
 	
 	
 
@@ -46,23 +47,26 @@ func OnCall(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	etc, err := connection.ListOnCalls(call)
+	oncallListing, err := connection.ListOnCalls(call)
 
 	if err != nil {
 		return err
 	}
 
-
+	
+	
 
 	var data [][]string
+	
 	//Oncalls contains all the information about the user
-	primary := etc.OnCalls[0]
+	primary := oncallListing.OnCalls[0]
 	
 	data = append(data, []string{primary.Schedule.Summary, primary.User.Summary,primary.Start,primary.End})
 
-	secondary := etc.OnCalls[5]
+	secondary := oncallListing.OnCalls[5]
 
 	data = append(data, []string{secondary.Schedule.Summary, secondary.User.Summary,secondary.Start,secondary.End})
+	//oncallsMap:=make(map[string]string)
 
 	//prints all oncall role and name to the console in a tabular format.
 	table := tablewriter.NewWriter(os.Stdout)
