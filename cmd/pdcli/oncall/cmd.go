@@ -70,14 +70,5 @@ func OnCall(cmd *cobra.Command, args []string) error {
 	table.AppendBulk(data)
 	table.Render()
 
-
-	
-	//var user_data [][] string
-
-	
-
-	
-	
-
 	return nil
 }
