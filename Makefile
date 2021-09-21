@@ -24,9 +24,6 @@ export CGO_ENABLED=0
 # Constants
 GOPATH := $(shell go env GOPATH)
 
-# Allow overriding: `make lint container_runner=docker`.
-container_runner:=podman
-
 .PHONY: build
 build:
 	go build -o pdcli ./cmd/pdcli
@@ -35,20 +32,31 @@ build:
 install:
 	go build -o ${GOPATH}/bin/pdcli ./cmd/pdcli
 
+.PHONY: tools
+tools:
+	@mkdir -p $(GOPATH)/bin
+	@ls $(GOPATH)/bin/ginkgo 1>/dev/null || (echo "Installing ginkgo..." && go get -u github.com/onsi/ginkgo/ginkgo@v1.16.4)
+	
 .PHONY: test
 test:
 	ginkgo -v -r tests
 
+# Installed using instructions from: https://golangci-lint.run/usage/install/#linux-and-windows
+getlint:
+	@mkdir -p $(GOPATH)/bin
+	@ls $(GOPATH)/bin/golangci-lint 1>/dev/null || (echo "Installing golangci-lint" && curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(GOPATH)/bin v1.42.0)
+
 .PHONY: lint
-lint:
-	$(container_runner) run --rm --security-opt label=disable --volume="$(PWD):/app" --workdir=/app \
-		golangci/golangci-lint:v$(shell cat .golangciversion) \
-		golangci-lint run
+lint: getlint
+	$(GOPATH)/bin/golangci-lint run
+
+.PHONY: fmt
+fmt:
+	gofmt -s -l -w cmd pkg tests
 
 .PHONY: clean
 clean:
 	rm -rf \
-		$$(ls cmd) \
 		*-darwin-amd64 \
 		*-linux-amd64 \
 		*-windows-amd64 \
