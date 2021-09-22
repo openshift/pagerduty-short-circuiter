@@ -25,17 +25,18 @@ You need to have go installed, the minimal version required is go 1.15.
 
 ### Option 1: Install binary
 
+This command will fetch, build a binary named `pdcli` and install them to your $GOPATH/bin, you should and move this binary onto your $PATH if desired.
+
 ```
 $ make install
 ```
-This command will fetch, build a binary named `pdcli` and install them to your $GOPATH/bin, you should and move this binary onto your $PATH if desired.
-
 ### Option 2: Build from source
+
+This command will build the PagerDuty CLI binary, named `pdcli`. This binary will be created in the root of your project folder.
+
 ```
 $ make build
 ```
-This command will build the PagerDuty CLI binary, named `pdcli`. This binary will be created in the root of your project folder.
-
 ## Login
 
 - In order to use any PagerDuty CLI features you will have to login first.
@@ -78,13 +79,19 @@ When you use the option `assigned-to=team`, it will fetch all the alerts assigne
 ```
 
 ## Running Tests
-The test suite uses the [Ginkgo](https://onsi.github.io/ginkgo/) to run comprehensive tests using Behavior-Driven Development.
+The test suite uses the [Ginkgo](https://onsi.github.io/ginkgo/) to run comprehensive tests using Behavior-Driven Development.<br>
+The mocking framework used for testing is [gomock](https://github.com/golang/mock).
+
+This command runs all the tests present within the 'tests' folder by default.
 
 ```
 $ make test
 ```
-This command runs all the tests present within the 'tests' folder by default.
+Use the mockgen command to generate source code for a mock class given a Go source file containing interfaces to be mocked.
 
+```
+$ mockgen -source=foo.go -destination=mock/foo_mock.go
+```
 
 ## Maintainers
 - Dominic Finn (dofinn@redhat.com)
