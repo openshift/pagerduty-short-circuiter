@@ -19,4 +19,8 @@ const (
 	StatusTriggered    = "triggered"
 	StatusAcknowledged = "acknowledged"
 	StatusResolved     = "resolved"
+
+	//ScheduleIDs to fetch Oncalls
+	PrimaryScheduleID   = "P995J2A"
+	SecondaryScheduleID = "P4TU2IT"
 )
