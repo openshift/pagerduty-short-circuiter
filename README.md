@@ -25,7 +25,7 @@ You need to have go installed, the minimal version required is go 1.15.
 
 ### Option 1: Install binary
 
-This command will fetch, build a binary named `pdcli` and install them to your $GOPATH/bin, you should and move this binary onto your $PATH if desired.
+Build and copy `pdcli` to your $GOPATH/bin:
 
 ```
 $ make install
