@@ -14,11 +14,13 @@ limitations under the License.
 package oncall
 
 import (
-	"os"
+	"fmt"
+	"strings"
+	"time"
 
 	"github.com/PagerDuty/go-pagerduty"
-	"github.com/olekukonko/tablewriter"
 	"github.com/openshift/pagerduty-short-circuiter/pkg/constants"
+	"github.com/openshift/pagerduty-short-circuiter/pkg/output"
 	"github.com/openshift/pagerduty-short-circuiter/pkg/pdcli"
 	"github.com/spf13/cobra"
 )
@@ -31,6 +33,13 @@ var Cmd = &cobra.Command{
 	RunE:  OnCall,
 }
 
+type User struct {
+	OncallRole string
+	Name       string
+	Start      string
+	End        string
+}
+
 //Oncall implements the fetching of current roles and names of users
 func OnCall(cmd *cobra.Command, args []string) error {
 
@@ -39,43 +48,99 @@ func OnCall(cmd *cobra.Command, args []string) error {
 	call.ScheduleIDs = []string{constants.PrimaryScheduleID, constants.SecondaryScheduleID}
 
 	// Establish a secure connection with the PagerDuty API
-	connection, err := pdcli.NewConnection().Build()
+	client, err := pdcli.NewConnection().Build()
 	if err != nil {
-		return err
+		return nil
 	}
 
-	oncallListing, err := connection.ListOnCalls(call)
+	oncallListing, err := client.ListOnCalls(call)
 
 	if err != nil {
-		return err
+		return nil
 	}
 
-	//oncallMapis a hash map to avoid repetition of data in the data array
-	//oncallMap := make(map[string]string)
+	//oncallMap is used to store Primary and Secondary oncall information
+	oncallMap := map[string]map[string]string{}
+	tempCallObjectS := User{}
+	tempCallObjectP := User{}
 
-	//oncallData maintains two key
-
-	var oncallData [][]string
-
+	//OnCalls array contains all information about the API object
 	for _, y := range oncallListing.OnCalls {
 
+		//Storing information about Primary Role in oncallMap
 		if y.Schedule.Summary == "0-SREP: Weekday Primary" {
-			//oncallMap["Primary"] = y.User.Summary,y.Schedule.Summary
-			oncallData = append(oncallData, []string{y.Schedule.Summary, y.User.Summary})
+			oncallMap["Primary"] = map[string]string{}
+
+			//Converting Start and End timestamps to date and time
+			timeConversionStart := timeConversion(y.Start)
+			timeConversionEnd := timeConversion(y.End)
+
+			oncallMap["Primary"]["Oncall Role"] = y.Schedule.Summary
+			oncallMap["Primary"]["Name"] = y.User.Summary
+			oncallMap["Primary"]["Start"] = timeConversionStart
+			oncallMap["Primary"]["End"] = timeConversionEnd
 		}
 
+		tempCallObjectP.OncallRole = oncallMap["Primary"]["Oncall Role"]
+		tempCallObjectP.Name = oncallMap["Primary"]["Name"]
+		tempCallObjectP.Start = oncallMap["Primary"]["Start"]
+		tempCallObjectP.End = oncallMap["Primary"]["End"]
+
+		//Storing information about Secondary Role in oncallMap
 		if y.Schedule.Summary == "0-SREP: Weekday Secondary" {
-			//oncallMap["Secondary"] = y.User.Summary
-			oncallData = append(oncallData, []string{y.Schedule.Summary, y.User.Summary})
+			oncallMap["Secondary"] = map[string]string{}
+
+			//Converting Start and End timestamps to date and time
+			timeConversionStart := timeConversion(y.Start)
+			timeConversionEnd := timeConversion(y.End)
+
+			oncallMap["Secondary"]["Oncall Role"] = y.Schedule.Summary
+			oncallMap["Secondary"]["Name"] = y.User.Summary
+			oncallMap["Secondary"]["Start"] = timeConversionStart
+			oncallMap["Secondary"]["End"] = timeConversionEnd
 		}
+
+		tempCallObjectS.OncallRole = oncallMap["Secondary"]["Oncall Role"]
+		tempCallObjectS.Name = oncallMap["Secondary"]["Name"]
+		tempCallObjectS.Start = oncallMap["Secondary"]["Start"]
+		tempCallObjectS.End = oncallMap["Secondary"]["End"]
 
 	}
+	var oncallData []User
+	oncallData = append(oncallData, tempCallObjectP)
+	oncallData = append(oncallData, tempCallObjectS)
 
-	//prints all oncall role and name to the console in a tabular format.
-	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"Oncall Role", "Name", "From", "To"})
-	table.AppendBulk(oncallData)
-	table.Render()
+	printOncalls(oncallData)
 
 	return nil
+
+}
+
+//timeConversion converts timestamp into time and date
+func timeConversion(s string) string {
+
+	timeString := s
+	timeConverted, err := time.Parse(time.RFC3339, timeString)
+
+	if err != nil {
+		fmt.Println(err)
+	}
+	finalTimeString := timeConverted.String()
+	finalTimeString = strings.ReplaceAll(finalTimeString, " +0000 UTC", " UTC")
+
+	return finalTimeString
+}
+
+//printOncalls prints data in a tabular form
+func printOncalls(oncallData []User) {
+	var printData []string
+	table := output.NewTable()
+	headers := []string{"Oncall Role", "Name", "From", "To"}
+	table.SetHeaders(headers)
+	for _, v := range oncallData {
+		printData = []string{v.OncallRole, v.Name, v.Start, v.End}
+		table.AddRow(printData)
+	}
+	table.SetData()
+	table.Print()
 }
