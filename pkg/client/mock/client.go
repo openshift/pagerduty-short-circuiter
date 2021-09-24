@@ -5,6 +5,7 @@
 package mock_client
 
 import (
+	http "net/http"
 	reflect "reflect"
 
 	pagerduty "github.com/PagerDuty/go-pagerduty"
@@ -47,6 +48,22 @@ func (m *MockPagerDutyClient) GetCurrentUser(arg0 pagerduty.GetCurrentUserOption
 func (mr *MockPagerDutyClientMockRecorder) GetCurrentUser(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCurrentUser", reflect.TypeOf((*MockPagerDutyClient)(nil).GetCurrentUser), arg0)
+}
+
+// GetIncidentAlert mocks base method.
+func (m *MockPagerDutyClient) GetIncidentAlert(incidentID, alertID string) (*pagerduty.IncidentAlertResponse, *http.Response, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetIncidentAlert", incidentID, alertID)
+	ret0, _ := ret[0].(*pagerduty.IncidentAlertResponse)
+	ret1, _ := ret[1].(*http.Response)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// GetIncidentAlert indicates an expected call of GetIncidentAlert.
+func (mr *MockPagerDutyClientMockRecorder) GetIncidentAlert(incidentID, alertID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetIncidentAlert", reflect.TypeOf((*MockPagerDutyClient)(nil).GetIncidentAlert), incidentID, alertID)
 }
 
 // ListIncidentAlerts mocks base method.

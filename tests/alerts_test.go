@@ -32,10 +32,14 @@ func incident(incidentID string) pdApi.Incident {
 	}
 }
 
-func alert(name string, clusterID string, severity string, status string) pdApi.IncidentAlert {
+func alert(name string, clusterName string, clusterID string, severity string, status string) pdApi.IncidentAlert {
 	return pdApi.IncidentAlert{
 		APIObject: pdApi.APIObject{
 			Summary: name,
+		},
+
+		Service: pdApi.APIObject{
+			Summary: clusterName,
 		},
 
 		Body: map[string]interface{}{
@@ -74,7 +78,7 @@ var _ = Describe("view alerts", func() {
 	})
 
 	When("the alerts command is run", func() {
-		It("returns incident IDs", func() {
+		It("returns incidents", func() {
 
 			userResponse := &pdApi.User{}
 
@@ -92,12 +96,12 @@ var _ = Describe("view alerts", func() {
 
 			Expect(err).ShouldNot(HaveOccurred())
 
-			expectedIncidentIDs := []string{
-				"incident-id-1",
-				"incident-id-2",
+			expectedIncidents := []pdApi.Incident{
+				{Id: "incident-id-1"},
+				{Id: "incident-id-2"},
 			}
 
-			Expect(result).Should(Equal(expectedIncidentIDs))
+			Expect(result).Should(Equal(expectedIncidents))
 		})
 	})
 
@@ -109,6 +113,7 @@ var _ = Describe("view alerts", func() {
 				Alerts: []pdApi.IncidentAlert{
 					alert(
 						"alert-name",
+						"my-cluster",
 						"cluster-id",
 						"critical",
 						"triggered",
@@ -118,11 +123,12 @@ var _ = Describe("view alerts", func() {
 
 			expectedAlert := []alerts.Alert{
 				{
-					IncidentID: "incident-id-1",
-					Name:       "alert-name",
-					ClusterID:  "cluster-id",
-					Severity:   "critical",
-					Status:     "triggered",
+					IncidentID:  "incident-id-1",
+					Name:        "alert-name",
+					ClusterName: "my-cluster",
+					ClusterID:   "cluster-id",
+					Severity:    "critical",
+					Status:      "triggered",
 				},
 			}
 
