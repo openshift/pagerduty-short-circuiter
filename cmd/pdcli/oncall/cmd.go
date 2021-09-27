@@ -45,7 +45,7 @@ type User struct {
 func OnCall(cmd *cobra.Command, args []string) error {
 
 	var call pagerduty.ListOnCallOptions
-	call.ScheduleIDs = []string{constants.PrimaryScheduleID, constants.SecondaryScheduleID, constants.OncallIDWeekend, constants.OncallManager, constants.OncallId}
+	call.ScheduleIDs = []string{constants.PrimaryScheduleID, constants.SecondaryScheduleID, constants.OncallManager}
 	// Establish a secure connection with the PagerDuty API
 	client, err := pdcli.NewConnection().Build()
 	if err != nil {
@@ -66,43 +66,53 @@ func OnCall(cmd *cobra.Command, args []string) error {
 	//OnCalls array contains all information about the API object
 	for _, y := range oncallListing.OnCalls {
 
-		//fmt.Println(y.EscalationPolicy.Summary, y.Schedule.Summary, y.User.Summary)
-		s := y.EscalationPolicy.Summary
+		s := y.EscalationPolicy.Summary + y.Schedule.Summary
 
 		timeConversionStart := timeConversion(y.Start)
 		timeConversionEnd := timeConversion(y.End)
-
-		oncallMap[s] = map[string]string{}
-		oncallMap[s]["Escalation Policy"] = removespace(y.EscalationPolicy.Summary)
-		oncallMap[s]["Oncall Role"] = removespace(y.Schedule.Summary)
-		oncallMap[s]["Name"] = removespace(y.User.Summary)
-		oncallMap[s]["Start"] = removespace(timeConversionStart)
-		oncallMap[s]["End"] = removespace(timeConversionEnd)
-
-		for x, y := range oncallMap[s] {
-			temp := User{}
-
-			if x == "Escalation Policy" {
-				temp.EscalationPolicy = removespace(y)
-			}
-			if x == "Oncall Role" {
-				temp.OncallRole = removespace(y)
-			}
-			if x == "Name" {
-				temp.Name = removespace(y)
-			}
-			if x == "Start" {
-				temp.Start = removespace(y)
-			}
-			if x == "End" {
-				temp.End = removespace(y)
-			}
-			oncallData = append(oncallData, temp)
+		if _, ok := oncallMap[s]; ok {
+			continue
+		} else {
+			oncallMap[s] = map[string]string{}
+			oncallMap[s]["Escalation Policy"] = removespace(y.EscalationPolicy.Summary)
+			oncallMap[s]["Oncall Role"] = removespace(y.Schedule.Summary)
+			oncallMap[s]["Name"] = removespace(y.User.Summary)
+			oncallMap[s]["Start"] = removespace(timeConversionStart)
+			oncallMap[s]["End"] = removespace(timeConversionEnd)
 
 		}
 
+		for q, r := range oncallMap[s] {
+
+			temp := User{}
+
+			if q == "Escalation Policy" {
+				temp.EscalationPolicy = removespace(r)
+
+			}
+			if q == "Oncall Role" {
+				temp.OncallRole = removespace(r)
+
+			}
+			if q == "Name" {
+				temp.Name = removespace(r)
+
+			}
+			if q == "Start" {
+				temp.Start = removespace(r)
+
+			}
+			if q == "End" {
+				temp.End = removespace(r)
+
+			}
+
+			oncallData = append(oncallData, temp)
+
+		}
 	}
 	fmt.Println(oncallData)
+
 	printOncalls(oncallData)
 
 	return nil
@@ -122,6 +132,7 @@ func timeConversion(s string) string {
 	finalTimeString = strings.ReplaceAll(finalTimeString, " +0000 UTC", " UTC")
 
 	return finalTimeString
+
 }
 
 //printOncalls prints data in a tabular form
@@ -139,7 +150,7 @@ func printOncalls(oncallData []User) {
 	table.Print()
 
 }
-func removespace(s string)string{
-	space:= strings.TrimSpace(s)
+func removespace(s string) string {
+	space := strings.TrimSpace(s)
 	return space
 }
