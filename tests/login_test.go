@@ -1,14 +1,31 @@
 package tests
 
 import (
+	pdApi "github.com/PagerDuty/go-pagerduty"
+	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/openshift/pagerduty-short-circuiter/cmd/pdcli/login"
+	mockpd "github.com/openshift/pagerduty-short-circuiter/pkg/client/mock"
 	"github.com/openshift/pagerduty-short-circuiter/pkg/constants"
 )
 
 var _ = Describe("pdcli login", func() {
 
-	var jsonTemplate string
+	var (
+		mockCtrl     *gomock.Controller
+		mockClient   *mockpd.MockPagerDutyClient
+		jsonTemplate string
+	)
+
+	BeforeEach(func() {
+		mockCtrl = gomock.NewController(GinkgoT())
+		mockClient = mockpd.NewMockPagerDutyClient(mockCtrl)
+	})
+
+	AfterEach(func() {
+		mockCtrl.Finish()
+	})
 
 	BeforeEach(func() {
 		jsonTemplate = `{ 
@@ -47,20 +64,20 @@ var _ = Describe("pdcli login", func() {
 		})
 	})
 
-	When("the login command is run", func() {
-		It("the sample key is used against PagerDuty REST API", func() {
+	When("the login command is run with a valid key", func() {
+		It("it sucessfully logs into pdcli and returns the username", func() {
 
-			result := NewCommand().
-				Args(
-					"login",
-					"--api-key",
-					constants.SampleKey,
-				).
-				Run()
+			loginResponse := &pdApi.User{
+				Name: "my-user",
+			}
 
-			Expect(result.ConfigFile()).ToNot(BeEmpty())
-			Expect(result.ExitCode()).ToNot(BeZero())
-			Expect(result.ErrString()).To(ContainSubstring("Unauthorized"))
+			mockClient.EXPECT().GetCurrentUser(gomock.Any()).Return(loginResponse, nil).Times(1)
+
+			user, err := login.Login(constants.SampleKey, mockClient)
+
+			Expect(err).ToNot(HaveOccurred())
+
+			Expect(user).To(Equal(loginResponse.Name))
 		})
 	})
 })
