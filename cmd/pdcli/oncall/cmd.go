@@ -62,6 +62,7 @@ func OnCall(cmd *cobra.Command, args []string) error {
 	//oncallMap is used to store Primary and Secondary oncall information
 	oncallMap := map[string]map[string]string{}
 	var oncallData []User
+	
 
 	//OnCalls array contains all information about the API object
 	for _, y := range oncallListing.OnCalls {
@@ -70,17 +71,18 @@ func OnCall(cmd *cobra.Command, args []string) error {
 
 		timeConversionStart := timeConversion(y.Start)
 		timeConversionEnd := timeConversion(y.End)
-		if _, ok := oncallMap[s]; ok {
+		if _,ok:= oncallMap[s]; ok{ 
 			continue
-		} else {
-			oncallMap[s] = map[string]string{}
-			oncallMap[s]["Escalation Policy"] = removespace(y.EscalationPolicy.Summary)
-			oncallMap[s]["Oncall Role"] = removespace(y.Schedule.Summary)
-			oncallMap[s]["Name"] = removespace(y.User.Summary)
-			oncallMap[s]["Start"] = removespace(timeConversionStart)
-			oncallMap[s]["End"] = removespace(timeConversionEnd)
+		}else{oncallMap[s] = map[string]string{}
+		oncallMap[s]["Escalation Policy"] = removespace(y.EscalationPolicy.Summary)
+		oncallMap[s]["Oncall Role"] = removespace(y.Schedule.Summary)
+		oncallMap[s]["Name"] = removespace(y.User.Summary)
+		oncallMap[s]["Start"] = removespace(timeConversionStart)
+		oncallMap[s]["End"] = removespace(timeConversionEnd)
 
 		}
+		
+	
 
 		for q, r := range oncallMap[s] {
 
@@ -108,10 +110,11 @@ func OnCall(cmd *cobra.Command, args []string) error {
 			}
 
 			oncallData = append(oncallData, temp)
+		
 
 		}
 	}
-	fmt.Println(oncallData)
+	
 
 	printOncalls(oncallData)
 
