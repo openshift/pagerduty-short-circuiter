@@ -44,77 +44,52 @@ type User struct {
 //Oncall implements the fetching of current roles and names of users
 func OnCall(cmd *cobra.Command, args []string) error {
 
-	var call pagerduty.ListOnCallOptions
-	call.ScheduleIDs = []string{constants.PrimaryScheduleID, constants.SecondaryScheduleID, constants.OncallManager}
+	var callOpts pagerduty.ListOnCallOptions
+	callOpts.ScheduleIDs = []string{constants.PrimaryScheduleID, constants.SecondaryScheduleID, constants.OncallManager}
 	// Establish a secure connection with the PagerDuty API
 	client, err := pdcli.NewConnection().Build()
 	if err != nil {
-		return nil
+		return err
 	}
 
-	oncallListing, err := client.ListOnCalls(call)
+	oncallListing, err := client.ListOnCalls(callOpts)
 
 	if err != nil {
-		return nil
+		return err
 
 	}
 
-	//oncallMap is used to store Primary and Secondary oncall information
+	//oncallMap is used to create and assign data to struct object for each Escalation Policy
 	oncallMap := map[string]map[string]string{}
+	//oncallData stores struct objects for each Escalation Policy
 	var oncallData []User
-	
 
 	//OnCalls array contains all information about the API object
 	for _, y := range oncallListing.OnCalls {
 
-		s := y.EscalationPolicy.Summary + y.Schedule.Summary
+		//mapKey uniquely identifies an Escalation Policy with its user roles
+		mapKey := y.EscalationPolicy.Summary + y.Schedule.Summary
 
 		timeConversionStart := timeConversion(y.Start)
 		timeConversionEnd := timeConversion(y.End)
-		if _,ok:= oncallMap[s]; ok{ 
+
+		//checking the presence of keys in the map before assigning data
+		if _, ok := oncallMap[mapKey]; ok {
 			continue
-		}else{oncallMap[s] = map[string]string{}
-		oncallMap[s]["Escalation Policy"] = removespace(y.EscalationPolicy.Summary)
-		oncallMap[s]["Oncall Role"] = removespace(y.Schedule.Summary)
-		oncallMap[s]["Name"] = removespace(y.User.Summary)
-		oncallMap[s]["Start"] = removespace(timeConversionStart)
-		oncallMap[s]["End"] = removespace(timeConversionEnd)
+		} else {
 
-		}
-		
-	
-
-		for q, r := range oncallMap[s] {
-
+			//temp is a struct object created for each Escalation Policy
 			temp := User{}
-
-			if q == "Escalation Policy" {
-				temp.EscalationPolicy = removespace(r)
-
-			}
-			if q == "Oncall Role" {
-				temp.OncallRole = removespace(r)
-
-			}
-			if q == "Name" {
-				temp.Name = removespace(r)
-
-			}
-			if q == "Start" {
-				temp.Start = removespace(r)
-
-			}
-			if q == "End" {
-				temp.End = removespace(r)
-
-			}
-
+			temp.EscalationPolicy = y.EscalationPolicy.Summary
+			temp.OncallRole = y.Schedule.Summary
+			temp.Name = y.User.Summary
+			temp.Start = timeConversionStart
+			temp.End = timeConversionEnd
 			oncallData = append(oncallData, temp)
-		
 
 		}
+
 	}
-	
 
 	printOncalls(oncallData)
 
@@ -152,8 +127,4 @@ func printOncalls(oncallData []User) {
 	table.SetData()
 	table.Print()
 
-}
-func removespace(s string) string {
-	space := strings.TrimSpace(s)
-	return space
 }
