@@ -23,6 +23,7 @@ import (
 	"github.com/openshift/pagerduty-short-circuiter/pkg/output"
 	"github.com/openshift/pagerduty-short-circuiter/pkg/pdcli"
 	"github.com/spf13/cobra"
+
 )
 
 var Cmd = &cobra.Command{
@@ -60,7 +61,7 @@ func OnCall(cmd *cobra.Command, args []string) error {
 	}
 
 	//oncallMap is used to create and assign data to struct object for each Escalation Policy
-	oncallMap := map[string]map[string]string{}
+	oncallMap := map[string]string{}
 	//oncallData stores struct objects for each Escalation Policy
 	var oncallData []User
 
@@ -90,6 +91,7 @@ func OnCall(cmd *cobra.Command, args []string) error {
 		}
 
 	}
+	
 
 	printOncalls(oncallData)
 
