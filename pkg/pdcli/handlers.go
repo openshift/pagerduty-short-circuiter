@@ -74,13 +74,13 @@ func GetIncidentAlerts(c client.PagerDutyClient, incidentID string) ([]Alert, er
 		}
 	}
 
-	for _, p := range incidentAlerts.Alerts {
+	for _, alert := range incidentAlerts.Alerts {
 
 		tempAlertObj := Alert{}
 
 		// Check if the alert is not resolved
-		if p.Status != constants.StatusResolved {
-			tempAlertObj.ParseAlertData(c, &p)
+		if alert.Status != constants.StatusResolved {
+			tempAlertObj.ParseAlertData(c, &alert)
 			alerts = append(alerts, tempAlertObj)
 		}
 
@@ -101,27 +101,6 @@ func GetClusterName(servideID string, c client.PagerDutyClient) (string, error) 
 	clusterName := strings.Split(service.Description, " ")[0]
 
 	return clusterName, nil
-}
-
-// GetAlertMetadata returns the alert details of a particular incident and alert.
-func GetAlertMetadata(c client.PagerDutyClient, incidentID, alertID string) (*Alert, error) {
-	var alertData Alert
-
-	alert, response, err := c.GetIncidentAlert(incidentID, alertID)
-
-	if err != nil {
-		return nil, err
-	}
-
-	// check for http status code error
-	if response.StatusCode != 200 {
-		err = fmt.Errorf("error: %v, Status Code: %v", response.Body, response.StatusCode)
-		return nil, err
-	}
-
-	alertData.ParseAlertData(c, alert.IncidentAlert)
-
-	return &alertData, nil
 }
 
 // GetCurrentUserID returns the ID of the currently logged in user.

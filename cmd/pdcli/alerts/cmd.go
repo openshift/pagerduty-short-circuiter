@@ -84,6 +84,7 @@ func init() {
 
 // alertsHandler is the main alerts command handler.
 func alertsHandler(cmd *cobra.Command, args []string) error {
+
 	var (
 		incidentAlerts []pdcli.Alert
 		incidentID     string
@@ -122,6 +123,7 @@ func alertsHandler(cmd *cobra.Command, args []string) error {
 	// Fetch only triggered, acknowledged incidents (not resolved ones)
 	incidentOpts.Statuses = append(status, constants.StatusTriggered, constants.StatusAcknowledged)
 
+	// Fetch the currently logged in user's ID.
 	userID, err := pdcli.GetCurrentUserID(client)
 
 	if err != nil {
@@ -241,7 +243,7 @@ func selectIncident(c client.PagerDutyClient, opts pdApi.ListIncidentsOptions) e
 // selectAlert prompts the user to select an alert in interactive mode.
 func selectAlert(c client.PagerDutyClient, incidentID string, opts pdApi.ListIncidentsOptions) error {
 	var items []string
-	var alertData *pdcli.Alert
+	var alertData pdcli.Alert
 
 	alerts, err := pdcli.GetIncidentAlerts(c, incidentID)
 
@@ -276,16 +278,16 @@ func selectAlert(c client.PagerDutyClient, incidentID string, opts pdApi.ListInc
 	// Fetch only the alert ID
 	alertID := strings.Split(result, " ")[0]
 
-	// Fetch the metadata of a given alert
-	alertData, err = pdcli.GetAlertMetadata(c, incidentID, alertID)
-
-	if err != nil {
-		return err
+	// Fetch the selected alert data from the already fetched alerts slice
+	for _, v := range alerts {
+		if v.AlertID == alertID {
+			alertData = v
+		}
 	}
 
-	printAlertMetadata(alertData)
+	printAlertMetadata(&alertData)
 
-	promptClusterLogin(c, alertData, opts)
+	promptClusterLogin(c, &alertData, opts)
 
 	return nil
 }
