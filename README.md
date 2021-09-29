@@ -78,6 +78,16 @@ When you use the option `assigned-to=team`, it will fetch all the alerts assigne
 --low                  View all low alerts
 ```
 
+## Oncall
+
+To view the oncalls for each Escalation Policy as per PagerDuty, use the command:
+
+```
+pdcli oncall
+```
+This will list all **oncalls** with their role and schedule summaries
+
+
 ## Running Tests
 The test suite uses the [Ginkgo](https://onsi.github.io/ginkgo/) to run comprehensive tests using Behavior-Driven Development.<br>
 The mocking framework used for testing is [gomock](https://github.com/golang/mock).
