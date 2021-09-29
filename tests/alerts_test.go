@@ -22,8 +22,8 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	"github.com/openshift/pagerduty-short-circuiter/cmd/pdcli/alerts"
 	mockpd "github.com/openshift/pagerduty-short-circuiter/pkg/client/mock"
+	"github.com/openshift/pagerduty-short-circuiter/pkg/pdcli"
 )
 
 func incident(incidentID string) pdApi.Incident {
@@ -32,10 +32,14 @@ func incident(incidentID string) pdApi.Incident {
 	}
 }
 
-func alert(name string, clusterName string, clusterID string, severity string, status string) pdApi.IncidentAlert {
+func alert(incidentID string, name string, clusterName string, clusterID string, severity string, status string) pdApi.IncidentAlert {
 	return pdApi.IncidentAlert{
 		APIObject: pdApi.APIObject{
 			Summary: name,
+		},
+
+		Incident: pdApi.APIReference{
+			ID: incidentID,
 		},
 
 		Service: pdApi.APIObject{
@@ -80,8 +84,6 @@ var _ = Describe("view alerts", func() {
 	When("the alerts command is run", func() {
 		It("returns incidents", func() {
 
-			userResponse := &pdApi.User{}
-
 			incidentsResponse := &pdApi.ListIncidentsResponse{
 				Incidents: []pdApi.Incident{
 					incident("incident-id-1"),
@@ -89,10 +91,9 @@ var _ = Describe("view alerts", func() {
 				},
 			}
 
-			mockClient.EXPECT().GetCurrentUser(gomock.Any()).Return(userResponse, nil).Times(1)
 			mockClient.EXPECT().ListIncidents(gomock.Any()).Return(incidentsResponse, nil).Times(1)
 
-			result, err := alerts.GetIncidents(mockClient)
+			result, err := pdcli.GetIncidents(mockClient, pdApi.ListIncidentsOptions{})
 
 			Expect(err).ShouldNot(HaveOccurred())
 
@@ -112,6 +113,7 @@ var _ = Describe("view alerts", func() {
 				APIListObject: pdApi.APIListObject{},
 				Alerts: []pdApi.IncidentAlert{
 					alert(
+						"incident-id-1",
 						"alert-name",
 						"my-cluster",
 						"cluster-id",
@@ -121,20 +123,32 @@ var _ = Describe("view alerts", func() {
 				},
 			}
 
-			expectedAlert := []alerts.Alert{
+			serviceResponse := &pdApi.Service{
+				Description: "my-cluster",
+			}
+
+			expectedAlert := []pdcli.Alert{
 				{
 					IncidentID:  "incident-id-1",
-					Name:        "alert-name",
-					ClusterName: "my-cluster",
+					AlertID:     "",
 					ClusterID:   "cluster-id",
+					ClusterName: "my-cluster",
+					Name:        "alert-name",
+					Console:     "<nil>",
+					Labels:      "<nil>",
+					LastCheckIn: "",
 					Severity:    "critical",
 					Status:      "triggered",
+					Sop:         "<nil>",
+					Token:       "",
+					Tags:        "",
 				},
 			}
 
+			mockClient.EXPECT().GetService("", gomock.Any()).Return(serviceResponse, nil).Times(1)
 			mockClient.EXPECT().ListIncidentAlerts(gomock.Any()).Return(alertResponse, nil).Times(1)
 
-			result, err := alerts.GetIncidentAlerts(mockClient, "incident-id-1")
+			result, err := pdcli.GetIncidentAlerts(mockClient, "incident-id-1")
 
 			Expect(err).ShouldNot(HaveOccurred())
 

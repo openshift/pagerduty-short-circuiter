@@ -66,6 +66,21 @@ func (mr *MockPagerDutyClientMockRecorder) GetIncidentAlert(incidentID, alertID 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetIncidentAlert", reflect.TypeOf((*MockPagerDutyClient)(nil).GetIncidentAlert), incidentID, alertID)
 }
 
+// GetService mocks base method.
+func (m *MockPagerDutyClient) GetService(serviceID string, opts *pagerduty.GetServiceOptions) (*pagerduty.Service, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetService", serviceID, opts)
+	ret0, _ := ret[0].(*pagerduty.Service)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetService indicates an expected call of GetService.
+func (mr *MockPagerDutyClientMockRecorder) GetService(serviceID, opts interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetService", reflect.TypeOf((*MockPagerDutyClient)(nil).GetService), serviceID, opts)
+}
+
 // ListIncidentAlerts mocks base method.
 func (m *MockPagerDutyClient) ListIncidentAlerts(incidentId string) (*pagerduty.ListAlertsResponse, error) {
 	m.ctrl.T.Helper()

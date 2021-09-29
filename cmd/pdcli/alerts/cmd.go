@@ -17,14 +17,12 @@ limitations under the License.
 package alerts
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"os/exec"
 	"regexp"
 	"sort"
 	"strings"
-	"time"
 
 	pdApi "github.com/PagerDuty/go-pagerduty"
 	"github.com/manifoldco/promptui"
@@ -34,22 +32,6 @@ import (
 	"github.com/openshift/pagerduty-short-circuiter/pkg/pdcli"
 	"github.com/spf13/cobra"
 )
-
-type Alert struct {
-	IncidentID  string
-	AlertID     string
-	ClusterID   string
-	ClusterName string
-	Name        string
-	Console     string
-	Labels      string
-	LastCheckIn string
-	Severity    string
-	Status      string
-	Sop         string
-	Token       string
-	Tags        string
-}
 
 var options struct {
 	high        bool
@@ -102,9 +84,15 @@ func init() {
 
 // alertsHandler is the main alerts command handler.
 func alertsHandler(cmd *cobra.Command, args []string) error {
-	var incidentAlerts []Alert
-	var alerts []Alert
-	var incidentID string
+	var (
+		incidentAlerts []pdcli.Alert
+		incidentID     string
+		incidentOpts   pdApi.ListIncidentsOptions
+		alerts         []pdcli.Alert
+		teams          []string
+		users          []string
+		status         []string
+	)
 
 	// Create a new pagerduty client
 	client, err := pdcli.NewConnection().Build()
@@ -125,21 +113,61 @@ func alertsHandler(cmd *cobra.Command, args []string) error {
 		}
 
 		// Show alerts for the given incident
-		selectAlert(client, incidentID)
-
+		selectAlert(client, incidentID, incidentOpts)
 	}
 
-	// Fetch all incidents
-	incidents, err := GetIncidents(client)
+	// Set the limit on incidents fetched
+	incidentOpts.Limit = constants.AlertsLimit
+
+	// Fetch only triggered, acknowledged incidents (not resolved ones)
+	incidentOpts.Statuses = append(status, constants.StatusTriggered, constants.StatusAcknowledged)
+
+	userID, err := pdcli.GetCurrentUserID(client)
 
 	if err != nil {
 		return err
 	}
 
+	// Check the assigned-to flag
+	switch options.assignment {
+
+	case "team":
+		// Fetch incidents belonging to a specific team
+		incidentOpts.TeamIDs = append(teams, constants.TeamID)
+
+	case "silentTest":
+		// Fetch incidents assigned to silent test
+		incidentOpts.UserIDs = append(users, constants.SilentTest)
+
+	case "self":
+		// Fetch incidents only assigned to self
+		incidentOpts.UserIDs = append(users, userID)
+	}
+
+	// Check urgency
+	if options.low {
+		incidentOpts.Urgencies = []string{"low"}
+	} else if options.high {
+		incidentOpts.Urgencies = []string{"high"}
+	}
+
+	// Fetch all incidents
+	incidents, err := pdcli.GetIncidents(client, incidentOpts)
+
+	if err != nil {
+		return err
+	}
+
+	// Check if there are no incidents returned
+	if len(incidents) == 0 {
+		fmt.Println("Currently there are no alerts assigned to " + options.assignment)
+		os.Exit(0)
+	}
+
 	for _, incident := range incidents {
 
 		// An incident can have more than one alert
-		incidentAlerts, err = GetIncidentAlerts(client, incident.Id)
+		incidentAlerts, err = pdcli.GetIncidentAlerts(client, incident.Id)
 
 		if err != nil {
 			return err
@@ -150,8 +178,7 @@ func alertsHandler(cmd *cobra.Command, args []string) error {
 
 	// Check for interactive mode
 	if options.interactive {
-
-		err = selectIncident(client)
+		err = selectIncident(client, incidentOpts)
 
 		if err != nil {
 			return err
@@ -164,192 +191,11 @@ func alertsHandler(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-// GetIncidents returns an array pagerduty incidents.
-func GetIncidents(c client.PagerDutyClient) ([]pdApi.Incident, error) {
-
-	var status []string
-	var teams []string
-	var users []string
-
-	var opts pdApi.ListIncidentsOptions
-
-	var aerr pdApi.APIError
-
-	// Get current user details
-	user, err := c.GetCurrentUser(pdApi.GetCurrentUserOptions{})
-
-	if err != nil {
-		if errors.As(err, &aerr) {
-			if aerr.RateLimited() {
-				fmt.Println("rate limited")
-				return nil, err
-			}
-
-			fmt.Println("status code:", aerr.StatusCode)
-
-			return nil, err
-		}
-	}
-
-	// Check the assigned-to flag
-	switch options.assignment {
-
-	case "team":
-		// Fetch incidents belonging to a specific team
-		opts.TeamIDs = append(teams, constants.TeamID)
-
-	case "silentTest":
-		// Fetch incidents assigned to silent test
-		opts.UserIDs = append(users, constants.SilentTest)
-
-	case "self":
-		// Fetch incidents only assigned to self
-		opts.UserIDs = append(users, user.ID)
-	}
-
-	// Fetch only triggered, acknowledged incidents (not resolved ones)
-	opts.Statuses = append(status, constants.StatusTriggered, constants.StatusAcknowledged)
-
-	// Let the number of incidents fetched
-	opts.Limit = constants.AlertsLimit
-
-	// Check urgency
-	if options.low {
-		opts.Urgencies = []string{"low"}
-	} else if options.high {
-		opts.Urgencies = []string{"high"}
-	}
-
-	// Get incidents via pagerduty API
-	incidents, err := c.ListIncidents(opts)
-
-	if err != nil {
-		if errors.As(err, &aerr) {
-			if aerr.RateLimited() {
-				fmt.Println("rate limited")
-				return nil, err
-			}
-
-			fmt.Println("status code:", aerr.StatusCode)
-
-			return nil, err
-		}
-	}
-
-	// Check if there are no incidents returned
-	if len(incidents.Incidents) == 0 {
-		fmt.Println("Currently there are no alerts assigned to " + options.assignment)
-		os.Exit(1)
-	}
-
-	return incidents.Incidents, nil
-}
-
-// GetIncidentAlerts returns all the alerts belong to a particular incident.
-func GetIncidentAlerts(c client.PagerDutyClient, incidentID string) ([]Alert, error) {
-
-	var alerts []Alert
-
-	// Fetch alerts related to an incident via pagerduty API
-	incidentAlerts, err := c.ListIncidentAlerts(incidentID)
-
-	if err != nil {
-		var aerr pdApi.APIError
-
-		if errors.As(err, &aerr) {
-			if aerr.RateLimited() {
-				fmt.Println("rate limited")
-				return nil, err
-			}
-
-			fmt.Println("status code:", aerr.StatusCode)
-
-			return nil, err
-		}
-	}
-
-	for _, p := range incidentAlerts.Alerts {
-
-		tempAlertObj := Alert{}
-
-		// Check if the alert is not resolved
-		if p.Status != constants.StatusResolved {
-			tempAlertObj.ParseAlertData(&p)
-			alerts = append(alerts, tempAlertObj)
-		}
-
-	}
-
-	return alerts, nil
-}
-
-// GetAlertData parses a pagerduty alert data into the Alert struct.
-func (a *Alert) ParseAlertData(alert *pdApi.IncidentAlert) (err error) {
-
-	// check if the alert is of type 'missing cluster'
-	isCHGM := alert.Body["details"].(map[string]interface{})["notes"]
-
-	if isCHGM != nil {
-		notes := strings.Split(fmt.Sprint(alert.Body["details"].(map[string]interface{})["notes"]), "\n")
-
-		a.ClusterID = strings.Replace(notes[0], "cluster_id: ", "", 1)
-		a.ClusterName = strings.Split(fmt.Sprint(alert.Body["details"].(map[string]interface{})["name"]), ".")[0]
-
-		lastCheckIn := fmt.Sprint(alert.Body["details"].(map[string]interface{})["last healthy check-in"])
-		a.LastCheckIn, err = formatTimestamp(lastCheckIn)
-
-		if err != nil {
-			return err
-		}
-
-		a.Token = fmt.Sprint(alert.Body["details"].(map[string]interface{})["token"])
-		a.Tags = fmt.Sprint(alert.Body["details"].(map[string]interface{})["tags"])
-		a.Sop = strings.Replace(notes[1], "runbook: ", "", 1)
-
-	} else {
-		a.ClusterID = fmt.Sprint(alert.Body["details"].(map[string]interface{})["cluster_id"])
-		a.ClusterName = strings.Split(fmt.Sprint(alert.Service.Summary), ".")[0]
-		a.Console = fmt.Sprint(alert.Body["details"].(map[string]interface{})["console"])
-		a.Labels = fmt.Sprint(alert.Body["details"].(map[string]interface{})["firing"])
-		a.Sop = fmt.Sprint(alert.Body["details"].(map[string]interface{})["link"])
-	}
-
-	a.IncidentID = alert.Incident.ID
-	a.AlertID = alert.ID
-	a.Name = alert.Summary
-	a.Severity = alert.Severity
-	a.Status = alert.Status
-
-	return nil
-
-}
-
-// GetAlertMetadata returns the alert details of a particular incident and alert.
-func GetAlertMetadata(c client.PagerDutyClient, incidentID, alertID string) (*Alert, error) {
-	var alertData Alert
-
-	alert, response, err := c.GetIncidentAlert(incidentID, alertID)
-
-	if err != nil {
-		return nil, err
-	}
-
-	// check for http status code error
-	if response.StatusCode != 200 {
-		err = fmt.Errorf("error: %v, Status Code: %v", response.Body, response.StatusCode)
-		return nil, err
-	}
-
-	alertData.ParseAlertData(alert.IncidentAlert)
-
-	return &alertData, nil
-}
-
 // selectIncident lists incidents in interactive mode.
-func selectIncident(c client.PagerDutyClient) error {
+func selectIncident(c client.PagerDutyClient, opts pdApi.ListIncidentsOptions) error {
 	var items []string
 
-	incidents, err := GetIncidents(c)
+	incidents, err := pdcli.GetIncidents(c, opts)
 
 	if err != nil {
 		return err
@@ -383,7 +229,7 @@ func selectIncident(c client.PagerDutyClient) error {
 	incidentID := strings.Split(result, " ")[0]
 
 	// list alerts for a selected incident
-	err = selectAlert(c, incidentID)
+	err = selectAlert(c, incidentID, opts)
 
 	if err != nil {
 		return err
@@ -393,11 +239,11 @@ func selectIncident(c client.PagerDutyClient) error {
 }
 
 // selectAlert prompts the user to select an alert in interactive mode.
-func selectAlert(c client.PagerDutyClient, incidentID string) error {
+func selectAlert(c client.PagerDutyClient, incidentID string, opts pdApi.ListIncidentsOptions) error {
 	var items []string
-	var alertData *Alert
+	var alertData *pdcli.Alert
 
-	alerts, err := GetIncidentAlerts(c, incidentID)
+	alerts, err := pdcli.GetIncidentAlerts(c, incidentID)
 
 	if err != nil {
 		return err
@@ -431,7 +277,7 @@ func selectAlert(c client.PagerDutyClient, incidentID string) error {
 	alertID := strings.Split(result, " ")[0]
 
 	// Fetch the metadata of a given alert
-	alertData, err = GetAlertMetadata(c, incidentID, alertID)
+	alertData, err = pdcli.GetAlertMetadata(c, incidentID, alertID)
 
 	if err != nil {
 		return err
@@ -439,13 +285,13 @@ func selectAlert(c client.PagerDutyClient, incidentID string) error {
 
 	printAlertMetadata(alertData)
 
-	promptClusterLogin(c, alertData)
+	promptClusterLogin(c, alertData, opts)
 
 	return nil
 }
 
 // promptClusterLogin prompts the user for cluster login, if yes spawns an instance of ocm-container
-func promptClusterLogin(c client.PagerDutyClient, alert *Alert) error {
+func promptClusterLogin(c client.PagerDutyClient, alert *pdcli.Alert, opts pdApi.ListIncidentsOptions) error {
 
 	template := &promptui.SelectTemplates{
 		Label: "{{ . | green }}",
@@ -488,14 +334,14 @@ func promptClusterLogin(c client.PagerDutyClient, alert *Alert) error {
 
 	// If the command exits, switch control flow back to incident selection
 	if cmd.ProcessState.Exited() {
-		selectIncident(c)
+		selectIncident(c, opts)
 	}
 
 	return nil
 }
 
 // printAlerts prints all the alerts to the console in a tabular format.
-func printAlerts(alerts []Alert) {
+func printAlerts(alerts []pdcli.Alert) {
 	var headers []string
 
 	// columns returned by the columns flag
@@ -575,7 +421,7 @@ func printAlerts(alerts []Alert) {
 }
 
 // printAlertMetadata prints the alert data to the console.
-func printAlertMetadata(alert *Alert) {
+func printAlertMetadata(alert *pdcli.Alert) {
 
 	if alert.ClusterID != "" {
 		fmt.Printf("* Cluster ID: %s\n", alert.ClusterID)
@@ -608,15 +454,4 @@ func printAlertMetadata(alert *Alert) {
 	if alert.Sop != "" {
 		fmt.Printf("* SOP: %s\n", alert.Sop)
 	}
-}
-
-// formatTimestamp formats a given timestamp into a UTC format time and returns the string.
-func formatTimestamp(timestamp string) (string, error) {
-	t, err := time.Parse("2006-01-02T15:04:05Z", timestamp)
-
-	if err != nil {
-		return "", err
-	}
-
-	return t.Format("01-02-2006 15:04 UTC"), nil
 }
