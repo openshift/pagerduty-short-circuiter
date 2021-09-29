@@ -23,7 +23,6 @@ import (
 	"github.com/openshift/pagerduty-short-circuiter/pkg/output"
 	"github.com/openshift/pagerduty-short-circuiter/pkg/pdcli"
 	"github.com/spf13/cobra"
-
 )
 
 var Cmd = &cobra.Command{
@@ -60,38 +59,24 @@ func OnCall(cmd *cobra.Command, args []string) error {
 
 	}
 
-	//oncallMap is used to create and assign data to struct object for each Escalation Policy
-	oncallMap := map[string]string{}
 	//oncallData stores struct objects for each Escalation Policy
 	var oncallData []User
 
 	//OnCalls array contains all information about the API object
 	for _, y := range oncallListing.OnCalls {
 
-		//mapKey uniquely identifies an Escalation Policy with its user roles
-		mapKey := y.EscalationPolicy.Summary + y.Schedule.Summary
-
 		timeConversionStart := timeConversion(y.Start)
 		timeConversionEnd := timeConversion(y.End)
 
-		//checking the presence of keys in the map before assigning data
-		if _, ok := oncallMap[mapKey]; ok {
-			continue
-		} else {
-
-			//temp is a struct object created for each Escalation Policy
-			temp := User{}
-			temp.EscalationPolicy = y.EscalationPolicy.Summary
-			temp.OncallRole = y.Schedule.Summary
-			temp.Name = y.User.Summary
-			temp.Start = timeConversionStart
-			temp.End = timeConversionEnd
-			oncallData = append(oncallData, temp)
-
-		}
+		temp := User{}
+		temp.EscalationPolicy = y.EscalationPolicy.Summary
+		temp.OncallRole = y.Schedule.Summary
+		temp.Name = y.User.Summary
+		temp.Start = timeConversionStart
+		temp.End = timeConversionEnd
+		oncallData = append(oncallData, temp)
 
 	}
-	
 
 	printOncalls(oncallData)
 
