@@ -114,7 +114,7 @@ func alertsHandler(cmd *cobra.Command, args []string) error {
 		}
 
 		// Show alerts for the given incident
-		selectAlert(client, incidentID, incidentOpts)
+		selectAlert(client, incidentID, &incidentOpts)
 	}
 
 	// Set the limit on incidents fetched
@@ -154,7 +154,7 @@ func alertsHandler(cmd *cobra.Command, args []string) error {
 	}
 
 	// Fetch all incidents
-	incidents, err := pdcli.GetIncidents(client, incidentOpts)
+	incidents, err := pdcli.GetIncidents(client, &incidentOpts)
 
 	if err != nil {
 		return err
@@ -180,7 +180,7 @@ func alertsHandler(cmd *cobra.Command, args []string) error {
 
 	// Check for interactive mode
 	if options.interactive {
-		err = selectIncident(client, incidentOpts)
+		err = selectIncident(client, &incidentOpts)
 
 		if err != nil {
 			return err
@@ -194,7 +194,7 @@ func alertsHandler(cmd *cobra.Command, args []string) error {
 }
 
 // selectIncident lists incidents in interactive mode.
-func selectIncident(c client.PagerDutyClient, opts pdApi.ListIncidentsOptions) error {
+func selectIncident(c client.PagerDutyClient, opts *pdApi.ListIncidentsOptions) error {
 	var items []string
 
 	incidents, err := pdcli.GetIncidents(c, opts)
@@ -241,7 +241,7 @@ func selectIncident(c client.PagerDutyClient, opts pdApi.ListIncidentsOptions) e
 }
 
 // selectAlert prompts the user to select an alert in interactive mode.
-func selectAlert(c client.PagerDutyClient, incidentID string, opts pdApi.ListIncidentsOptions) error {
+func selectAlert(c client.PagerDutyClient, incidentID string, opts *pdApi.ListIncidentsOptions) error {
 	var items []string
 	var alertData pdcli.Alert
 
@@ -293,7 +293,7 @@ func selectAlert(c client.PagerDutyClient, incidentID string, opts pdApi.ListInc
 }
 
 // promptClusterLogin prompts the user for cluster login, if yes spawns an instance of ocm-container
-func promptClusterLogin(c client.PagerDutyClient, alert *pdcli.Alert, opts pdApi.ListIncidentsOptions) error {
+func promptClusterLogin(c client.PagerDutyClient, alert *pdcli.Alert, opts *pdApi.ListIncidentsOptions) error {
 
 	template := &promptui.SelectTemplates{
 		Label: "{{ . | green }}",

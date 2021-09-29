@@ -29,7 +29,7 @@ const (
 	// Sample API key for testing
 	SampleKey = "y_NbAkKc66ryYTWUXYEu"
 
-	AlertsLimit = 8
+	AlertsLimit = 7
 
 	// PagerDuty IDs
 	TeamID     = "PASPK4G"
@@ -40,12 +40,10 @@ const (
 	StatusAcknowledged = "acknowledged"
 	StatusResolved     = "resolved"
 
-
 	//ScheduleIDS for fetching oncalls as per pagerduty documentation (https://<host>.pagerduty.com/escalation_policies)
-	PrimaryScheduleID = "P995J2A"
+	PrimaryScheduleID   = "P995J2A"
 	SecondaryScheduleID = "P4TU2IT"
-	OncallIDWeekend = "P7CC7UN"
-	OncallManager = "P1WFZIG"
-	OncallId = "PA4586M"
-
+	OncallIDWeekend     = "P7CC7UN"
+	OncallManager       = "P1WFZIG"
+	OncallId            = "PA4586M"
 )

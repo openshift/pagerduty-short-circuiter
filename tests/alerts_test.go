@@ -93,7 +93,7 @@ var _ = Describe("view alerts", func() {
 
 			mockClient.EXPECT().ListIncidents(gomock.Any()).Return(incidentsResponse, nil).Times(1)
 
-			result, err := pdcli.GetIncidents(mockClient, pdApi.ListIncidentsOptions{})
+			result, err := pdcli.GetIncidents(mockClient, &pdApi.ListIncidentsOptions{})
 
 			Expect(err).ShouldNot(HaveOccurred())
 

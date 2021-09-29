@@ -28,12 +28,12 @@ type Alert struct {
 }
 
 // GetIncidents returns a slice of pagerduty incidents.
-func GetIncidents(c client.PagerDutyClient, opts pdApi.ListIncidentsOptions) ([]pdApi.Incident, error) {
+func GetIncidents(c client.PagerDutyClient, opts *pdApi.ListIncidentsOptions) ([]pdApi.Incident, error) {
 
 	var aerr pdApi.APIError
 
 	// Get incidents via pagerduty API
-	incidents, err := c.ListIncidents(opts)
+	incidents, err := c.ListIncidents(*opts)
 
 	if err != nil {
 		if errors.As(err, &aerr) {
