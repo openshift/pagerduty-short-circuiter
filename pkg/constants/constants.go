@@ -27,5 +27,6 @@ const (
 	OncallIDWeekend = "P7CC7UN"
 	OncallManager = "P1WFZIG"
 	OncallId = "PA4586M"
+	InvestigatorID="PLE62Y8"
 
 )

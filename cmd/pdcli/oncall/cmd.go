@@ -45,7 +45,7 @@ type User struct {
 func OnCall(cmd *cobra.Command, args []string) error {
 
 	var callOpts pagerduty.ListOnCallOptions
-	callOpts.ScheduleIDs = []string{constants.PrimaryScheduleID, constants.SecondaryScheduleID, constants.OncallManager}
+	callOpts.ScheduleIDs = []string{constants.PrimaryScheduleID, constants.SecondaryScheduleID, constants.OncallManager,constants.OncallIDWeekend,constants.InvestigatorID}
 	// Establish a secure connection with the PagerDuty API
 	client, err := pdcli.NewConnection().Build()
 	if err != nil {
