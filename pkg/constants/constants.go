@@ -19,4 +19,13 @@ const (
 	StatusTriggered    = "triggered"
 	StatusAcknowledged = "acknowledged"
 	StatusResolved     = "resolved"
+
+
+	//ScheduleIDS for fetching oncalls as per pagerduty documentation (https://<host>.pagerduty.com/escalation_policies)
+	PrimaryScheduleID = "P995J2A"
+	SecondaryScheduleID = "P4TU2IT"
+	OncallIDWeekend = "P7CC7UN"
+	OncallManager = "P1WFZIG"
+	OncallId = "PA4586M"
+
 )
