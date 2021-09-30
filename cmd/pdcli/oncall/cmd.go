@@ -30,7 +30,7 @@ var Cmd = &cobra.Command{
 	Short: "oncall to the PagerDuty CLI",
 	Long:  "Running the pdcli oncall command will display the current primary and secondary oncall SRE",
 	Args:  cobra.NoArgs,
-	RunE:  OnCall,
+	RunE:  CurrentOnCall,
 }
 
 type User struct {
@@ -42,7 +42,7 @@ type User struct {
 }
 
 //Oncall implements the fetching of current roles and names of users
-func OnCall(cmd *cobra.Command, args []string) error {
+func CurrentOnCall(cmd *cobra.Command, args []string) error {
 
 	var callOpts pagerduty.ListOnCallOptions
 	callOpts.ScheduleIDs = []string{constants.PrimaryScheduleID, constants.SecondaryScheduleID, constants.OncallManager,constants.OncallIDWeekend,constants.InvestigatorID1,constants.InvestigatorID2}
@@ -83,6 +83,10 @@ func OnCall(cmd *cobra.Command, args []string) error {
 	return nil
 
 }
+
+
+
+
 
 //timeConversion converts timestamp into time and date
 func timeConversion(s string) string {
