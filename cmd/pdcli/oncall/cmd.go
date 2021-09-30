@@ -103,7 +103,7 @@ func timeConversion(s string) string {
 //printOncalls prints data in a tabular form
 func printOncalls(oncallData []User) {
 	var printData []string
-	table := output.NewTable()
+	table := output.NewTable(false)
 	headers := []string{"Escalation Policy", "Oncall Role", "Name", "Start", "End"}
 	table.SetHeaders(headers)
 	for _, v := range oncallData {

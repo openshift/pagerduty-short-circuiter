@@ -12,7 +12,7 @@ type table struct {
 }
 
 // NewTable initializes a new table with defined table configuration.
-func NewTable() *table {
+func NewTable(mergeCol bool) *table {
 	table := table{writer: tablewriter.NewWriter(os.Stdout)}
 
 	table.writer.SetAutoWrapText(false)
@@ -24,7 +24,11 @@ func NewTable() *table {
 	table.writer.SetColumnSeparator("")
 	table.writer.SetTablePadding("\t")
 	table.writer.SetBorder(false)
-	table.writer.SetAutoMergeCellsByColumnIndex([]int{0, 1})
+
+	// Choose to auto merge rows in first column
+	if mergeCol {
+		table.writer.SetAutoMergeCellsByColumnIndex([]int{0})
+	}
 
 	return &table
 }
