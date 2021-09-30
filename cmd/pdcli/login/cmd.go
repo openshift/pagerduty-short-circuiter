@@ -23,9 +23,9 @@ import (
 	"os"
 
 	"github.com/PagerDuty/go-pagerduty"
+	"github.com/openshift/pagerduty-short-circuiter/pkg/client"
 	"github.com/openshift/pagerduty-short-circuiter/pkg/config"
 	"github.com/openshift/pagerduty-short-circuiter/pkg/constants"
-	"github.com/openshift/pagerduty-short-circuiter/pkg/pdcli"
 	"github.com/spf13/cobra"
 )
 
@@ -144,7 +144,7 @@ func generateNewKey(cfg *config.Config) (err error) {
 func login(apiKey string) error {
 
 	// PagerDuty client object is created
-	client, err := pdcli.NewConnection().Build()
+	client, err := client.NewClient().Connect()
 
 	if err != nil {
 		return err

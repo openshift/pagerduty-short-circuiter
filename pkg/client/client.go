@@ -17,9 +17,11 @@ limitations under the License.
 package client
 
 import (
+	"fmt"
 	"net/http"
 
 	pdApi "github.com/PagerDuty/go-pagerduty"
+	"github.com/openshift/pagerduty-short-circuiter/pkg/config"
 )
 
 // PagerDutyClient is an interface for the actual PD API
@@ -29,12 +31,48 @@ type PagerDutyClient interface {
 	GetCurrentUser(pdApi.GetCurrentUserOptions) (*pdApi.User, error)
 	GetIncidentAlert(incidentID, alertID string) (*pdApi.IncidentAlertResponse, *http.Response, error)
 	GetService(serviceID string, opts *pdApi.GetServiceOptions) (*pdApi.Service, error)
+	ListOnCalls(opts pdApi.ListOnCallOptions) (*pdApi.ListOnCallsResponse, error)
 }
 
-// PDClient wraps pdApi.Client
 type PDClient struct {
-	APIKey   string
+	cfg      *config.Config
 	PdClient PagerDutyClient
+}
+
+// NewClient creates an instance of PDClient that is then used to connect to the actual pagerduty client.
+func NewClient() *PDClient {
+	return &PDClient{}
+}
+
+// Connect uses the information stored in new client to create a new PDCLI connection.
+// It returns the PDClient object with pagerduty API connection initialized.
+func (pd *PDClient) Connect() (client *PDClient, err error) {
+
+	if pd.cfg == nil {
+
+		// Load the configuration file
+		pd.cfg, err = config.Load()
+
+		if err != nil {
+			err = fmt.Errorf("configuration file not found, run the 'pdcli login' command")
+			return nil, err
+		}
+
+		if pd.cfg == nil {
+			err = fmt.Errorf("not logged in, run the 'pdcli login' command")
+			return nil, err
+		}
+
+		if err != nil {
+			err = fmt.Errorf("invalid API key, run the 'pdcli login' command")
+			return nil, err
+		}
+
+		// Create a new PagerDuty API client
+		pd.PdClient = pdApi.NewClient(pd.cfg.ApiKey)
+	}
+
+	return pd, nil
 }
 
 func (c *PDClient) ListIncidents(opts pdApi.ListIncidentsOptions) (*pdApi.ListIncidentsResponse, error) {
@@ -55,4 +93,8 @@ func (c *PDClient) GetIncidentAlert(incidentID, alertID string) (*pdApi.Incident
 
 func (c *PDClient) GetService(serviceID string, opts *pdApi.GetServiceOptions) (*pdApi.Service, error) {
 	return c.PdClient.GetService(serviceID, opts)
+}
+
+func (c *PDClient) ListOnCalls(opts pdApi.ListOnCallOptions) (*pdApi.ListOnCallsResponse, error) {
+	return c.PdClient.ListOnCalls(opts)
 }

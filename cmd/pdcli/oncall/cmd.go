@@ -19,9 +19,9 @@ import (
 	"time"
 
 	"github.com/PagerDuty/go-pagerduty"
+	"github.com/openshift/pagerduty-short-circuiter/pkg/client"
 	"github.com/openshift/pagerduty-short-circuiter/pkg/constants"
 	"github.com/openshift/pagerduty-short-circuiter/pkg/output"
-	"github.com/openshift/pagerduty-short-circuiter/pkg/pdcli"
 	"github.com/spf13/cobra"
 )
 
@@ -46,8 +46,10 @@ func OnCall(cmd *cobra.Command, args []string) error {
 
 	var callOpts pagerduty.ListOnCallOptions
 	callOpts.ScheduleIDs = []string{constants.PrimaryScheduleID, constants.SecondaryScheduleID, constants.OncallManager}
+
 	// Establish a secure connection with the PagerDuty API
-	client, err := pdcli.NewConnection().Build()
+	client, err := client.NewClient().Connect()
+
 	if err != nil {
 		return err
 	}
@@ -81,7 +83,6 @@ func OnCall(cmd *cobra.Command, args []string) error {
 	printOncalls(oncallData)
 
 	return nil
-
 }
 
 //timeConversion converts timestamp into time and date
@@ -113,5 +114,4 @@ func printOncalls(oncallData []User) {
 
 	table.SetData()
 	table.Print()
-
 }

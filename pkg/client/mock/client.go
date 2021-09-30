@@ -110,3 +110,18 @@ func (mr *MockPagerDutyClientMockRecorder) ListIncidents(arg0 interface{}) *gomo
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListIncidents", reflect.TypeOf((*MockPagerDutyClient)(nil).ListIncidents), arg0)
 }
+
+// ListOnCalls mocks base method.
+func (m *MockPagerDutyClient) ListOnCalls(opts pagerduty.ListOnCallOptions) (*pagerduty.ListOnCallsResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListOnCalls", opts)
+	ret0, _ := ret[0].(*pagerduty.ListOnCallsResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListOnCalls indicates an expected call of ListOnCalls.
+func (mr *MockPagerDutyClientMockRecorder) ListOnCalls(opts interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListOnCalls", reflect.TypeOf((*MockPagerDutyClient)(nil).ListOnCalls), opts)
+}

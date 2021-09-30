@@ -96,7 +96,7 @@ func alertsHandler(cmd *cobra.Command, args []string) error {
 	)
 
 	// Create a new pagerduty client
-	client, err := pdcli.NewConnection().Build()
+	client, err := client.NewClient().Connect()
 
 	if err != nil {
 		return err
