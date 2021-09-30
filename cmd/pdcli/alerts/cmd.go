@@ -17,13 +17,15 @@ limitations under the License.
 package alerts
 
 import (
-	"errors"
 	"fmt"
 	"os"
+	"os/exec"
+	"regexp"
 	"sort"
 	"strings"
 
 	pdApi "github.com/PagerDuty/go-pagerduty"
+	"github.com/manifoldco/promptui"
 	"github.com/openshift/pagerduty-short-circuiter/pkg/client"
 	"github.com/openshift/pagerduty-short-circuiter/pkg/constants"
 	"github.com/openshift/pagerduty-short-circuiter/pkg/output"
@@ -31,36 +33,31 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type Alert struct {
-	IncidentID string
-	Name       string
-	ClusterID  string
-	Severity   string
-	Status     string
-}
-
-var args struct {
-	high       bool
-	low        bool
-	assignment string
-	columns    string
+var options struct {
+	high        bool
+	low         bool
+	assignment  string
+	columns     string
+	interactive bool
+	incidentID  bool
 }
 
 var Cmd = &cobra.Command{
 	Use:   "alerts",
 	Short: "This command will list all the open high alerts assigned to self.",
+	Args:  cobra.MaximumNArgs(1),
 	RunE:  alertsHandler,
 }
 
 func init() {
 
 	// Urgency
-	Cmd.Flags().BoolVar(&args.low, "low", false, "View all low alerts")
-	Cmd.Flags().BoolVar(&args.high, "high", true, "View all high alerts")
+	Cmd.Flags().BoolVar(&options.low, "low", false, "View all low alerts")
+	Cmd.Flags().BoolVar(&options.high, "high", true, "View all high alerts")
 
 	// Incident Assignment
 	Cmd.Flags().StringVar(
-		&args.assignment,
+		&options.assignment,
 		"assigned-to",
 		"self",
 		"Filter alerts based on user or team",
@@ -68,35 +65,111 @@ func init() {
 
 	// Columns displayed
 	Cmd.Flags().StringVar(
-		&args.columns,
+		&options.columns,
 		"columns",
-		"incident.id,name,cluster.id,status,severity",
+		"incident.id,cluster.name,alert,cluster.id,status,severity",
 		"Specify which columns to display separated by commas without any space in between",
 	)
+
+	// Interactive mode
+	Cmd.Flags().BoolVarP(
+		&options.interactive,
+		"interactive",
+		"i",
+		false,
+		"Use interactive mode",
+	)
+
 }
 
 // alertsHandler is the main alerts command handler.
 func alertsHandler(cmd *cobra.Command, args []string) error {
-	var incidentAlerts []Alert
-	var alerts []Alert
 
+	var (
+		incidentAlerts []pdcli.Alert
+		incidentID     string
+		incidentOpts   pdApi.ListIncidentsOptions
+		alerts         []pdcli.Alert
+		teams          []string
+		users          []string
+		status         []string
+	)
+
+	// Create a new pagerduty client
 	client, err := pdcli.NewConnection().Build()
 
 	if err != nil {
 		return err
 	}
 
-	// Get incident IDs
-	incidentIDs, err := GetIncidents(client)
+	// Check for incident ID argument
+	if len(args) > 0 {
+		incidentID = strings.TrimSpace(args[0])
+
+		// Validate the incident ID
+		match, _ := regexp.MatchString(constants.IncidentIdRegex, incidentID)
+
+		if !match {
+			return fmt.Errorf("invalid incident ID")
+		}
+
+		// Show alerts for the given incident
+		selectAlert(client, incidentID, &incidentOpts)
+	}
+
+	// Set the limit on incidents fetched
+	incidentOpts.Limit = constants.AlertsLimit
+
+	// Fetch only triggered, acknowledged incidents (not resolved ones)
+	incidentOpts.Statuses = append(status, constants.StatusTriggered, constants.StatusAcknowledged)
+
+	// Fetch the currently logged in user's ID.
+	userID, err := pdcli.GetCurrentUserID(client)
 
 	if err != nil {
 		return err
 	}
 
-	for _, id := range incidentIDs {
+	// Check the assigned-to flag
+	switch options.assignment {
+
+	case "team":
+		// Fetch incidents belonging to a specific team
+		incidentOpts.TeamIDs = append(teams, constants.TeamID)
+
+	case "silentTest":
+		// Fetch incidents assigned to silent test
+		incidentOpts.UserIDs = append(users, constants.SilentTest)
+
+	case "self":
+		// Fetch incidents only assigned to self
+		incidentOpts.UserIDs = append(users, userID)
+	}
+
+	// Check urgency
+	if options.low {
+		incidentOpts.Urgencies = []string{"low"}
+	} else if options.high {
+		incidentOpts.Urgencies = []string{"high"}
+	}
+
+	// Fetch all incidents
+	incidents, err := pdcli.GetIncidents(client, &incidentOpts)
+
+	if err != nil {
+		return err
+	}
+
+	// Check if there are no incidents returned
+	if len(incidents) == 0 {
+		fmt.Println("Currently there are no alerts assigned to " + options.assignment)
+		os.Exit(0)
+	}
+
+	for _, incident := range incidents {
 
 		// An incident can have more than one alert
-		incidentAlerts, err = GetIncidentAlerts(client, id)
+		incidentAlerts, err = pdcli.GetIncidentAlerts(client, incident.Id)
 
 		if err != nil {
 			return err
@@ -105,142 +178,176 @@ func alertsHandler(cmd *cobra.Command, args []string) error {
 		alerts = append(alerts, incidentAlerts...)
 	}
 
-	printAlerts(alerts)
+	// Check for interactive mode
+	if options.interactive {
+		err = selectIncident(client, &incidentOpts)
+
+		if err != nil {
+			return err
+		}
+
+	} else {
+		printAlerts(alerts)
+	}
 
 	return nil
 }
 
-// getIncidents returns a string slice consisting IDs of the first 10 incidents.
-func GetIncidents(c client.PagerDutyClient) ([]string, error) {
+// selectIncident lists incidents in interactive mode.
+func selectIncident(c client.PagerDutyClient, opts *pdApi.ListIncidentsOptions) error {
+	var items []string
 
-	var incidentIDs []string
-	var status []string
-	var teams []string
-	var users []string
-
-	var opts pdApi.ListIncidentsOptions
-
-	var aerr pdApi.APIError
-
-	// Get current user details
-	user, err := c.GetCurrentUser(pdApi.GetCurrentUserOptions{})
+	incidents, err := pdcli.GetIncidents(c, opts)
 
 	if err != nil {
-		if errors.As(err, &aerr) {
-			if aerr.RateLimited() {
-				fmt.Println("rate limited")
-				return nil, err
-			}
-
-			fmt.Println("status code:", aerr.StatusCode)
-
-			return nil, err
-		}
+		return err
 	}
 
-	// Check the assigned-to flag
-	switch args.assignment {
-
-	case "team":
-		// Fetch incidents belonging to a specific team
-		opts.TeamIDs = append(teams, constants.TeamID)
-
-	case "silentTest":
-		// Fetch incidents assigned to silent test
-		opts.UserIDs = append(users, constants.SilentTest)
-
-	case "self":
-		// Fetch incidents only assigned to self
-		opts.UserIDs = append(users, user.ID)
+	for _, i := range incidents {
+		incident := i.Id + " " + i.Title + " " + i.Urgency
+		items = append(items, incident)
 	}
 
-	// Fetch only triggered, acknowledged incidents (not resolved ones)
-	opts.Statuses = append(status, constants.StatusTriggered, constants.StatusAcknowledged)
+	items = append(items, "exit")
 
-	// Let the number of incidents fetched
-	opts.Limit = constants.AlertsLimit
-
-	// Check urgency
-	if args.low {
-		opts.Urgencies = []string{"low"}
-	} else if args.high {
-		opts.Urgencies = []string{"high"}
+	// list incidents in interactive mode
+	prompt := promptui.Select{
+		Label: "Select incident",
+		Items: items,
 	}
 
-	incidents, err := c.ListIncidents(opts)
+	_, result, err := prompt.Run()
 
 	if err != nil {
-		if errors.As(err, &aerr) {
-			if aerr.RateLimited() {
-				fmt.Println("rate limited")
-				return nil, err
-			}
-
-			fmt.Println("status code:", aerr.StatusCode)
-
-			return nil, err
-		}
+		return err
 	}
 
-	// Check if there are no incidents returned
-	if len(incidents.Incidents) == 0 {
-		fmt.Println("Currently there are no alerts assigned to " + args.assignment)
-		os.Exit(1)
+	// Exit from interactive mode
+	if result == "exit" {
+		os.Exit(0)
 	}
 
-	for _, incident := range incidents.Incidents {
-		incidentIDs = append(incidentIDs, incident.Id)
+	// Fetch only the incident ID
+	incidentID := strings.Split(result, " ")[0]
+
+	// list alerts for a selected incident
+	err = selectAlert(c, incidentID, opts)
+
+	if err != nil {
+		return err
 	}
 
-	return incidentIDs, nil
+	return nil
 }
 
-// getIncidentAlerts returns all the alerts belong to a particular incident.
-func GetIncidentAlerts(c client.PagerDutyClient, incidentID string) ([]Alert, error) {
+// selectAlert prompts the user to select an alert in interactive mode.
+func selectAlert(c client.PagerDutyClient, incidentID string, opts *pdApi.ListIncidentsOptions) error {
+	var items []string
+	var alertData pdcli.Alert
 
-	var alerts []Alert
-
-	incidentAlerts, err := c.ListIncidentAlerts(incidentID)
+	alerts, err := pdcli.GetIncidentAlerts(c, incidentID)
 
 	if err != nil {
-		var aerr pdApi.APIError
+		return err
+	}
 
-		if errors.As(err, &aerr) {
-			if aerr.RateLimited() {
-				fmt.Println("rate limited")
-				return nil, err
-			}
+	for _, v := range alerts {
+		alert := v.AlertID + " " + "[" + v.ClusterName + "]" + " " + v.Name + " " + v.Severity
+		items = append(items, alert)
+	}
 
-			fmt.Println("status code:", aerr.StatusCode)
+	items = append(items, "exit")
 
-			return nil, err
+	// list alerts in interactive mode
+	prompt := promptui.Select{
+		Label: "Select alert",
+		Items: items,
+	}
+
+	_, result, err := prompt.Run()
+
+	if err != nil {
+		return err
+	}
+
+	// Exit from interactive mode
+	if result == "exit" {
+		os.Exit(0)
+	}
+
+	// Fetch only the alert ID
+	alertID := strings.Split(result, " ")[0]
+
+	// Fetch the selected alert data from the already fetched alerts slice
+	for _, v := range alerts {
+		if v.AlertID == alertID {
+			alertData = v
 		}
-
 	}
 
-	for _, p := range incidentAlerts.Alerts {
+	printAlertMetadata(&alertData)
 
-		tempAlertObj := Alert{}
+	promptClusterLogin(c, &alertData, opts)
 
-		tempAlertObj.IncidentID = incidentID
-		tempAlertObj.Name = p.Summary
-		tempAlertObj.Severity = p.Severity
-		tempAlertObj.Status = p.Status
-		tempAlertObj.ClusterID = fmt.Sprint(p.Body["details"].(map[string]interface{})["cluster_id"])
+	return nil
+}
 
-		alerts = append(alerts, tempAlertObj)
+// promptClusterLogin prompts the user for cluster login, if yes spawns an instance of ocm-container
+func promptClusterLogin(c client.PagerDutyClient, alert *pdcli.Alert, opts *pdApi.ListIncidentsOptions) error {
+
+	template := &promptui.SelectTemplates{
+		Label: "{{ . | green }}",
 	}
 
-	return alerts, nil
+	prompt := promptui.Select{
+		Label:     "Do you want to proceed with cluster login?",
+		Items:     []string{"Yes", "No"},
+		Templates: template,
+	}
+	_, result, err := prompt.Run()
+
+	if err != nil {
+		return err
+	}
+
+	// If a user chooses not to log into the cluster
+	if result == "No" {
+		os.Exit(0)
+	}
+
+	// Check if ocm-container is installed locally
+	ocmContainer, err := exec.LookPath("ocm-container")
+
+	if err != nil {
+		fmt.Println("ocm-container is not found.\nPlease install it via:", constants.OcmContainerURL)
+	}
+
+	cmd := exec.Command(ocmContainer, alert.ClusterID)
+
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	err = cmd.Run()
+
+	if err != nil {
+		return err
+	}
+
+	// If the command exits, switch control flow back to incident selection
+	if cmd.ProcessState.Exited() {
+		selectIncident(c, opts)
+	}
+
+	return nil
 }
 
 // printAlerts prints all the alerts to the console in a tabular format.
-func printAlerts(alerts []Alert) {
-
+func printAlerts(alerts []pdcli.Alert) {
 	var headers []string
 
 	// columns returned by the columns flag
-	columns := strings.Split(args.columns, ",")
+	columns := strings.Split(options.columns, ",")
 
 	columnsMap := make(map[string]bool)
 
@@ -249,7 +356,7 @@ func printAlerts(alerts []Alert) {
 	}
 
 	// Initializing a new table printer
-	table := output.NewTable()
+	table := output.NewTable(true)
 
 	headersMap := make(map[int]string)
 
@@ -265,10 +372,16 @@ func printAlerts(alerts []Alert) {
 			values = append(values, alert.IncidentID)
 		}
 
-		if columnsMap["name"] {
+		if columnsMap["alert"] {
 			i++
 			headersMap[i] = "ALERT"
 			values = append(values, alert.Name)
+		}
+
+		if columnsMap["cluster.name"] {
+			i++
+			headersMap[i] = "CLUSTER NAME"
+			values = append(values, alert.ClusterName)
 		}
 
 		if columnsMap["cluster.id"] {
@@ -307,4 +420,40 @@ func printAlerts(alerts []Alert) {
 	table.SetHeaders(headers)
 	table.SetData()
 	table.Print()
+}
+
+// printAlertMetadata prints the alert data to the console.
+func printAlertMetadata(alert *pdcli.Alert) {
+
+	if alert.ClusterID != "" {
+		fmt.Printf("* Cluster ID: %s\n", alert.ClusterID)
+	}
+
+	if alert.ClusterName != "" {
+		fmt.Printf("* Cluster Name: %s\n", alert.ClusterName)
+	}
+
+	if alert.Console != "" {
+		fmt.Printf("* Console: %s\n", alert.Console)
+	}
+
+	if alert.LastCheckIn != "" {
+		fmt.Printf("* Last Healthy Check-in: %s\n", alert.LastCheckIn)
+	}
+
+	if alert.Tags != "" {
+		fmt.Printf("* Tags: %s\n", alert.Tags)
+	}
+
+	if alert.Token != "" {
+		fmt.Printf("* Token: %s\n", alert.Token)
+	}
+
+	if alert.Labels != "" {
+		fmt.Printf("* %s", alert.Labels)
+	}
+
+	if alert.Sop != "" {
+		fmt.Printf("* SOP: %s\n", alert.Sop)
+	}
 }
