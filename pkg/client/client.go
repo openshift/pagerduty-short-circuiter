@@ -38,7 +38,7 @@ type PDClient struct {
 	PdClient PagerDutyClient
 }
 
-// NewClient creates an instance if PDClient that can then be used to configure and build a PDCLI connection
+// NewClient creates an instance of PDClient that is then used to connect to the actual pagerduty client.
 func NewClient() *PDClient {
 	return &PDClient{}
 }
