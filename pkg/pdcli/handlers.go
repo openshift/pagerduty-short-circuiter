@@ -25,6 +25,7 @@ type Alert struct {
 	Sop         string
 	Token       string
 	Tags        string
+	WebURL      string
 }
 
 // GetIncidents returns a slice of pagerduty incidents.
@@ -76,10 +77,9 @@ func GetIncidentAlerts(c client.PagerDutyClient, incidentID string) ([]Alert, er
 
 	for _, alert := range incidentAlerts.Alerts {
 
-		tempAlertObj := Alert{}
-
 		// Check if the alert is not resolved
 		if alert.Status != constants.StatusResolved {
+			tempAlertObj := Alert{}
 			tempAlertObj.ParseAlertData(c, &alert)
 			alerts = append(alerts, tempAlertObj)
 		}
@@ -168,7 +168,7 @@ func (a *Alert) ParseAlertData(c client.PagerDutyClient, alert *pdApi.IncidentAl
 	a.Name = alert.Summary
 	a.Severity = alert.Severity
 	a.Status = alert.Status
+	a.WebURL = alert.HTMLURL
 
 	return nil
-
 }
