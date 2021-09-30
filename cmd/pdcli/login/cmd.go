@@ -57,7 +57,7 @@ func loginHandler(cmd *cobra.Command, args []string) error {
 
 	// Currently logged in user
 	var user string
-	var client client.PagerDutyClient
+	var pdClient client.PagerDutyClient
 
 	// load the configuration info
 	cfg, err := config.Load()
@@ -82,13 +82,13 @@ func loginHandler(cmd *cobra.Command, args []string) error {
 		}
 
 		// PagerDuty API client
-		client, err = pdcli.NewConnection().Build()
+		pdClient, err = client.NewClient().Connect()
 
 		if err != nil {
 			return err
 		}
 
-		user, err = Login(cfg.ApiKey, client)
+		user, err = Login(cfg.ApiKey, pdClient)
 
 		if err != nil {
 			return err
@@ -110,14 +110,14 @@ func loginHandler(cmd *cobra.Command, args []string) error {
 		}
 
 		// PagerDuty API client
-		client, err = pdcli.NewConnection().Build()
+		pdClient, err = client.NewClient().Connect()
 
 		if err != nil {
 			return err
 		}
 
 		// Login using the newly generated API Key
-		user, err = Login(cfg.ApiKey, client)
+		user, err = Login(cfg.ApiKey, pdClient)
 
 		if err != nil {
 			return err
@@ -128,14 +128,14 @@ func loginHandler(cmd *cobra.Command, args []string) error {
 	} else {
 
 		// PagerDuty API client
-		client, err = pdcli.NewConnection().Build()
+		pdClient, err = client.NewClient().Connect()
 
 		if err != nil {
 			return err
 		}
 
 		// Login using the existing API key in the configuration file
-		user, err = Login(cfg.ApiKey, client)
+		user, err = Login(cfg.ApiKey, pdClient)
 
 		if err != nil {
 			return err
