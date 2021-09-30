@@ -100,7 +100,8 @@ This will list all the alerts belonging to that incident in interactive mode.
 --high                 View all high alerts (default true)
 --low                  View all low alerts
 --interactive, -i      View alerts in interactive mode and proceed with cluster login
---columns              Specify which columns to display separated by commas without any space in between (default "incident.id,name,cluster.id,status,severity")
+--columns              Specify which columns to display separated by commas without any space in between 
+                       (default "incident.id,alert,cluster.name,cluster.id,status,severity")
 ```
 
 ## Running Tests
