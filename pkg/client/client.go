@@ -17,6 +17,8 @@ limitations under the License.
 package client
 
 import (
+	"net/http"
+
 	pdApi "github.com/PagerDuty/go-pagerduty"
 )
 
@@ -25,6 +27,8 @@ type PagerDutyClient interface {
 	ListIncidents(pdApi.ListIncidentsOptions) (*pdApi.ListIncidentsResponse, error)
 	ListIncidentAlerts(incidentId string) (*pdApi.ListAlertsResponse, error)
 	GetCurrentUser(pdApi.GetCurrentUserOptions) (*pdApi.User, error)
+	GetIncidentAlert(incidentID, alertID string) (*pdApi.IncidentAlertResponse, *http.Response, error)
+	GetService(serviceID string, opts *pdApi.GetServiceOptions) (*pdApi.Service, error)
 }
 
 // PDClient wraps pdApi.Client
@@ -43,4 +47,12 @@ func (c *PDClient) ListIncidentAlerts(incidentID string) (*pdApi.ListAlertsRespo
 
 func (c *PDClient) GetCurrentUser(opts pdApi.GetCurrentUserOptions) (*pdApi.User, error) {
 	return c.PdClient.GetCurrentUser(opts)
+}
+
+func (c *PDClient) GetIncidentAlert(incidentID, alertID string) (*pdApi.IncidentAlertResponse, *http.Response, error) {
+	return c.PdClient.GetIncidentAlert(incidentID, alertID)
+}
+
+func (c *PDClient) GetService(serviceID string, opts *pdApi.GetServiceOptions) (*pdApi.Service, error) {
+	return c.PdClient.GetService(serviceID, opts)
 }
