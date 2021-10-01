@@ -114,7 +114,11 @@ func alertsHandler(cmd *cobra.Command, args []string) error {
 		}
 
 		// Show alerts for the given incident
-		selectAlert(client, incidentID, &incidentOpts)
+		err = selectAlert(client, incidentID, &incidentOpts)
+
+		if err != nil {
+			return err
+		}
 	}
 
 	// Set the limit on incidents fetched
@@ -287,7 +291,11 @@ func selectAlert(c client.PagerDutyClient, incidentID string, opts *pdApi.ListIn
 
 	printAlertMetadata(&alertData)
 
-	promptClusterLogin(c, &alertData, opts)
+	err = promptClusterLogin(c, &alertData, opts)
+
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -336,7 +344,11 @@ func promptClusterLogin(c client.PagerDutyClient, alert *pdcli.Alert, opts *pdAp
 
 	// If the command exits, switch control flow back to incident selection
 	if cmd.ProcessState.Exited() {
-		selectIncident(c, opts)
+		err = selectIncident(c, opts)
+
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
