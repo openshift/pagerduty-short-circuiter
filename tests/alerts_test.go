@@ -26,24 +26,27 @@ import (
 	"github.com/openshift/pagerduty-short-circuiter/pkg/pdcli"
 )
 
+// incident retuns a pagerduty incident object with pre-configured data.
 func incident(incidentID string) pdApi.Incident {
 	return pdApi.Incident{
 		Id: incidentID,
 	}
 }
 
-func alert(incidentID string, name string, clusterName string, clusterID string, severity string, status string) pdApi.IncidentAlert {
+// alert retuns a pagerduty alert object with pre-configured data.
+func alert(incidentID string, serviceID string, name string, clusterID string, severity string, status string) pdApi.IncidentAlert {
 	return pdApi.IncidentAlert{
-		APIObject: pdApi.APIObject{
-			Summary: name,
-		},
 
 		Incident: pdApi.APIReference{
 			ID: incidentID,
 		},
 
 		Service: pdApi.APIObject{
-			Summary: clusterName,
+			ID: serviceID,
+		},
+
+		APIObject: pdApi.APIObject{
+			Summary: name,
 		},
 
 		Body: map[string]interface{}{
@@ -81,6 +84,26 @@ var _ = Describe("view alerts", func() {
 		})
 	})
 
+	When("pagerduty incidents are fetched", func() {
+		It("the currently logged-in user ID is retrieved first", func() {
+			userResponse := &pdApi.User{
+				APIObject: pdApi.APIObject{
+					ID: "my-user-id",
+				},
+			}
+
+			expectedUserID := "my-user-id"
+
+			mockClient.EXPECT().GetCurrentUser(gomock.Any()).Return(userResponse, nil).Times(1)
+
+			result, err := pdcli.GetCurrentUserID(mockClient)
+
+			Expect(err).ShouldNot(HaveOccurred())
+
+			Expect(result).To(Equal(expectedUserID))
+		})
+	})
+
 	When("the alerts command is run", func() {
 		It("returns incidents", func() {
 
@@ -91,18 +114,38 @@ var _ = Describe("view alerts", func() {
 				},
 			}
 
+			expectedIncidents := []pdApi.Incident{
+				{Id: "incident-id-1"},
+				{Id: "incident-id-2"},
+			}
+
 			mockClient.EXPECT().ListIncidents(gomock.Any()).Return(incidentsResponse, nil).Times(1)
 
 			result, err := pdcli.GetIncidents(mockClient, &pdApi.ListIncidentsOptions{})
 
 			Expect(err).ShouldNot(HaveOccurred())
 
-			expectedIncidents := []pdApi.Incident{
-				{Id: "incident-id-1"},
-				{Id: "incident-id-2"},
+			Expect(result).Should(Equal(expectedIncidents))
+		})
+	})
+
+	When("the alert data is fetched", func() {
+		It("the cluster name is retrieved from the alert service", func() {
+
+			// Set the mock cluster name
+			serviceResponse := &pdApi.Service{
+				Description: "my-cluster-name belongs to cluster.101.hive.apps.com",
 			}
 
-			Expect(result).Should(Equal(expectedIncidents))
+			mockClient.EXPECT().GetService("", gomock.Any()).Return(serviceResponse, nil).Times(1)
+
+			expectedResult := "my-cluster-name"
+
+			result, err := pdcli.GetClusterName("", mockClient)
+
+			Expect(err).ShouldNot(HaveOccurred())
+
+			Expect(result).Should(Equal(expectedResult))
 		})
 	})
 
@@ -114,8 +157,8 @@ var _ = Describe("view alerts", func() {
 				Alerts: []pdApi.IncidentAlert{
 					alert(
 						"incident-id-1",
+						"my-service-id",
 						"alert-name",
-						"my-cluster",
 						"cluster-id",
 						"critical",
 						"triggered",
@@ -123,38 +166,81 @@ var _ = Describe("view alerts", func() {
 				},
 			}
 
+			// Set the mock cluster name
 			serviceResponse := &pdApi.Service{
-				Description: "my-cluster",
+				Description: "my-cluster-name",
 			}
 
 			expectedAlert := []pdcli.Alert{
 				{
 					IncidentID:  "incident-id-1",
-					AlertID:     "",
 					ClusterID:   "cluster-id",
-					ClusterName: "my-cluster",
+					ClusterName: "my-cluster-name",
 					Name:        "alert-name",
 					Console:     "<nil>",
 					Labels:      "<nil>",
-					LastCheckIn: "",
 					Severity:    "critical",
 					Status:      "triggered",
 					Sop:         "<nil>",
-					Token:       "",
-					Tags:        "",
 				},
 			}
 
-			mockClient.EXPECT().GetService("", gomock.Any()).Return(serviceResponse, nil).Times(1)
+			mockClient.EXPECT().GetService("my-service-id", gomock.Any()).Return(serviceResponse, nil).Times(1)
+
 			mockClient.EXPECT().ListIncidentAlerts(gomock.Any()).Return(alertResponse, nil).Times(1)
 
-			result, err := pdcli.GetIncidentAlerts(mockClient, "incident-id-1")
+			result, err := pdcli.GetIncidentAlerts(mockClient, "incident-id-5")
 
 			Expect(err).ShouldNot(HaveOccurred())
 
 			Expect(result).Should(Equal(expectedAlert))
-
 		})
 	})
 
+	When("the incident alerts are fetched", func() {
+		It("parses the alert data to the struct", func() {
+
+			var alertData pdcli.Alert
+
+			alertResponse := &pdApi.ListAlertsResponse{
+				APIListObject: pdApi.APIListObject{},
+				Alerts: []pdApi.IncidentAlert{
+					alert(
+						"incident-id-1",
+						"my-service-id",
+						"alert-name",
+						"cluster-id",
+						"critical",
+						"triggered",
+					),
+				},
+			}
+
+			// Set the mock cluster name
+			serviceResponse := &pdApi.Service{
+				Description: "my-cluster-name",
+			}
+
+			expectedAlertData := pdcli.Alert{
+				IncidentID:  "incident-id-1",
+				Name:        "alert-name",
+				ClusterID:   "cluster-id",
+				ClusterName: "my-cluster-name",
+				Severity:    "critical",
+				Status:      "triggered",
+				Console:     "<nil>",
+				Labels:      "<nil>",
+				Sop:         "<nil>",
+			}
+
+			mockClient.EXPECT().GetService("my-service-id", gomock.Any()).Return(serviceResponse, nil).Times(1)
+
+			err := alertData.ParseAlertData(mockClient, &alertResponse.Alerts[0])
+
+			Expect(err).ShouldNot(HaveOccurred())
+
+			Expect(alertData).To(Equal(expectedAlertData))
+
+		})
+	})
 })
