@@ -80,7 +80,12 @@ func GetIncidentAlerts(c client.PagerDutyClient, incidentID string) ([]Alert, er
 		// Check if the alert is not resolved
 		if alert.Status != constants.StatusResolved {
 			tempAlertObj := Alert{}
-			tempAlertObj.ParseAlertData(c, &alert)
+			err = tempAlertObj.ParseAlertData(c, &alert)
+
+			if err != nil {
+				return nil, err
+			}
+
 			alerts = append(alerts, tempAlertObj)
 		}
 
