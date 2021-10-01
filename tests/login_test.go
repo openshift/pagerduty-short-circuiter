@@ -63,8 +63,8 @@ var _ = Describe("login", func() {
 		})
 	})
 
-	When("the user tried to login with an invalid API key", func() {
-		It("it does not login and throws an error", func() {
+	When("a user tries to login with an invalid API key", func() {
+		It("it doesn't login and throws an error", func() {
 
 			invalidKey := "ABCDEFGHIJ12345"
 
@@ -81,7 +81,7 @@ var _ = Describe("login", func() {
 		})
 	})
 
-	When("the user tried to login with a valid API key", func() {
+	When("a user tries to login with a valid API key", func() {
 		It("it sucessfully logs into pdcli and returns the username", func() {
 
 			loginResponse := &pdApi.User{
