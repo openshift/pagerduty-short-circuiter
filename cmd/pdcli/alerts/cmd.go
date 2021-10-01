@@ -456,4 +456,8 @@ func printAlertMetadata(alert *pdcli.Alert) {
 	if alert.Sop != "" {
 		fmt.Printf("* SOP: %s\n", alert.Sop)
 	}
+
+	if alert.WebURL != "" {
+		fmt.Printf("* Web URL: %s\n", alert.WebURL)
+	}
 }
