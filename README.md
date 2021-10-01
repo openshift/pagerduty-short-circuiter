@@ -1,5 +1,5 @@
 # PagerDuty Short Circuiter
-`pdcli` is an integration of [go-pagerduty](https://github.com/PagerDuty/go-pagerduty) and [ocm-container](https://github.com/openshift/ocm-container) which lets you spawn ocm-container with automatic cluster login and other features based on the pagerDuty alert.
+`pdcli` is an integration of [go-pagerduty](https://github.com/PagerDuty/go-pagerduty) and [ocm-container](https://github.com/openshift/ocm-container) which lets you spawn ocm-container with automatic cluster login and other features based on the PagerDuty alert.
 
 ***Note that pdcli is not a reinvention of another pagerDuty CLI tool instead it is a wrapper over go-pagerduty and provides you with all go-pagerduty cli features and much more.***
 
@@ -70,12 +70,38 @@ You can modify the alerts returned with the `assigned-to` option, you can either
 
 When you use the option `assigned-to=team`, it will fetch all the alerts assigned to **Platform-SRE** team.
 
+### Interactive Mode
+
+To view alerts in interactive mode, use the command:
+
+```
+pdcli alerts -i
+```
+This will prompt the user to select an incident from a list of incidents.
+
+Once an incident is selected, all the alerts related to that particular incident are listed.
+
+On alert selection, the alert metadata is displayed and the user is asked if they want to proceed with cluster login.
+
+If yes, then an instance of ocm container is spawned with the cluster already logged in.
+
+### View Incident Alerts
+
+To view alerts related to a particular incident, use the command:
+
+```
+pdcli alerts <Incident ID>
+```
+This will list all the alerts belonging to that incident in interactive mode.
+
 ### Options
 ```
 --assigned-to          Filter alerts based on user or team (default "self")
---columns string       Specify which columns to display separated by commas without any space in between (default "incident.id,name,cluster.id,status,severity")
 --high                 View all high alerts (default true)
 --low                  View all low alerts
+--interactive, -i      View alerts in interactive mode and proceed with cluster login
+--columns              Specify which columns to display separated by commas without any space in between 
+                       (default "incident.id,alert,cluster.name,cluster.id,status,severity")
 ```
 
 ## Running Tests
