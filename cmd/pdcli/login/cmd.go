@@ -43,7 +43,7 @@ var Cmd = &cobra.Command{
 }
 
 func init() {
-	//flags
+
 	Cmd.Flags().StringVar(
 		&loginArgs.apiKey,
 		"api-key",
@@ -54,6 +54,10 @@ func init() {
 
 // loginHandler handles the login flow into pdcli.
 func loginHandler(cmd *cobra.Command, args []string) error {
+
+	// Currently logged in user
+	var user string
+	var pdClient client.PagerDutyClient
 
 	// load the configuration info
 	cfg, err := config.Load()
@@ -66,7 +70,7 @@ func loginHandler(cmd *cobra.Command, args []string) error {
 		cfg = new(config.Config)
 	}
 
-	// if the key arg is not-empty
+	// If the key arg is not-empty
 	if loginArgs.apiKey != "" {
 		cfg.ApiKey = loginArgs.apiKey
 
@@ -77,11 +81,20 @@ func loginHandler(cmd *cobra.Command, args []string) error {
 			return err
 		}
 
-		err = login(cfg.ApiKey)
+		// PagerDuty API client
+		pdClient, err = client.NewClient().Connect()
 
 		if err != nil {
 			return err
 		}
+
+		user, err = Login(cfg.ApiKey, pdClient)
+
+		if err != nil {
+			return err
+		}
+
+		successMessage(user)
 
 		return nil
 	}
@@ -96,21 +109,39 @@ func loginHandler(cmd *cobra.Command, args []string) error {
 			return err
 		}
 
-		// Login using the newly generated API Key
-		err = login(cfg.ApiKey)
+		// PagerDuty API client
+		pdClient, err = client.NewClient().Connect()
 
 		if err != nil {
 			return err
 		}
+
+		// Login using the newly generated API Key
+		user, err = Login(cfg.ApiKey, pdClient)
+
+		if err != nil {
+			return err
+		}
+
+		successMessage(user)
 
 	} else {
 
-		// Login using the existing API key in the configuration file
-		err = login(cfg.ApiKey)
+		// PagerDuty API client
+		pdClient, err = client.NewClient().Connect()
 
 		if err != nil {
 			return err
 		}
+
+		// Login using the existing API key in the configuration file
+		user, err = Login(cfg.ApiKey, pdClient)
+
+		if err != nil {
+			return err
+		}
+
+		successMessage(user)
 	}
 
 	return nil
@@ -139,16 +170,10 @@ func generateNewKey(cfg *config.Config) (err error) {
 	return nil
 }
 
-// login handles PagerDuty REST API authentication via an user API token.
+// Login handles PagerDuty REST API authentication via an user API token.
 // Requests that cannot be authenticated will return a `401 Unauthorized` error response.
-func login(apiKey string) error {
-
-	// PagerDuty client object is created
-	client, err := client.NewClient().Connect()
-
-	if err != nil {
-		return err
-	}
+// It returns the username of the currently logged in user.
+func Login(apiKey string, client client.PagerDutyClient) (string, error) {
 
 	user, err := client.GetCurrentUser(pagerduty.GetCurrentUserOptions{})
 
@@ -158,13 +183,17 @@ func login(apiKey string) error {
 		//`401 Unauthorized` error response
 		if errors.As(err, &apiError) {
 			err = fmt.Errorf("login failed\n%v Unauthorized", apiError.StatusCode)
-			return err
+			return "", err
 		}
 
-		return err
-	} else {
-		fmt.Printf("Successfully logged in as user: %s\n", user.Name)
+		return "", err
 	}
 
-	return nil
+	return user.Name, nil
+}
+
+// successMessage prints the currently logged in username to the console.
+// if pagerduty login is successful.
+func successMessage(user string) {
+	fmt.Printf("Successfully logged in as user: %s\n", user)
 }
