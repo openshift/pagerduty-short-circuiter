@@ -24,9 +24,6 @@ export CGO_ENABLED=0
 # Constants
 GOPATH := $(shell go env GOPATH)
 
-tests: get-ginkgo test
-
-
 .PHONY: build
 build:
 	go build -o pdcli ./cmd/pdcli
