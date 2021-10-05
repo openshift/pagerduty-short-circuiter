@@ -40,7 +40,7 @@ tools:
 	
 .PHONY: test
 test: tools
-	ginkgo -v -r tests
+	$(GOPATH)/bin/ginkgo -v -r tests
 
 # Installed using instructions from: https://golangci-lint.run/usage/install/#linux-and-windows
 getlint:
