@@ -39,7 +39,7 @@ tools:
 	@ls $(GOPATH)/bin/mockgen 1>/dev/null || (echo "Installing gomock..." && go get -u github.com/golang/mock/mockgen@v1.6.0)
 	
 .PHONY: test
-test:
+test: tools
 	ginkgo -v -r tests
 
 # Installed using instructions from: https://golangci-lint.run/usage/install/#linux-and-windows
