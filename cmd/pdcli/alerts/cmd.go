@@ -17,11 +17,14 @@ limitations under the License.
 package alerts
 
 import (
+	"bufio"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 
 	pdApi "github.com/PagerDuty/go-pagerduty"
@@ -40,6 +43,7 @@ var options struct {
 	columns     string
 	interactive bool
 	incidentID  bool
+	ack         bool
 }
 
 var Cmd = &cobra.Command{
@@ -80,6 +84,38 @@ func init() {
 		"Use interactive mode",
 	)
 
+	// Acknowledge alerts
+	Cmd.Flags().BoolVar(
+		&options.ack,
+		"ack",
+		false,
+		"Select and acknowledge alerts assigned to self",
+	)
+
+}
+
+// GetIncidents returns a slice of pagerduty incidents.
+func GetIncidents(c client.PagerDutyClient, opts *pdApi.ListIncidentsOptions) ([]pdApi.Incident, error) {
+
+	var aerr pdApi.APIError
+
+	// Get incidents via pagerduty API
+	incidents, err := c.ListIncidents(*opts)
+
+	if err != nil {
+		if errors.As(err, &aerr) {
+			if aerr.RateLimited() {
+				fmt.Println("rate limited")
+				return nil, err
+			}
+
+			fmt.Println("status code:", aerr.StatusCode)
+
+			return nil, err
+		}
+	}
+
+	return incidents.Incidents, nil
 }
 
 // alertsHandler is the main alerts command handler.
@@ -168,6 +204,16 @@ func alertsHandler(cmd *cobra.Command, args []string) error {
 	if len(incidents) == 0 {
 		fmt.Println("Currently there are no alerts assigned to " + options.assignment)
 		os.Exit(0)
+	}
+
+	if options.ack {
+		err = acknowledgeAssignedIncidents(client, incidents)
+
+		if err != nil {
+			return err
+		}
+
+		return nil
 	}
 
 	for _, incident := range incidents {
@@ -472,4 +518,77 @@ func printAlertMetadata(alert *pdcli.Alert) {
 	if alert.WebURL != "" {
 		fmt.Printf("* Web URL: %s\n", alert.WebURL)
 	}
+}
+
+func acknowledgeAssignedIncidents(c client.PagerDutyClient, incidents []pdApi.Incident) (err error) {
+
+	var input string
+	var selectedIncidents []string
+	var incidentIDs []string
+
+	var ackIncidents []pdApi.Incident
+
+	incidentMap := make(map[string]string)
+
+	for i, incident := range incidents {
+
+		// Convert the index to a string
+		index := strconv.Itoa(i + 1)
+
+		// Show only incidents that have not been acknowledged
+		if incident.Status != constants.StatusAcknowledged {
+			// Store the index, incident ID as a key-value pair
+			incidentMap[index] = incident.Id
+
+			fmt.Printf("%s. %s - %s - %s\n", index, incident.Id, incident.Description, strings.ToUpper(incident.Urgency))
+		}
+	}
+
+	fmt.Print("Select the incident(s) you want to acknowledge (ex: 1,4,5): ")
+
+	reader := bufio.NewReader(os.Stdin)
+
+	input, err = reader.ReadString('\n')
+
+	if err != nil {
+		return err
+	}
+
+	input = strings.TrimSpace(input)
+
+	if len(input) == 0 {
+		return fmt.Errorf("please select atleast one incident to acknowledge")
+	}
+
+	// Exit if the user enters exit
+	if input == "exit" {
+		return nil
+	}
+
+	selectedIncidents = strings.Split(input, ",")
+
+	for _, n := range selectedIncidents {
+		if val, ok := incidentMap[n]; ok {
+			incidentIDs = append(incidentIDs, val)
+		}
+	}
+
+	if len(incidentIDs) == 0 {
+		return fmt.Errorf("no matching incident index selected")
+	}
+
+	// Acknowledge all the incidents given the incident ID
+	ackIncidents, err = pdcli.AcknowledgeIncidents(c, incidentIDs)
+
+	if err != nil {
+		return err
+	}
+
+	fmt.Println("The following incidents have been acknowledged:-")
+
+	for _, incident := range ackIncidents {
+		fmt.Println(incident.Id, incident.Description)
+	}
+
+	return nil
 }
