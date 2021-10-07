@@ -21,7 +21,10 @@ export GOPROXY=https://proxy.golang.org
 # Disable CGO so that we always generate static binaries:
 export CGO_ENABLED=0
 
-# Constants
+# Override the default lint cache directory:
+export GOLANGCI_LINT_CACHE=$(HOME)/golint-cache
+
+# Constants:
 GOPATH := $(shell go env GOPATH)
 
 .PHONY: build
@@ -40,7 +43,7 @@ tools:
 	
 .PHONY: test
 test: tools
-	$(GOPATH)/bin/ginkgo -v -r tests
+	ginkgo -v -r tests
 
 # Installed using instructions from: https://golangci-lint.run/usage/install/#linux-and-windows
 getlint:
