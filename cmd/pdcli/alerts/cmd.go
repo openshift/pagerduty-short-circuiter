@@ -18,7 +18,6 @@ package alerts
 
 import (
 	"bufio"
-	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -44,6 +43,7 @@ var options struct {
 	interactive bool
 	incidentID  bool
 	ack         bool
+	ackAll      bool
 }
 
 var Cmd = &cobra.Command{
@@ -84,38 +84,22 @@ func init() {
 		"Use interactive mode",
 	)
 
-	// Acknowledge alerts
+	// Acknowledge incidents
 	Cmd.Flags().BoolVar(
 		&options.ack,
 		"ack",
 		false,
-		"Select and acknowledge alerts assigned to self",
+		"Select and acknowledge incidents assigned to self",
 	)
 
-}
+	// Acknowledge all incidents
+	Cmd.Flags().BoolVar(
+		&options.ackAll,
+		"ack-all",
+		false,
+		"Acknowledge all incidents assigned to self",
+	)
 
-// GetIncidents returns a slice of pagerduty incidents.
-func GetIncidents(c client.PagerDutyClient, opts *pdApi.ListIncidentsOptions) ([]pdApi.Incident, error) {
-
-	var aerr pdApi.APIError
-
-	// Get incidents via pagerduty API
-	incidents, err := c.ListIncidents(*opts)
-
-	if err != nil {
-		if errors.As(err, &aerr) {
-			if aerr.RateLimited() {
-				fmt.Println("rate limited")
-				return nil, err
-			}
-
-			fmt.Println("status code:", aerr.StatusCode)
-
-			return nil, err
-		}
-	}
-
-	return incidents.Incidents, nil
 }
 
 // alertsHandler is the main alerts command handler.
@@ -124,6 +108,7 @@ func alertsHandler(cmd *cobra.Command, args []string) error {
 	var (
 		incidentAlerts []pdcli.Alert
 		incidentID     string
+		incidentIDs    []string
 		incidentOpts   pdApi.ListIncidentsOptions
 		alerts         []pdcli.Alert
 		teams          []string
@@ -206,8 +191,15 @@ func alertsHandler(cmd *cobra.Command, args []string) error {
 		os.Exit(0)
 	}
 
+	// Check for ack option
 	if options.ack {
-		err = acknowledgeAssignedIncidents(client, incidents)
+		incidentIDs, err = selectIncidentsToAcknowledge(incidents)
+
+		if err != nil {
+			return err
+		}
+
+		err = acknowledgeAssignedIncidents(client, incidentIDs)
 
 		if err != nil {
 			return err
@@ -216,6 +208,25 @@ func alertsHandler(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
+	// Check for ack-all option
+	if options.ackAll {
+		for _, i := range incidents {
+			// Show only incidents that have not been acknowledged
+			if i.Status != constants.StatusAcknowledged {
+				incidentIDs = append(incidentIDs, i.Id)
+			}
+		}
+
+		err = acknowledgeAssignedIncidents(client, incidentIDs)
+
+		if err != nil {
+			return err
+		}
+
+		return nil
+	}
+
+	// Get incident alerts
 	for _, incident := range incidents {
 
 		// An incident can have more than one alert
@@ -346,7 +357,7 @@ func selectAlert(c client.PagerDutyClient, incidentID string, opts *pdApi.ListIn
 	return nil
 }
 
-// promptClusterLogin prompts the user for cluster login, if yes spawns an instance of ocm-container
+// promptClusterLogin prompts the user for cluster login, if yes spawns an instance of ocm-container.
 func promptClusterLogin(c client.PagerDutyClient, alert *pdcli.Alert, opts *pdApi.ListIncidentsOptions) error {
 
 	template := &promptui.SelectTemplates{
@@ -398,6 +409,70 @@ func promptClusterLogin(c client.PagerDutyClient, alert *pdcli.Alert, opts *pdAp
 	}
 
 	return nil
+}
+
+// selectIncidentsToAcknowledge prompts the user to select incident(s) to acknowledge
+// from a list of incidents assigned to self and upon selection
+// it returns the incidents ID(s) of the selected incident(s).
+func selectIncidentsToAcknowledge(incidents []pdApi.Incident) ([]string, error) {
+
+	var (
+		input             string
+		err               error
+		selectedIncidents []string
+		incidentIDs       []string
+	)
+
+	incidentMap := make(map[string]string)
+
+	for i, incident := range incidents {
+
+		// Convert the index to a string
+		index := strconv.Itoa(i + 1)
+
+		// Show only incidents that have not been acknowledged
+		if incident.Status != constants.StatusAcknowledged {
+			// Store the index, incident ID as a key-value pair
+			incidentMap[index] = incident.Id
+
+			fmt.Printf("%s. %s - %s - %s\n", index, incident.Id, incident.Description, strings.ToUpper(incident.Urgency))
+		}
+	}
+
+	fmt.Print("Select the incident(s) you want to acknowledge (ex: 1,4,5): ")
+
+	reader := bufio.NewReader(os.Stdin)
+
+	input, err = reader.ReadString('\n')
+
+	if err != nil {
+		return nil, err
+	}
+
+	input = strings.TrimSpace(input)
+
+	if len(input) == 0 {
+		return nil, fmt.Errorf("please select atleast one incident to acknowledge")
+	}
+
+	// Exit if the user enters exit
+	if input == "exit" {
+		return nil, nil
+	}
+
+	selectedIncidents = strings.Split(input, ",")
+
+	for _, n := range selectedIncidents {
+		if val, ok := incidentMap[n]; ok {
+			incidentIDs = append(incidentIDs, val)
+		}
+	}
+
+	if len(incidentIDs) == 0 {
+		return nil, fmt.Errorf("no matching incident index selected")
+	}
+
+	return incidentIDs, nil
 }
 
 // printAlerts prints all the alerts to the console in a tabular format.
@@ -520,62 +595,11 @@ func printAlertMetadata(alert *pdcli.Alert) {
 	}
 }
 
-func acknowledgeAssignedIncidents(c client.PagerDutyClient, incidents []pdApi.Incident) (err error) {
-
-	var input string
-	var selectedIncidents []string
-	var incidentIDs []string
+// acknowledgeAssignedIncidents acknowledges incidents given the incident IDs
+// all the incidents that have been acknowledged are printed to the console.
+func acknowledgeAssignedIncidents(c client.PagerDutyClient, incidentIDs []string) (err error) {
 
 	var ackIncidents []pdApi.Incident
-
-	incidentMap := make(map[string]string)
-
-	for i, incident := range incidents {
-
-		// Convert the index to a string
-		index := strconv.Itoa(i + 1)
-
-		// Show only incidents that have not been acknowledged
-		if incident.Status != constants.StatusAcknowledged {
-			// Store the index, incident ID as a key-value pair
-			incidentMap[index] = incident.Id
-
-			fmt.Printf("%s. %s - %s - %s\n", index, incident.Id, incident.Description, strings.ToUpper(incident.Urgency))
-		}
-	}
-
-	fmt.Print("Select the incident(s) you want to acknowledge (ex: 1,4,5): ")
-
-	reader := bufio.NewReader(os.Stdin)
-
-	input, err = reader.ReadString('\n')
-
-	if err != nil {
-		return err
-	}
-
-	input = strings.TrimSpace(input)
-
-	if len(input) == 0 {
-		return fmt.Errorf("please select atleast one incident to acknowledge")
-	}
-
-	// Exit if the user enters exit
-	if input == "exit" {
-		return nil
-	}
-
-	selectedIncidents = strings.Split(input, ",")
-
-	for _, n := range selectedIncidents {
-		if val, ok := incidentMap[n]; ok {
-			incidentIDs = append(incidentIDs, val)
-		}
-	}
-
-	if len(incidentIDs) == 0 {
-		return fmt.Errorf("no matching incident index selected")
-	}
 
 	// Acknowledge all the incidents given the incident ID
 	ackIncidents, err = pdcli.AcknowledgeIncidents(c, incidentIDs)
