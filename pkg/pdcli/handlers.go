@@ -171,19 +171,19 @@ func (a *Alert) ParseAlertData(c client.PagerDutyClient, alert *pdApi.IncidentAl
 		a.IP = fmt.Sprint(alert.Body["details"].(map[string]interface{})["ip"])
 		a.Sop = fmt.Sprint(alert.Body["details"].(map[string]interface{})["url"])
 		a.Name = strings.Split(alert.Summary, " on ")[0]
+		a.ClusterName = "N/A"
 
 	} else {
 		a.ClusterID = fmt.Sprint(alert.Body["details"].(map[string]interface{})["cluster_id"])
 		a.ClusterName, err = GetClusterName(alert.Service.ID, c)
 
 		if err != nil {
-			return err
+			a.ClusterName = "N/A"
 		}
 
 		a.Console = fmt.Sprint(alert.Body["details"].(map[string]interface{})["console"])
 		a.Labels = fmt.Sprint(alert.Body["details"].(map[string]interface{})["firing"])
 		a.Sop = fmt.Sprint(alert.Body["details"].(map[string]interface{})["link"])
-
 	}
 
 	return nil
