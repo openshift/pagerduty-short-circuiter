@@ -18,6 +18,8 @@ type Alert struct {
 	ClusterName string
 	Name        string
 	Console     string
+	Hostname    string
+	IP          string
 	Labels      string
 	LastCheckIn string
 	Severity    string
@@ -134,8 +136,18 @@ func GetCurrentUserID(c client.PagerDutyClient) (string, error) {
 // GetAlertData parses a pagerduty alert data into the Alert struct.
 func (a *Alert) ParseAlertData(c client.PagerDutyClient, alert *pdApi.IncidentAlert) (err error) {
 
-	// check if the alert is of type 'missing cluster'
+	a.IncidentID = alert.Incident.ID
+	a.AlertID = alert.ID
+	a.Name = alert.Summary
+	a.Severity = alert.Severity
+	a.Status = alert.Status
+	a.WebURL = alert.HTMLURL
+
+	// check if the alert is of type 'Missing cluster'
 	isCHGM := alert.Body["details"].(map[string]interface{})["notes"]
+
+	// check if the alert is of type 'Certificate expiring'
+	isCertExpiring := alert.Body["details"].(map[string]interface{})["hostname"]
 
 	if isCHGM != nil {
 		notes := strings.Split(fmt.Sprint(alert.Body["details"].(map[string]interface{})["notes"]), "\n")
@@ -154,6 +166,12 @@ func (a *Alert) ParseAlertData(c client.PagerDutyClient, alert *pdApi.IncidentAl
 		a.Tags = fmt.Sprint(alert.Body["details"].(map[string]interface{})["tags"])
 		a.Sop = strings.Replace(notes[1], "runbook: ", "", 1)
 
+	} else if isCertExpiring != nil {
+		a.Hostname = fmt.Sprint(alert.Body["details"].(map[string]interface{})["hostname"])
+		a.IP = fmt.Sprint(alert.Body["details"].(map[string]interface{})["ip"])
+		a.Sop = fmt.Sprint(alert.Body["details"].(map[string]interface{})["url"])
+		a.Name = strings.Split(alert.Summary, "on")[0]
+
 	} else {
 		a.ClusterID = fmt.Sprint(alert.Body["details"].(map[string]interface{})["cluster_id"])
 		a.ClusterName, err = GetClusterName(alert.Service.ID, c)
@@ -167,13 +185,6 @@ func (a *Alert) ParseAlertData(c client.PagerDutyClient, alert *pdApi.IncidentAl
 		a.Sop = fmt.Sprint(alert.Body["details"].(map[string]interface{})["link"])
 
 	}
-
-	a.IncidentID = alert.Incident.ID
-	a.AlertID = alert.ID
-	a.Name = alert.Summary
-	a.Severity = alert.Severity
-	a.Status = alert.Status
-	a.WebURL = alert.HTMLURL
 
 	return nil
 }

@@ -449,6 +449,14 @@ func printAlertMetadata(alert *pdcli.Alert) {
 		fmt.Printf("* Console: %s\n", alert.Console)
 	}
 
+	if alert.Hostname != "" {
+		fmt.Printf("* Hostname: %s\n", alert.Hostname)
+	}
+
+	if alert.IP != "" {
+		fmt.Printf("* IP: %s\n", alert.IP)
+	}
+
 	if alert.LastCheckIn != "" {
 		fmt.Printf("* Last Healthy Check-in: %s\n", alert.LastCheckIn)
 	}
