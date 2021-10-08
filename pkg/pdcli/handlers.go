@@ -170,7 +170,7 @@ func (a *Alert) ParseAlertData(c client.PagerDutyClient, alert *pdApi.IncidentAl
 		a.Hostname = fmt.Sprint(alert.Body["details"].(map[string]interface{})["hostname"])
 		a.IP = fmt.Sprint(alert.Body["details"].(map[string]interface{})["ip"])
 		a.Sop = fmt.Sprint(alert.Body["details"].(map[string]interface{})["url"])
-		a.Name = strings.Split(alert.Summary, "on")[0]
+		a.Name = strings.Split(alert.Summary, " on ")[0]
 
 	} else {
 		a.ClusterID = fmt.Sprint(alert.Body["details"].(map[string]interface{})["cluster_id"])
