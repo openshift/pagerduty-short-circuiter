@@ -40,6 +40,9 @@ tools:
 	@mkdir -p $(GOPATH)/bin
 	@ls $(GOPATH)/bin/ginkgo 1>/dev/null || (echo "Installing ginkgo..." && go get -u github.com/onsi/ginkgo/ginkgo@v1.16.4)
 	@ls $(GOPATH)/bin/mockgen 1>/dev/null || (echo "Installing gomock..." && go get -u github.com/golang/mock/mockgen@v1.6.0)
+
+#   Sync the vendor dir for inconsistent vendoring
+	go mod vendor
 	
 .PHONY: test
 test: tools
