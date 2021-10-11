@@ -243,4 +243,53 @@ var _ = Describe("view alerts", func() {
 
 		})
 	})
+
+	When("a user acknowledges an incident(s)", func() {
+		It("it changes the incident status to acknowledged and returns the incident(s)", func() {
+
+			userResponse := &pdApi.User{
+				APIObject: pdApi.APIObject{
+					ID: "my-user-id",
+				},
+				Email: "example@redhat.com",
+			}
+
+			incidentResponse := &pdApi.ListIncidentsResponse{
+				Incidents: []pdApi.Incident{
+					{
+						Id:     "ABC123",
+						Status: "acknowledged",
+						Acknowledgements: []pdApi.Acknowledgement{
+							{
+								Acknowledger: userResponse.APIObject,
+							},
+						},
+					},
+				},
+			}
+
+			expectedResponse := []pdApi.Incident{
+				{
+					Id:     "ABC123",
+					Status: "acknowledged",
+					Acknowledgements: []pdApi.Acknowledgement{
+						{
+							Acknowledger: userResponse.APIObject,
+						},
+					},
+				},
+			}
+
+			mockClient.EXPECT().GetCurrentUser(gomock.Any()).Return(userResponse, nil).Times(1)
+
+			mockClient.EXPECT().ManageIncidents(gomock.Any(), gomock.Any()).Return(incidentResponse, nil).Times(1)
+
+			result, err := pdcli.AcknowledgeIncidents(mockClient, []string{"ABC123"})
+
+			Expect(err).ToNot(HaveOccurred())
+
+			Expect(result).To(Equal(expectedResponse))
+
+		})
+	})
 })
