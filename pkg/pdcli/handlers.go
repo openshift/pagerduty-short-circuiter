@@ -143,10 +143,10 @@ func (a *Alert) ParseAlertData(c client.PagerDutyClient, alert *pdApi.IncidentAl
 	a.Status = alert.Status
 	a.WebURL = alert.HTMLURL
 
-	// check if the alert is of type 'Missing cluster'
+	// Check if the alert is of type 'Missing cluster'
 	isCHGM := alert.Body["details"].(map[string]interface{})["notes"]
 
-	// check if the alert is of type 'Certificate expiring'
+	// Check if the alert is of type 'Certificate is expiring'
 	isCertExpiring := alert.Body["details"].(map[string]interface{})["hostname"]
 
 	if isCHGM != nil {
@@ -177,6 +177,7 @@ func (a *Alert) ParseAlertData(c client.PagerDutyClient, alert *pdApi.IncidentAl
 		a.ClusterID = fmt.Sprint(alert.Body["details"].(map[string]interface{})["cluster_id"])
 		a.ClusterName, err = GetClusterName(alert.Service.ID, c)
 
+		// If the service mapped to the current incident is not available (404)
 		if err != nil {
 			a.ClusterName = "N/A"
 		}
