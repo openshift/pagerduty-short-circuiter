@@ -469,10 +469,32 @@ func selectIncidentsToAcknowledge(incidents []pdApi.Incident) ([]string, error) 
 	}
 
 	if len(incidentIDs) == 0 {
-		return nil, fmt.Errorf("no matching incident index selected")
+		return nil, fmt.Errorf("please select a relavant incident")
 	}
 
 	return incidentIDs, nil
+}
+
+// acknowledgeAssignedIncidents acknowledges incidents given the incident IDs
+// all the incidents that have been acknowledged are printed to the console.
+func acknowledgeAssignedIncidents(c client.PagerDutyClient, incidentIDs []string) (err error) {
+
+	var ackIncidents []pdApi.Incident
+
+	// Acknowledge all the incidents given the incident ID
+	ackIncidents, err = pdcli.AcknowledgeIncidents(c, incidentIDs)
+
+	if err != nil {
+		return err
+	}
+
+	fmt.Println("The following incidents have been acknowledged:-")
+
+	for _, incident := range ackIncidents {
+		fmt.Println(incident.Id, incident.Description)
+	}
+
+	return nil
 }
 
 // printAlerts prints all the alerts to the console in a tabular format.
@@ -593,26 +615,4 @@ func printAlertMetadata(alert *pdcli.Alert) {
 	if alert.WebURL != "" {
 		fmt.Printf("* Web URL: %s\n", alert.WebURL)
 	}
-}
-
-// acknowledgeAssignedIncidents acknowledges incidents given the incident IDs
-// all the incidents that have been acknowledged are printed to the console.
-func acknowledgeAssignedIncidents(c client.PagerDutyClient, incidentIDs []string) (err error) {
-
-	var ackIncidents []pdApi.Incident
-
-	// Acknowledge all the incidents given the incident ID
-	ackIncidents, err = pdcli.AcknowledgeIncidents(c, incidentIDs)
-
-	if err != nil {
-		return err
-	}
-
-	fmt.Println("The following incidents have been acknowledged:-")
-
-	for _, incident := range ackIncidents {
-		fmt.Println(incident.Id, incident.Description)
-	}
-
-	return nil
 }
