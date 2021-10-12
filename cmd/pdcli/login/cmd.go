@@ -120,7 +120,7 @@ func loginHandler(cmd *cobra.Command, args []string) error {
 
 	// Check if user has selected a team
 	if cfg.TeamID == "" {
-		teamdID, err := teams.SelectTeam(pdClient)
+		teamdID, err := teams.SelectTeam(pdClient, os.Stdin)
 
 		if err != nil {
 			return err

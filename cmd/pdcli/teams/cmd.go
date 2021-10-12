@@ -3,6 +3,7 @@ package teams
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"os"
 	"strconv"
 	"strings"
@@ -37,7 +38,7 @@ func teamsHandler(cmd *cobra.Command, args []string) error {
 	}
 
 	// Fetch the user selected team ID
-	teamID, err := SelectTeam(pdClient)
+	teamID, err := SelectTeam(pdClient, os.Stdin)
 
 	if err != nil {
 		return err
@@ -58,7 +59,7 @@ func teamsHandler(cmd *cobra.Command, args []string) error {
 }
 
 // SelectTeam prompts the user to select a team and returns the selected team ID.
-func SelectTeam(c client.PagerDutyClient) (string, error) {
+func SelectTeam(c client.PagerDutyClient, stdin io.Reader) (string, error) {
 	var selectedTeam string
 	var userOptions pdApi.GetCurrentUserOptions
 
@@ -74,7 +75,7 @@ func SelectTeam(c client.PagerDutyClient) (string, error) {
 	// Check if the user belongs to any team
 	if len(user.Teams) == 0 {
 		fmt.Println("Your user account is currently not a part of any team")
-		return "", nil
+		os.Exit(0)
 	}
 
 	for i, team := range user.Teams {
@@ -85,7 +86,7 @@ func SelectTeam(c client.PagerDutyClient) (string, error) {
 
 	fmt.Print("Select Team: ")
 
-	reader := bufio.NewReader(os.Stdin)
+	reader := bufio.NewReader(stdin)
 
 	input, err := reader.ReadString('\n')
 
@@ -97,6 +98,8 @@ func SelectTeam(c client.PagerDutyClient) (string, error) {
 
 	if val, ok := userTeams[input]; ok {
 		selectedTeam = val
+	} else {
+		return "", fmt.Errorf("please select a valid option")
 	}
 
 	return selectedTeam, nil
