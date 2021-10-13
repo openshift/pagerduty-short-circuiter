@@ -38,8 +38,7 @@ var options struct {
 	assignment string
 	columns    string
 	incidentID bool
-	ack        bool
-	ackAll     bool
+	status     string
 }
 
 var Cmd = &cobra.Command{
@@ -70,6 +69,14 @@ func init() {
 		"incident.id,alert.id,cluster.name,alert,cluster.id,status,severity",
 		"Specify which columns to display separated by commas without any space in between",
 	)
+
+	// Alerts status
+	Cmd.Flags().StringVar(
+		&options.status,
+		"status",
+		"trigerred",
+		"Filter alerts by status",
+	)
 }
 
 // alertsHandler is the main alerts command handler.
@@ -96,6 +103,10 @@ func alertsHandler(cmd *cobra.Command, args []string) error {
 
 	// Fetch the currently logged in user's ID.
 	user, err := client.GetCurrentUser(pdApi.GetCurrentUserOptions{})
+
+	if err != nil {
+		return err
+	}
 
 	// UI internals
 	tui.Client = client
@@ -136,13 +147,6 @@ func alertsHandler(cmd *cobra.Command, args []string) error {
 	// Set the limit on incidents fetched
 	incidentOpts.Limit = constants.IncidentsLimit
 
-	// Fetch only triggered, acknowledged incidents (not resolved ones)
-	incidentOpts.Statuses = append(status, constants.StatusTriggered, constants.StatusAcknowledged)
-
-	if err != nil {
-		return err
-	}
-
 	// Check the assigned-to flag
 	switch options.assignment {
 
@@ -157,6 +161,9 @@ func alertsHandler(cmd *cobra.Command, args []string) error {
 	case "self":
 		// Fetch incidents only assigned to self
 		incidentOpts.UserIDs = append(users, user.ID)
+
+	default:
+		return fmt.Errorf("please enter a valid assigned-to option")
 	}
 
 	// Check urgency
@@ -166,7 +173,26 @@ func alertsHandler(cmd *cobra.Command, args []string) error {
 		incidentOpts.Urgencies = []string{"high"}
 	}
 
-	// Fetch all incidents
+	// Check the status flag
+	switch options.status {
+
+	case "trigerred":
+		// Fetch trigerred incidents
+		incidentOpts.Statuses = append(status, constants.StatusTriggered)
+
+	case "ack":
+		// Fetch incidents that have been acknowledged
+		incidentOpts.Statuses = append(users, constants.StatusAcknowledged)
+
+	case "resolved":
+		// Fetch resolved incidents
+		incidentOpts.Statuses = append(users, constants.StatusResolved)
+
+	default:
+		return fmt.Errorf("please enter a valid status")
+	}
+
+	// Fetch incidents
 	incidents, err := pdcli.GetIncidents(client, &incidentOpts)
 
 	if err != nil {
