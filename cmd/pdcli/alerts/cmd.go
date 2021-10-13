@@ -106,7 +106,7 @@ func init() {
 		&options.status,
 		"status",
 		"trigerred",
-		"Filter alerts by status",
+		"Filter alerts by status (trigerred, ack, resolved)",
 	)
 }
 
