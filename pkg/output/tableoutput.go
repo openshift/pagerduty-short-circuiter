@@ -19,6 +19,7 @@ func NewTable(mergeCol bool) *table {
 	table.writer.SetHeaderLine(false)
 	table.writer.SetAutoFormatHeaders(true)
 	table.writer.SetAlignment(tablewriter.ALIGN_LEFT)
+	table.writer.SetHeaderAlignment(tablewriter.ALIGN_LEFT)
 	table.writer.SetRowSeparator("")
 	table.writer.SetCenterSeparator("")
 	table.writer.SetColumnSeparator("")
