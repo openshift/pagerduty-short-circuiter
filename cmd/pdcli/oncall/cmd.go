@@ -30,7 +30,7 @@ var Cmd = &cobra.Command{
 	Short: "oncall to the PagerDuty CLI",
 	Long:  "Running the pdcli oncall command will display the current primary and secondary oncall SRE",
 	Args:  cobra.NoArgs,
-	RunE:  OnCall,
+	RunE:  teamSREOnCall,
 }
 
 type User struct {
@@ -42,10 +42,10 @@ type User struct {
 }
 
 //Oncall implements the fetching of current roles and names of users
-func OnCall(cmd *cobra.Command, args []string) error {
+func teamSREOnCall(cmd *cobra.Command, args []string) error {
 
 	var callOpts pagerduty.ListOnCallOptions
-	callOpts.ScheduleIDs = []string{constants.PrimaryScheduleID, constants.SecondaryScheduleID, constants.OncallManager}
+	callOpts.ScheduleIDs = []string{constants.PrimaryScheduleID, constants.SecondaryScheduleID, constants.OncallManager, constants.OncallIDWeekend}
 
 	// Establish a secure connection with the PagerDuty API
 	client, err := client.NewClient().Connect()
@@ -65,6 +65,7 @@ func OnCall(cmd *cobra.Command, args []string) error {
 	var oncallData []User
 
 	//OnCalls array contains all information about the API object
+
 	for _, y := range oncallListing.OnCalls {
 
 		timeConversionStart := timeConversion(y.Start)
@@ -79,8 +80,46 @@ func OnCall(cmd *cobra.Command, args []string) error {
 		oncallData = append(oncallData, temp)
 
 	}
+	headers := []string{"Escalation Policy", "Oncall Role", "Name", "From", "To"}
+	printOncalls(oncallData, headers)
 
-	printOncalls(oncallData)
+	return nil
+}
+func allTeamsOncall(cmd *cobra.Command, args []string) error {
+	var callOpts pagerduty.ListOnCallOptions
+
+	// Establish a secure connection with the PagerDuty API
+	client, err := client.NewClient().Connect()
+
+	if err != nil {
+		return err
+	}
+
+	oncallListing, err := client.ListOnCalls(callOpts)
+
+	if err != nil {
+		return err
+
+	}
+
+	//oncallData stores struct objects for each Escalation Policy
+	var oncallData []User
+
+	//OnCalls array contains all information about the API object
+
+	for _, y := range oncallListing.OnCalls {
+
+		temp := User{}
+		temp.EscalationPolicy = y.EscalationPolicy.Summary
+		temp.OncallRole = y.Schedule.Summary
+		temp.Name = y.User.Summary
+		temp.Start = y.Start
+		temp.End = y.End
+		oncallData = append(oncallData, temp)
+
+	}
+	headers := []string{"Escalation Policy", "Name"}
+	printOncalls(oncallData, headers)
 
 	return nil
 }
@@ -102,12 +141,13 @@ func timeConversion(s string) string {
 }
 
 //printOncalls prints data in a tabular form
-func printOncalls(oncallData []User) {
+func printOncalls(oncallData []User, headers []string) {
 	var printData []string
 	table := output.NewTable(false)
-	headers := []string{"Escalation Policy", "Oncall Role", "Name", "Start", "End"}
+
 	table.SetHeaders(headers)
 	for _, v := range oncallData {
+
 		printData = []string{v.EscalationPolicy, v.OncallRole, v.Name, v.Start, v.End}
 		table.AddRow(printData)
 	}
