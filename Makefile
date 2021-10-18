@@ -42,6 +42,7 @@ tools:
 	@ls $(GOPATH)/bin/mockgen 1>/dev/null || (echo "Installing gomock..." && go get -u github.com/golang/mock/mockgen@v1.6.0)
 
 #   Sync the vendor dir for inconsistent vendoring
+	go mod tidy
 	go mod vendor
 	
 .PHONY: test
