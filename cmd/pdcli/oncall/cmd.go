@@ -14,38 +14,49 @@ limitations under the License.
 package oncall
 
 import (
-	"fmt"
-	"strings"
-	"time"
-
-	"github.com/PagerDuty/go-pagerduty"
 	"github.com/openshift/pagerduty-short-circuiter/pkg/client"
-	"github.com/openshift/pagerduty-short-circuiter/pkg/constants"
 	"github.com/openshift/pagerduty-short-circuiter/pkg/output"
+	"github.com/openshift/pagerduty-short-circuiter/pkg/pdcli"
 	"github.com/spf13/cobra"
 )
+
+var options struct {
+	allTeams   bool
+	nextOncall bool
+}
 
 var Cmd = &cobra.Command{
 	Use:   "oncall",
 	Short: "oncall to the PagerDuty CLI",
 	Long:  "Running the pdcli oncall command will display the current primary and secondary oncall SRE",
 	Args:  cobra.NoArgs,
-	RunE:  OnCall,
+	RunE:  oncallHandler,
 }
 
-type User struct {
-	EscalationPolicy string
-	OncallRole       string
-	Name             string
-	Start            string
-	End              string
+func init() {
+
+	// Shows who is on-call in all teams
+	Cmd.Flags().BoolVarP(
+		&options.allTeams,
+		"all",
+		"a",
+		false,
+		"Show who is on-call in all teams",
+	)
+
+	// Next oncall
+	Cmd.Flags().BoolVar(
+		&options.nextOncall,
+		"next-oncall",
+		false,
+		"Show the current user's next oncall schedule",
+	)
 }
 
-//Oncall implements the fetching of current roles and names of users
-func OnCall(cmd *cobra.Command, args []string) error {
+// oncallHandler is the main handler for pdcli oncall.
+func oncallHandler(cmd *cobra.Command, args []string) (err error) {
 
-	var callOpts pagerduty.ListOnCallOptions
-	callOpts.ScheduleIDs = []string{constants.PrimaryScheduleID, constants.SecondaryScheduleID, constants.OncallManager}
+	var onCallUsers []pdcli.OncallUser
 
 	// Establish a secure connection with the PagerDuty API
 	client, err := client.NewClient().Connect()
@@ -54,64 +65,86 @@ func OnCall(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	oncallListing, err := client.ListOnCalls(callOpts)
+	switch {
+	case options.allTeams:
+		// Fetch oncall data from all teams
+		onCallUsers, err = pdcli.AllTeamsOncall(client)
 
-	if err != nil {
-		return err
+		if err != nil {
+			return err
+		}
 
+		printOncalls(onCallUsers)
+
+	case options.nextOncall:
+		onCallUsers, err = pdcli.UserNextOncallSchedule(client)
+
+		if err != nil {
+			return err
+		}
+
+		printOncalls(onCallUsers)
+
+	default:
+		// Fetch oncall data from Platform-SRE team
+		onCallUsers, err = pdcli.TeamSREOnCall(client)
+
+		if err != nil {
+			return err
+		}
+
+		printOncalls(onCallUsers)
 	}
-
-	//oncallData stores struct objects for each Escalation Policy
-	var oncallData []User
-
-	//OnCalls array contains all information about the API object
-	for _, y := range oncallListing.OnCalls {
-
-		timeConversionStart := timeConversion(y.Start)
-		timeConversionEnd := timeConversion(y.End)
-
-		temp := User{}
-		temp.EscalationPolicy = y.EscalationPolicy.Summary
-		temp.OncallRole = y.Schedule.Summary
-		temp.Name = y.User.Summary
-		temp.Start = timeConversionStart
-		temp.End = timeConversionEnd
-		oncallData = append(oncallData, temp)
-
-	}
-
-	printOncalls(oncallData)
 
 	return nil
 }
 
-//timeConversion converts timestamp into time and date
-func timeConversion(s string) string {
+//printOncalls prints data in a tabular form.
+func printOncalls(oncallData []pdcli.OncallUser) {
 
-	timeString := s
-	timeConverted, err := time.Parse(time.RFC3339, timeString)
-
-	if err != nil {
-		fmt.Println(err)
-	}
-	finalTimeString := timeConverted.String()
-	finalTimeString = strings.ReplaceAll(finalTimeString, " +0000 UTC", " UTC")
-
-	return finalTimeString
-
-}
-
-//printOncalls prints data in a tabular form
-func printOncalls(oncallData []User) {
-	var printData []string
+	// Initialize table writer
 	table := output.NewTable(false)
-	headers := []string{"Escalation Policy", "Oncall Role", "Name", "Start", "End"}
-	table.SetHeaders(headers)
+
 	for _, v := range oncallData {
-		printData = []string{v.EscalationPolicy, v.OncallRole, v.Name, v.Start, v.End}
-		table.AddRow(printData)
+
+		var data []string
+
+		if v.EscalationPolicy != "" {
+			data = append(data, v.EscalationPolicy)
+		} else {
+			data = append(data, "N/A")
+		}
+
+		if v.Name != "" {
+			data = append(data, v.Name)
+		} else {
+			data = append(data, "N/A")
+		}
+
+		if v.OncallRole != "" {
+			data = append(data, v.OncallRole)
+		} else {
+			data = append(data, "N/A")
+		}
+
+		if v.Start != "" {
+			data = append(data, v.Start)
+		} else {
+			data = append(data, "N/A")
+		}
+
+		if v.End != "" {
+			data = append(data, v.End)
+		} else {
+			data = append(data, "N/A")
+		}
+
+		table.AddRow(data)
 	}
 
+	headers := []string{"Escalation Policy", "Name", "Oncall Role", "From", "To"}
+
+	table.SetHeaders(headers)
 	table.SetData()
 	table.Print()
 }
