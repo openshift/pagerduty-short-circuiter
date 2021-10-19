@@ -104,6 +104,39 @@ This will list all the alerts belonging to that incident in interactive mode.
                        (default "incident.id,alert,cluster.name,cluster.id,status,severity")
 ```
 
+## Oncall
+
+To view the current oncalls as per PagerDuty, use the command:
+
+```
+pdcli oncall
+```
+This will list all the current oncalls for each escalation of team **Platform-SRE** by default.
+
+You can choose to use `all` option for getting the escalation policies of all teams on PagerDuty through the following command:
+
+```
+pdcli oncall --all 
+```
+or 
+
+```
+pdcli oncall --a
+```
+
+You can choose to use `next-oncall` option for getting your next oncall schedule as per PagerDuty through the following command:
+
+```
+pdcli oncall --next-oncall 
+```
+### Options
+```
+-a,--all          Show who is on-call in all teams
+-h,--help         help for oncall
+--next-oncall     Show the current user's next oncall schedule
+
+```
+
 ## Running Tests
 The test suite uses the [Ginkgo](https://onsi.github.io/ginkgo/) to run comprehensive tests using Behavior-Driven Development.<br>
 The mocking framework used for testing is [gomock](https://github.com/golang/mock).
