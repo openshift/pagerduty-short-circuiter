@@ -12,3 +12,6 @@
 *.out
 
 /pdcli
+
+# Ignore the vendor directory
+/vendor
