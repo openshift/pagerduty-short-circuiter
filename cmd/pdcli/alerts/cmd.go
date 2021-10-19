@@ -439,7 +439,7 @@ func selectIncidentsToAcknowledge(incidents []pdApi.Incident) ([]string, error) 
 		}
 	}
 
-	fmt.Print("Select the incident(s) you want to acknowledge (ex: 1,4,5): ")
+	fmt.Print("Select the incident(s) you want to acknowledge (ex: 1,4,5) or type exit: ")
 
 	reader := bufio.NewReader(os.Stdin)
 
