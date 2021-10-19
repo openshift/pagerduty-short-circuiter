@@ -5,9 +5,7 @@ go 1.16
 require (
 	github.com/PagerDuty/go-pagerduty v1.4.1
 	github.com/fsnotify/fsnotify v1.5.1 // indirect
-	github.com/go-delve/delve v1.7.2
 	github.com/golang/mock v1.6.0
-	github.com/google/go-querystring v1.0.0
 	github.com/manifoldco/promptui v0.8.0
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/onsi/ginkgo v1.16.4
