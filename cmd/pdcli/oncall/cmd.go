@@ -15,6 +15,7 @@ package oncall
 
 import (
 	"github.com/openshift/pagerduty-short-circuiter/pkg/client"
+	"github.com/openshift/pagerduty-short-circuiter/pkg/output"
 	"github.com/openshift/pagerduty-short-circuiter/pkg/pdcli"
 	"github.com/spf13/cobra"
 )
@@ -55,6 +56,8 @@ func init() {
 // oncallHandler is the main handler for pdcli oncall.
 func oncallHandler(cmd *cobra.Command, args []string) (err error) {
 
+	var onCallUsers []pdcli.OncallUser
+
 	// Establish a secure connection with the PagerDuty API
 	client, err := client.NewClient().Connect()
 
@@ -65,27 +68,83 @@ func oncallHandler(cmd *cobra.Command, args []string) (err error) {
 	switch {
 	case options.allTeams:
 		// Fetch oncall data from all teams
-		err = pdcli.AllTeamsOncall(client)
+		onCallUsers, err = pdcli.AllTeamsOncall(client)
 
 		if err != nil {
 			return err
 		}
+
+		printOncalls(onCallUsers)
 
 	case options.nextOncall:
-		err = pdcli.UserNextOncallSchedule(client)
+		onCallUsers, err = pdcli.UserNextOncallSchedule(client)
 
 		if err != nil {
 			return err
 		}
+
+		printOncalls(onCallUsers)
 
 	default:
 		// Fetch oncall data from Platform-SRE team
-		err = pdcli.TeamSREOnCall(client)
+		onCallUsers, err = pdcli.TeamSREOnCall(client)
 
 		if err != nil {
 			return err
 		}
+
+		printOncalls(onCallUsers)
 	}
 
 	return nil
+}
+
+//printOncalls prints data in a tabular form.
+func printOncalls(oncallData []pdcli.OncallUser) {
+
+	// Initialize table writer
+	table := output.NewTable(false)
+
+	for _, v := range oncallData {
+
+		var data []string
+
+		if v.EscalationPolicy != "" {
+			data = append(data, v.EscalationPolicy)
+		} else {
+			data = append(data, "N/A")
+		}
+
+		if v.Name != "" {
+			data = append(data, v.Name)
+		} else {
+			data = append(data, "N/A")
+		}
+
+		if v.OncallRole != "" {
+			data = append(data, v.OncallRole)
+		} else {
+			data = append(data, "N/A")
+		}
+
+		if v.Start != "" {
+			data = append(data, v.Start)
+		} else {
+			data = append(data, "N/A")
+		}
+
+		if v.End != "" {
+			data = append(data, v.End)
+		} else {
+			data = append(data, "N/A")
+		}
+
+		table.AddRow(data)
+	}
+
+	headers := []string{"Escalation Policy", "Name", "Oncall Role", "From", "To"}
+
+	table.SetHeaders(headers)
+	table.SetData()
+	table.Print()
 }

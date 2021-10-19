@@ -7,11 +7,10 @@ import (
 	"github.com/PagerDuty/go-pagerduty"
 	"github.com/openshift/pagerduty-short-circuiter/pkg/client"
 	"github.com/openshift/pagerduty-short-circuiter/pkg/constants"
-	"github.com/openshift/pagerduty-short-circuiter/pkg/output"
 	"github.com/openshift/pagerduty-short-circuiter/pkg/utils"
 )
 
-type User struct {
+type OncallUser struct {
 	EscalationPolicy string
 	OncallRole       string
 	Name             string
@@ -20,9 +19,9 @@ type User struct {
 }
 
 //TeamSREOnCall fetches the current roles and names of on-call users.
-func TeamSREOnCall(c client.PagerDutyClient) error {
+func TeamSREOnCall(c client.PagerDutyClient) ([]OncallUser, error) {
 	var callOpts pagerduty.ListOnCallOptions
-	var oncallData []User
+	var oncallData []OncallUser
 
 	callOpts.ScheduleIDs = []string{
 		constants.PrimaryScheduleID,
@@ -36,7 +35,7 @@ func TeamSREOnCall(c client.PagerDutyClient) error {
 	oncallListing, err := c.ListOnCalls(callOpts)
 
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// OnCalls array contains all information about the API object
@@ -45,17 +44,17 @@ func TeamSREOnCall(c client.PagerDutyClient) error {
 		timeConversionStart, err := utils.FormatTimestamp(y.Start)
 
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		timeConversionEnd, err := utils.FormatTimestamp(y.End)
 
 		if err != nil {
-			return err
+			return nil, err
 		}
 
-		// Parse the oncall data to user object
-		temp := User{}
+		// Parse the oncall data to OncallUser object
+		temp := OncallUser{}
 		temp.EscalationPolicy = y.EscalationPolicy.Summary
 		temp.OncallRole = y.Schedule.Summary
 		temp.Name = y.User.Summary
@@ -64,16 +63,13 @@ func TeamSREOnCall(c client.PagerDutyClient) error {
 		oncallData = append(oncallData, temp)
 	}
 
-	// Print the oncall users to console
-	printOncalls(oncallData)
-
-	return nil
+	return oncallData, err
 }
 
 // AllTeamsOncall displays the oncall data of all Red Hat PagerDuty teams.
-func AllTeamsOncall(c client.PagerDutyClient) error {
+func AllTeamsOncall(c client.PagerDutyClient) ([]OncallUser, error) {
 	var callOpts pagerduty.ListOnCallOptions
-	var oncallData []User
+	var oncallData []OncallUser
 
 	offset := []uint{0, 100, 200, 300, 400, 500, 600}
 
@@ -89,12 +85,12 @@ func AllTeamsOncall(c client.PagerDutyClient) error {
 		oncallListing, err := c.ListOnCalls(callOpts)
 
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		// Parse oncall data
 		for _, y := range oncallListing.OnCalls {
-			temp := User{}
+			temp := OncallUser{}
 			temp.EscalationPolicy = y.EscalationPolicy.Summary
 			temp.OncallRole = y.Schedule.Summary
 			temp.Name = y.User.Summary
@@ -109,111 +105,54 @@ func AllTeamsOncall(c client.PagerDutyClient) error {
 		return oncallData[i].EscalationPolicy < oncallData[j].EscalationPolicy
 	})
 
-	// Print the oncall users to console
-	printOncalls(oncallData)
-
-	return nil
+	return oncallData, nil
 }
 
 // UserNextOncallSchedule displays the current user's
 // next oncall schedule.
-func UserNextOncallSchedule(c client.PagerDutyClient) error {
+func UserNextOncallSchedule(c client.PagerDutyClient) ([]OncallUser, error) {
 	var callOpts pagerduty.ListOnCallOptions
+	var nextOncallData []OncallUser
 
 	callOpts.Until = time.Now().AddDate(0, 3, 0).String()
 
 	userID, err := GetCurrentUserID(c)
 
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	callOpts.UserIDs = append(callOpts.UserIDs, userID)
 
 	// Fetch the oncall data from pagerduty API
-	onCallUser, err := c.ListOnCalls(callOpts)
+	onCallOncallUser, err := c.ListOnCalls(callOpts)
 
 	if err != nil {
-		return err
+		return nil, err
 	}
-	// Initialize table writer
-	table := output.NewTable(true)
 
-	for _, y := range onCallUser.OnCalls {
-		var data []string
+	for _, y := range onCallOncallUser.OnCalls {
 
 		start, err := utils.FormatTimestamp(y.Start)
 
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		end, err := utils.FormatTimestamp(y.End)
 
 		if err != nil {
-			return err
+			return nil, err
 		}
 
-		data = append(data, y.Schedule.Summary, start, end)
-
-		table.AddRow(data)
+		temp := OncallUser{}
+		temp.EscalationPolicy = y.EscalationPolicy.Summary
+		temp.OncallRole = y.Schedule.Summary
+		temp.Name = y.User.Summary
+		temp.Start = start
+		temp.End = end
+		nextOncallData = append(nextOncallData, temp)
 	}
 
-	headers := []string{"Oncall Role", "From", "To"}
-
-	table.SetHeaders(headers)
-	table.SetData()
-	table.Print()
-
-	return nil
-}
-
-//printOncalls prints data in a tabular form.
-func printOncalls(oncallData []User) {
-
-	// Initialize table writer
-	table := output.NewTable(false)
-
-	for _, v := range oncallData {
-
-		var data []string
-
-		if v.EscalationPolicy != "" {
-			data = append(data, v.EscalationPolicy)
-		} else {
-			data = append(data, "N/A")
-		}
-
-		if v.Name != "" {
-			data = append(data, v.Name)
-		} else {
-			data = append(data, "N/A")
-		}
-
-		if v.OncallRole != "" {
-			data = append(data, v.OncallRole)
-		} else {
-			data = append(data, "N/A")
-		}
-
-		if v.Start != "" {
-			data = append(data, v.Start)
-		} else {
-			data = append(data, "N/A")
-		}
-
-		if v.End != "" {
-			data = append(data, v.End)
-		} else {
-			data = append(data, "N/A")
-		}
-
-		table.AddRow(data)
-	}
-
-	headers := []string{"Escalation Policy", "Oncall Role", "Name", "From", "To"}
-
-	table.SetHeaders(headers)
-	table.SetData()
-	table.Print()
+	return nextOncallData, nil
 }
