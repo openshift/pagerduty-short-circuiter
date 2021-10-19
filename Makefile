@@ -21,7 +21,7 @@ export GOPROXY=https://proxy.golang.org
 # Disable CGO so that we always generate static binaries:
 export CGO_ENABLED=0
 
-# Constants
+# Constants:
 GOPATH := $(shell go env GOPATH)
 
 .PHONY: build
@@ -37,6 +37,10 @@ tools:
 	@mkdir -p $(GOPATH)/bin
 	@ls $(GOPATH)/bin/ginkgo 1>/dev/null || (echo "Installing ginkgo..." && go get -u github.com/onsi/ginkgo/ginkgo@v1.16.4)
 	@ls $(GOPATH)/bin/mockgen 1>/dev/null || (echo "Installing gomock..." && go get -u github.com/golang/mock/mockgen@v1.6.0)
+
+#   Sync the vendor dir for inconsistent vendoring
+	go mod tidy
+	go mod vendor
 	
 .PHONY: test
 test: tools
