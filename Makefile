@@ -21,9 +21,6 @@ export GOPROXY=https://proxy.golang.org
 # Disable CGO so that we always generate static binaries:
 export CGO_ENABLED=0
 
-# Override the default lint cache directory:
-export GOLANGCI_LINT_CACHE=$(HOME)/golint-cache
-
 # Constants:
 GOPATH := $(shell go env GOPATH)
 
