@@ -32,6 +32,7 @@ type PagerDutyClient interface {
 	GetIncidentAlert(incidentID, alertID string) (*pdApi.IncidentAlertResponse, *http.Response, error)
 	GetService(serviceID string, opts *pdApi.GetServiceOptions) (*pdApi.Service, error)
 	ListOnCalls(opts pdApi.ListOnCallOptions) (*pdApi.ListOnCallsResponse, error)
+	ManageIncidents(from string, incidents []pdApi.ManageIncidentsOptions) (*pdApi.ListIncidentsResponse, error)
 }
 
 type PDClient struct {
@@ -97,4 +98,8 @@ func (c *PDClient) GetService(serviceID string, opts *pdApi.GetServiceOptions) (
 
 func (c *PDClient) ListOnCalls(opts pdApi.ListOnCallOptions) (*pdApi.ListOnCallsResponse, error) {
 	return c.PdClient.ListOnCalls(opts)
+}
+
+func (c *PDClient) ManageIncidents(from string, incidents []pdApi.ManageIncidentsOptions) (*pdApi.ListIncidentsResponse, error) {
+	return c.PdClient.ManageIncidents(from, incidents)
 }

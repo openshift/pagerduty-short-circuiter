@@ -133,7 +133,38 @@ func GetCurrentUserID(c client.PagerDutyClient) (string, error) {
 	return user.ID, nil
 }
 
-// GetAlertData parses a pagerduty alert data into the Alert struct.
+// AcknowledgeIncidents acknowledges incidents for the given incident IDs
+// and retuns the acknowledged incidents
+func AcknowledgeIncidents(c client.PagerDutyClient, incidentIDs []string) ([]pdApi.Incident, error) {
+	var incidents []pdApi.ManageIncidentsOptions
+	var opts pdApi.ManageIncidentsOptions
+
+	var response *pdApi.ListIncidentsResponse
+
+	for _, id := range incidentIDs {
+		opts.ID = id
+		opts.Type = "incident"
+		opts.Status = constants.StatusAcknowledged
+
+		incidents = append(incidents, opts)
+	}
+
+	user, err := c.GetCurrentUser(pdApi.GetCurrentUserOptions{})
+
+	if err != nil {
+		return nil, err
+	}
+
+	response, err = c.ManageIncidents(user.Email, incidents)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return response.Incidents, nil
+}
+
+// ParseAlertData parses a pagerduty alert data into the Alert struct.
 func (a *Alert) ParseAlertData(c client.PagerDutyClient, alert *pdApi.IncidentAlert) (err error) {
 
 	a.IncidentID = alert.Incident.ID
