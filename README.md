@@ -1,7 +1,7 @@
 # PagerDuty Short Circuiter
 `pdcli` is an integration of [go-pagerduty](https://github.com/PagerDuty/go-pagerduty) and [ocm-container](https://github.com/openshift/ocm-container) which lets you spawn ocm-container with automatic cluster login and other features based on the PagerDuty alert.
 
-***Note that pdcli is not a reinvention of another pagerDuty CLI tool instead it is a wrapper over go-pagerduty and provides you with all go-pagerduty cli features and much more.***
+***Note that pdcli is not a reinvention of another PagerDuty CLI tool instead it is a wrapper over go-pagerduty and provides you with all go-pagerduty cli features and much more.***
 
 ## Features:
 
@@ -94,8 +94,27 @@ pdcli alerts <Incident ID>
 ```
 This will list all the alerts belonging to that incident in interactive mode.
 
+### Acknowledge Incidents
+
+To acknowledge an incident assigned to your user account, use the command:
+
+```
+pdcli alerts --ack
+```
+This will list all the incidents currently assigned to self and will prompt the user to choose incident(s) to be acknowledged.
+
+A user can acknowledge a single incident or multiple incidents at once.
+
+To acknowledge all the incidents assgined to your user account, use the command:
+
+```
+pdcli alerts --ack-all
+```
+
 ### Options
 ```
+--ack                  Select and acknowledge incidents assigned to self
+--ack-all              Acknowledge all incidents assigned to self
 --assigned-to          Filter alerts based on user or team (default "self")
 --high                 View all high alerts (default true)
 --low                  View all low alerts
