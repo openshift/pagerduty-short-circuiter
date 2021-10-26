@@ -116,13 +116,13 @@ func UserNextOncallSchedule(c client.PagerDutyClient) ([]OncallUser, error) {
 
 	callOpts.Until = time.Now().AddDate(0, 3, 0).String()
 
-	userID, err := GetCurrentUserID(c)
+	user, err := c.GetCurrentUser(pagerduty.GetCurrentUserOptions{})
 
 	if err != nil {
 		return nil, err
 	}
 
-	callOpts.UserIDs = append(callOpts.UserIDs, userID)
+	callOpts.UserIDs = append(callOpts.UserIDs, user.ID)
 
 	// Fetch the oncall data from pagerduty API
 	onCallOncallUser, err := c.ListOnCalls(callOpts)
