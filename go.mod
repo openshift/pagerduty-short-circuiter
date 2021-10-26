@@ -1,6 +1,6 @@
 module github.com/openshift/pagerduty-short-circuiter
 
-go 1.15
+go 1.16
 
 require (
 	github.com/PagerDuty/go-pagerduty v1.4.1
