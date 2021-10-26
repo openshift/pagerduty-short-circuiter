@@ -84,26 +84,6 @@ var _ = Describe("view alerts", func() {
 		})
 	})
 
-	When("pagerduty incidents are fetched", func() {
-		It("the currently logged-in user ID is retrieved first", func() {
-			userResponse := &pdApi.User{
-				APIObject: pdApi.APIObject{
-					ID: "my-user-id",
-				},
-			}
-
-			expectedUserID := "my-user-id"
-
-			mockClient.EXPECT().GetCurrentUser(gomock.Any()).Return(userResponse, nil).Times(1)
-
-			result, err := pdcli.GetCurrentUserID(mockClient)
-
-			Expect(err).ShouldNot(HaveOccurred())
-
-			Expect(result).To(Equal(expectedUserID))
-		})
-	})
-
 	When("the alerts command is run", func() {
 		It("returns incidents", func() {
 

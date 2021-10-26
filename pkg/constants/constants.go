@@ -29,7 +29,8 @@ const (
 	// Sample API key for testing
 	SampleKey = "y_NbAkKc66ryYTWUXYEu"
 
-	AlertsLimit = 7
+	// Set limit to number of incidents fetched from pagerduty
+	IncidentsLimit = 10
 
 	// PagerDuty IDs
 	TeamID     = "PASPK4G"
