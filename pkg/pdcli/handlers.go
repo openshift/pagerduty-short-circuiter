@@ -3,6 +3,8 @@ package pdcli
 import (
 	"errors"
 	"fmt"
+	"os"
+	"os/exec"
 	"strings"
 
 	pdApi "github.com/PagerDuty/go-pagerduty"
@@ -110,30 +112,38 @@ func GetClusterName(servideID string, c client.PagerDutyClient) (string, error) 
 	return clusterName, nil
 }
 
-// GetCurrentUserID returns the ID of the currently logged in user.
-func GetCurrentUserID(c client.PagerDutyClient) (string, error) {
-	var aerr pdApi.APIError
+// AcknowledgeIncidents acknowledges incidents for the given incident IDs
+// and retuns the acknowledged incidents
+func AcknowledgeIncidents(c client.PagerDutyClient, incidentIDs []string) ([]pdApi.Incident, error) {
+	var incidents []pdApi.ManageIncidentsOptions
+	var opts pdApi.ManageIncidentsOptions
 
-	// Get current user details
+	var response *pdApi.ListIncidentsResponse
+
+	for _, id := range incidentIDs {
+		opts.ID = id
+		opts.Type = "incident"
+		opts.Status = constants.StatusAcknowledged
+
+		incidents = append(incidents, opts)
+	}
+
 	user, err := c.GetCurrentUser(pdApi.GetCurrentUserOptions{})
 
 	if err != nil {
-		if errors.As(err, &aerr) {
-			if aerr.RateLimited() {
-				fmt.Println("rate limited")
-				return "", err
-			}
-
-			fmt.Println("status code:", aerr.StatusCode)
-
-			return "", err
-		}
+		return nil, err
 	}
 
-	return user.ID, nil
+	response, err = c.ManageIncidents(user.Email, incidents)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return response.Incidents, nil
 }
 
-// GetAlertData parses a pagerduty alert data into the Alert struct.
+// ParseAlertData parses a pagerduty alert data into the Alert struct.
 func (a *Alert) ParseAlertData(c client.PagerDutyClient, alert *pdApi.IncidentAlert) (err error) {
 
 	a.IncidentID = alert.Incident.ID
@@ -187,5 +197,102 @@ func (a *Alert) ParseAlertData(c client.PagerDutyClient, alert *pdApi.IncidentAl
 		a.Sop = fmt.Sprint(alert.Body["details"].(map[string]interface{})["link"])
 	}
 
+	// If there's no cluster ID related to the given alert
+	if a.ClusterID == "" {
+		a.ClusterID = "N/A"
+	}
+
 	return nil
+}
+
+// ParseAlertMetaData parses the given alert metadata into a string and returns it.
+func ParseAlertMetaData(alert Alert) string {
+	var alertData string
+
+	if alert.ClusterID != "" {
+		data := fmt.Sprintf("* Cluster ID: %s\n", alert.ClusterID)
+		alertData = alertData + data
+	}
+
+	if alert.ClusterName != "" {
+		data := fmt.Sprintf("* Cluster Name: %s\n", alert.ClusterName)
+		alertData = alertData + data
+	}
+
+	if alert.Console != "" {
+		data := fmt.Sprintf("* Console: %s\n", alert.Console)
+		alertData = alertData + data
+	}
+
+	if alert.Hostname != "" {
+		data := fmt.Sprintf("* Hostname: %s\n", alert.Hostname)
+		alertData = alertData + data
+	}
+
+	if alert.IP != "" {
+		data := fmt.Sprintf("* IP: %s\n", alert.IP)
+		alertData = alertData + data
+	}
+
+	if alert.LastCheckIn != "" {
+		data := fmt.Sprintf("* Last Healthy Check-in: %s\n", alert.LastCheckIn)
+		alertData = alertData + data
+	}
+
+	if alert.Tags != "" {
+		data := fmt.Sprintf("* Tags: %s\n", alert.Tags)
+		alertData = alertData + data
+	}
+
+	if alert.Token != "" {
+		data := fmt.Sprintf("* Token: %s\n", alert.Token)
+		alertData = alertData + data
+	}
+
+	if alert.Labels != "" {
+		data := fmt.Sprintf("* %s", alert.Labels)
+		alertData = alertData + data
+	}
+
+	if alert.Sop != "" {
+		data := fmt.Sprintf("* SOP: %s\n", alert.Sop)
+		alertData = alertData + data
+	}
+
+	if alert.WebURL != "" {
+		data := fmt.Sprintf("* Web URL: %s\n", alert.WebURL)
+		alertData = alertData + data
+	}
+
+	return alertData
+}
+
+// ClusterLogin spawns an instance of ocm-container.
+func ClusterLogin(clusterID string) (bool, error) {
+
+	// Check if ocm-container is installed locally
+	ocmContainer, err := exec.LookPath("ocm-container")
+
+	if err != nil {
+		fmt.Println("ocm-container is not found.\nPlease install it via:", constants.OcmContainerURL)
+	}
+
+	cmd := exec.Command(ocmContainer, clusterID)
+
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	err = cmd.Run()
+
+	if err != nil {
+		return false, err
+	}
+
+	// If the command exits, switch control flow back to the UI.
+	if cmd.ProcessState.Exited() {
+		return true, nil
+	}
+
+	return false, nil
 }
