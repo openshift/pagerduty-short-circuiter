@@ -55,8 +55,9 @@ func alert(incidentID string, serviceID string, name string, clusterID string, s
 			},
 		},
 
-		Severity: severity,
-		Status:   status,
+		Severity:  severity,
+		Status:    status,
+		CreatedAt: "2006-01-02T15:04:05Z",
 	}
 }
 
@@ -156,6 +157,7 @@ var _ = Describe("view alerts", func() {
 					IncidentID:  "incident-id-1",
 					ClusterID:   "cluster-id",
 					ClusterName: "my-cluster-name",
+					CreatedAt:   "01-02-2006 15:04 UTC",
 					Name:        "alert-name",
 					Console:     "<nil>",
 					Labels:      "<nil>",
@@ -206,6 +208,7 @@ var _ = Describe("view alerts", func() {
 				Name:        "alert-name",
 				ClusterID:   "cluster-id",
 				ClusterName: "my-cluster-name",
+				CreatedAt:   "01-02-2006 15:04 UTC",
 				Severity:    "critical",
 				Status:      "triggered",
 				Console:     "<nil>",
