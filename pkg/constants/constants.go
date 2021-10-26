@@ -46,5 +46,6 @@ const (
 	SecondaryScheduleID = "P4TU2IT"
 	OncallIDWeekend     = "P7CC7UN"
 	OncallManager       = "P1WFZIG"
-	OncallId            = "PA4586M"
+	OncallID            = "PA4586M"
+	InvestigatorID      = "PWQAANA"
 )
