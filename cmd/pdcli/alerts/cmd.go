@@ -67,7 +67,7 @@ func init() {
 	Cmd.Flags().StringVar(
 		&options.columns,
 		"columns",
-		"incident.id,alert.id,cluster.name,alert,cluster.id,status,severity",
+		"incident.id,alert.id,cluster.name,alert,cluster.id,status,severity,created.at",
 		"Specify which columns to display separated by commas without any space in between",
 	)
 }
@@ -300,6 +300,12 @@ func getTableData(alerts []pdcli.Alert) ([]string, [][]string) {
 			i++
 			headersMap[i] = "SEVERITY"
 			values = append(values, alert.Severity)
+		}
+
+		if columnsMap["created.at"] {
+			i++
+			headersMap[i] = "CREATED AT"
+			values = append(values, alert.CreatedAt)
 		}
 
 		tableData = append(tableData, values)

@@ -18,6 +18,7 @@ type Alert struct {
 	AlertID     string
 	ClusterID   string
 	ClusterName string
+	CreatedAt   string
 	Name        string
 	Console     string
 	Hostname    string
@@ -30,6 +31,16 @@ type Alert struct {
 	Token       string
 	Tags        string
 	WebURL      string
+}
+
+var options struct {
+	high       bool
+	low        bool
+	assignment string
+	columns    string
+	incidentID bool
+	ack        bool
+	ackAll     bool
 }
 
 // GetIncidents returns a slice of pagerduty incidents.
@@ -152,6 +163,14 @@ func (a *Alert) ParseAlertData(c client.PagerDutyClient, alert *pdApi.IncidentAl
 	a.Severity = alert.Severity
 	a.Status = alert.Status
 	a.WebURL = alert.HTMLURL
+
+	createdAt, err := utils.FormatTimestamp(alert.CreatedAt)
+
+	if err != nil {
+		return err
+	}
+
+	a.CreatedAt = createdAt
 
 	// Check if the alert is of type 'Missing cluster'
 	isCHGM := alert.Body["details"].(map[string]interface{})["notes"]
