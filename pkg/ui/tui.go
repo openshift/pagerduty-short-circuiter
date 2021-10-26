@@ -26,13 +26,14 @@ type TUI struct {
 	secondaryText  string
 
 	// Internals
-	Username      string
-	AssginedTo    string
-	FetchedAlerts string
-	Incidents     [][]string
-	AckIncidents  []string
-	ClusterID     string
-	Client        client.PagerDutyClient
+	Username          string
+	AssginedTo        string
+	FetchedAlerts     string
+	Incidents         [][]string
+	SelectedIncidents map[string]string
+	AckIncidents      []string
+	ClusterID         string
+	Client            client.PagerDutyClient
 }
 
 const (

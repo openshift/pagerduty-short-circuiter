@@ -28,16 +28,20 @@ func (tui *TUI) SetAlertsTableEvents(alerts []pdcli.Alert) {
 // SetIncidentsTableEvents is the event handler for the incidents table in ack mode.
 // It handles the program flow when a table selection is made.
 func (tui *TUI) SetIncidentsTableEvents() {
-	selectedIncidents := make(map[string]string)
-
+	tui.SelectedIncidents = make(map[string]string)
+	var text bool
 	tui.IncidentsTable.SetSelectedFunc(func(row, column int) {
+
 		incidentID := tui.IncidentsTable.GetCell(row, 0).Text
 
-		tui.IncidentsTable.GetCell(row, 0).SetTextColor(tcell.ColorLimeGreen)
+		text = !text
 
-		if _, ok := selectedIncidents[incidentID]; !ok {
-			selectedIncidents[incidentID] = incidentID
-			tui.AckIncidents = append(tui.AckIncidents, incidentID)
+		if _, ok := tui.SelectedIncidents[incidentID]; !ok || tui.SelectedIncidents[incidentID] == "" {
+			tui.IncidentsTable.GetCell(row, 0).SetTextColor(tcell.ColorLimeGreen)
+			tui.SelectedIncidents[incidentID] = incidentID
+		} else {
+			tui.IncidentsTable.GetCell(row, 0).SetTextColor(tcell.ColorWhite)
+			tui.SelectedIncidents[incidentID] = ""
 		}
 	})
 }

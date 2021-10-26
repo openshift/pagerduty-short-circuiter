@@ -57,12 +57,21 @@ func (tui *TUI) initKeyboard() {
 	if tui.IncidentsTable != nil {
 		tui.IncidentsTable.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 			if event.Key() == tcell.KeyCtrlA {
+
+				for _, v := range tui.SelectedIncidents {
+					if v != "" {
+						tui.AckIncidents = append(tui.AckIncidents, v)
+					}
+				}
+
 				if len(tui.AckIncidents) == 0 {
 					tui.showSecondaryView("Please select atleast one incident to acknowledge")
 				} else {
 					tui.ackowledgeSelectedIncidents()
+					tui.AckIncidents = []string{}
 				}
 			}
+
 			return event
 		})
 	}
