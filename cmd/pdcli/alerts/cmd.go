@@ -98,6 +98,10 @@ func alertsHandler(cmd *cobra.Command, args []string) error {
 	// Fetch the currently logged in user's ID.
 	user, err := client.GetCurrentUser(pdApi.GetCurrentUserOptions{})
 
+	if err != nil {
+		return err
+	}
+
 	// UI internals
 	tui.Client = client
 	tui.Username = user.Name
@@ -156,6 +160,7 @@ func alertsHandler(cmd *cobra.Command, args []string) error {
 		}
 
 		teamID := cfg.TeamID
+		tui.AssginedTo = cfg.Team
 
 		if teamID == "" {
 			return fmt.Errorf("no team selected, please run 'pdcli teams' to set a team")
@@ -168,9 +173,13 @@ func alertsHandler(cmd *cobra.Command, args []string) error {
 		// Fetch incidents assigned to silent test
 		incidentOpts.UserIDs = append(users, constants.SilentTest)
 
+		tui.AssginedTo = "Silent Test"
+
 	case "self":
 		// Fetch incidents only assigned to self
 		incidentOpts.UserIDs = append(users, user.ID)
+
+		tui.AssginedTo = user.Name
 	}
 
 	// Check urgency
@@ -214,7 +223,6 @@ func alertsHandler(cmd *cobra.Command, args []string) error {
 		alerts = append(alerts, incidentAlerts...)
 	}
 
-	tui.AssginedTo = options.assignment
 	tui.FetchedAlerts = strconv.Itoa(len(alerts))
 
 	// Setup TUI

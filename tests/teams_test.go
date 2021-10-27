@@ -32,13 +32,14 @@ var _ = Describe("select team", func() {
 			userResponse := &pdApi.User{
 				Name: "my-user",
 				Teams: []pdApi.Team{
-					{Name: "my-team-a", APIObject: pdApi.APIObject{ID: "ABCD123"}},
-					{Name: "my-team-b", APIObject: pdApi.APIObject{ID: "EFGH456"}},
-					{Name: "my-team-c", APIObject: pdApi.APIObject{ID: "IJKL789"}},
+					{APIObject: pdApi.APIObject{ID: "ABCD123", Summary: "my-team-a"}},
+					{APIObject: pdApi.APIObject{ID: "EFGH456", Summary: "my-team-b"}},
+					{APIObject: pdApi.APIObject{ID: "IJKL789", Summary: "my-team-c"}},
 				},
 			}
 
-			expectedResult := "EFGH456"
+			expectedTeamID := "EFGH456"
+			expectedTeamName := "my-team-b"
 
 			mockClient.EXPECT().GetCurrentUser(gomock.Any()).Return(userResponse, nil).Times(1)
 
@@ -46,11 +47,13 @@ var _ = Describe("select team", func() {
 
 			stdin.Write([]byte("2\n"))
 
-			result, err := teams.SelectTeam(mockClient, &stdin)
+			teamID, teamName, err := teams.SelectTeam(mockClient, &stdin)
 
 			Expect(err).ToNot(HaveOccurred())
 
-			Expect(result).To(Equal(expectedResult))
+			Expect(teamID).To(Equal(expectedTeamID))
+
+			Expect(teamName).To(Equal(expectedTeamName))
 		})
 	})
 
@@ -60,9 +63,9 @@ var _ = Describe("select team", func() {
 			userResponse := &pdApi.User{
 				Name: "my-user",
 				Teams: []pdApi.Team{
-					{Name: "my-team-a", APIObject: pdApi.APIObject{ID: "ABCD123"}},
-					{Name: "my-team-b", APIObject: pdApi.APIObject{ID: "EFGH456"}},
-					{Name: "my-team-c", APIObject: pdApi.APIObject{ID: "IJKL789"}},
+					{APIObject: pdApi.APIObject{ID: "ABCD123", Summary: "my-team-a"}},
+					{APIObject: pdApi.APIObject{ID: "EFGH456", Summary: "my-team-b"}},
+					{APIObject: pdApi.APIObject{ID: "IJKL789", Summary: "my-team-c"}},
 				},
 			}
 
@@ -72,11 +75,13 @@ var _ = Describe("select team", func() {
 
 			stdin.Write([]byte("X\n"))
 
-			result, err := teams.SelectTeam(mockClient, &stdin)
+			teamID, teamName, err := teams.SelectTeam(mockClient, &stdin)
 
 			Expect(err).To(HaveOccurred())
 
-			Expect(result).To(BeEmpty())
+			Expect(teamID).To(BeEmpty())
+
+			Expect(teamName).To(BeEmpty())
 		})
 	})
 })

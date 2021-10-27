@@ -32,6 +32,7 @@ import (
 type Config struct {
 	ApiKey string `json:"api_key,omitempty"`
 	TeamID string `json:"team_id,omitempty"`
+	Team   string `json:"team,omitempty"`
 }
 
 // Find returns the pdcli configuration filepath.
