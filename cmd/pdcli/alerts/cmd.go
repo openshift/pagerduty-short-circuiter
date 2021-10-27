@@ -26,6 +26,7 @@ import (
 
 	pdApi "github.com/PagerDuty/go-pagerduty"
 	"github.com/openshift/pagerduty-short-circuiter/pkg/client"
+	"github.com/openshift/pagerduty-short-circuiter/pkg/config"
 	"github.com/openshift/pagerduty-short-circuiter/pkg/constants"
 	pdcli "github.com/openshift/pagerduty-short-circuiter/pkg/pdcli/alerts"
 	"github.com/openshift/pagerduty-short-circuiter/pkg/ui"
@@ -147,8 +148,21 @@ func alertsHandler(cmd *cobra.Command, args []string) error {
 	switch options.assignment {
 
 	case "team":
+		// Load the configuration file
+		cfg, err := config.Load()
+
+		if err != nil {
+			return err
+		}
+
+		teamID := cfg.TeamID
+
+		if teamID == "" {
+			return fmt.Errorf("no team selected, please run 'pdcli teams' to set a team")
+		}
+
 		// Fetch incidents belonging to a specific team
-		incidentOpts.TeamIDs = append(teams, constants.TeamID)
+		incidentOpts.TeamIDs = append(teams, teamID)
 
 	case "silentTest":
 		// Fetch incidents assigned to silent test

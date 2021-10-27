@@ -23,6 +23,7 @@ import (
 	"os"
 
 	"github.com/PagerDuty/go-pagerduty"
+	"github.com/openshift/pagerduty-short-circuiter/cmd/pdcli/teams"
 	"github.com/openshift/pagerduty-short-circuiter/pkg/client"
 	"github.com/openshift/pagerduty-short-circuiter/pkg/config"
 	"github.com/openshift/pagerduty-short-circuiter/pkg/constants"
@@ -55,7 +56,6 @@ func init() {
 // loginHandler handles the login flow into pdcli.
 func loginHandler(cmd *cobra.Command, args []string) error {
 
-	// Currently logged in user
 	var user string
 	var pdClient client.PagerDutyClient
 
@@ -70,8 +70,9 @@ func loginHandler(cmd *cobra.Command, args []string) error {
 		cfg = new(config.Config)
 	}
 
-	// If the key arg is not-empty
+	// If the key arg is not empty
 	if loginArgs.apiKey != "" {
+
 		cfg.ApiKey = loginArgs.apiKey
 
 		// Save the key in the config file
@@ -80,23 +81,6 @@ func loginHandler(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
-
-		// PagerDuty API client
-		pdClient, err = client.NewClient().Connect()
-
-		if err != nil {
-			return err
-		}
-
-		user, err = Login(cfg.ApiKey, pdClient)
-
-		if err != nil {
-			return err
-		}
-
-		successMessage(user)
-
-		return nil
 	}
 
 	// API key is not found in the config file
@@ -109,39 +93,47 @@ func loginHandler(cmd *cobra.Command, args []string) error {
 			return err
 		}
 
-		// PagerDuty API client
-		pdClient, err = client.NewClient().Connect()
+		// Save the key in the config file
+		err = config.Save(cfg)
+
+		if err != nil {
+			return err
+		}
+	}
+
+	// Connect to PagerDuty API client
+	pdClient, err = client.NewClient().Connect()
+
+	if err != nil {
+		return err
+	}
+
+	// Login using the API key in the configuration file
+	user, err = Login(cfg.ApiKey, pdClient)
+
+	if err != nil {
+		return err
+	}
+
+	// Print login success message
+	successMessage(user)
+
+	// Check if user has selected a team
+	if cfg.TeamID == "" {
+		teamdID, err := teams.SelectTeam(pdClient, os.Stdin)
 
 		if err != nil {
 			return err
 		}
 
-		// Login using the newly generated API Key
-		user, err = Login(cfg.ApiKey, pdClient)
+		cfg.TeamID = teamdID
+	}
 
-		if err != nil {
-			return err
-		}
+	// Save the Team ID to the config file
+	err = config.Save(cfg)
 
-		successMessage(user)
-
-	} else {
-
-		// PagerDuty API client
-		pdClient, err = client.NewClient().Connect()
-
-		if err != nil {
-			return err
-		}
-
-		// Login using the existing API key in the configuration file
-		user, err = Login(cfg.ApiKey, pdClient)
-
-		if err != nil {
-			return err
-		}
-
-		successMessage(user)
+	if err != nil {
+		return err
 	}
 
 	return nil
@@ -154,14 +146,10 @@ func generateNewKey(cfg *config.Config) (err error) {
 
 	//Takes standard input from the user and stores it in a variable
 	reader := bufio.NewReader(os.Stdin)
+
 	fmt.Print("API Key: ")
+
 	cfg.ApiKey, err = reader.ReadString('\n')
-
-	if err != nil {
-		return err
-	}
-
-	err = config.Save(cfg)
 
 	if err != nil {
 		return err
@@ -192,7 +180,7 @@ func Login(apiKey string, client client.PagerDutyClient) (string, error) {
 	return user.Name, nil
 }
 
-// successMessage prints the currently logged in username to the console.
+// successMessage prints the currently logged in username to the console
 // if pagerduty login is successful.
 func successMessage(user string) {
 	fmt.Printf("Successfully logged in as user: %s\n", user)

@@ -31,18 +31,19 @@ import (
 // Configuration struct to store user configuration.
 type Config struct {
 	ApiKey string `json:"api_key,omitempty"`
+	TeamID string `json:"team_id,omitempty"`
 }
 
 // Find returns the pdcli configuration filepath.
 // If the config filepath doesn't exist, the desired config filepath string is created and returned.
 func Find() (string, error) {
 
-	// return the test configuration filepath
+	// Return the test configuration filepath
 	if pdcliConfig := os.Getenv("PDCLI_CONFIG"); pdcliConfig != "" {
 		return pdcliConfig, nil
 	}
 
-	// locate the standard configuration directory
+	// Locate the standard configuration directory
 	configDir, err := os.UserConfigDir()
 
 	if err != nil {
@@ -64,11 +65,21 @@ func Save(cfg *Config) error {
 		return err
 	}
 
-	// check if the API key is valid
+	// Check if the API key is valid
 	cfg.ApiKey, err = validateKey(cfg.ApiKey)
 
 	if err != nil {
 		return err
+	}
+
+	if cfg.TeamID != "" {
+
+		// Check if the team ID is valid
+		cfg.TeamID, err = validateTeamID(cfg.TeamID)
+
+		if err != nil {
+			return err
+		}
 	}
 
 	// Create a new directory to store config file
@@ -139,11 +150,11 @@ func Load() (config *Config, err error) {
 	return config, nil
 }
 
-// ValidateKey sanitizes and validates the API key string.
+// validateKey sanitizes and validates the API key string.
 func validateKey(apiKey string) (string, error) {
 	apiKey = strings.TrimSpace(apiKey)
 
-	//compare string with regex
+	//Compare string with regex
 	match, _ := regexp.MatchString(constants.APIKeyRegex, apiKey)
 
 	if !match {
@@ -151,4 +162,17 @@ func validateKey(apiKey string) (string, error) {
 	}
 
 	return apiKey, nil
+}
+
+// validateTeamID sanitizes and validates the team ID string.
+func validateTeamID(teamID string) (string, error) {
+	teamID = strings.TrimSpace(teamID)
+
+	match, _ := regexp.MatchString(constants.IncidentIdRegex, teamID)
+
+	if !match {
+		return "", fmt.Errorf("invalid Team ID")
+	}
+
+	return teamID, nil
 }
