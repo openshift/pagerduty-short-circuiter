@@ -27,7 +27,7 @@ import (
 	pdApi "github.com/PagerDuty/go-pagerduty"
 	"github.com/openshift/pagerduty-short-circuiter/pkg/client"
 	"github.com/openshift/pagerduty-short-circuiter/pkg/constants"
-	"github.com/openshift/pagerduty-short-circuiter/pkg/pdcli"
+	pdcli "github.com/openshift/pagerduty-short-circuiter/pkg/pdcli/alerts"
 	"github.com/openshift/pagerduty-short-circuiter/pkg/ui"
 	"github.com/spf13/cobra"
 )
@@ -232,7 +232,7 @@ func initAlertsUI(tui *ui.TUI, alerts []pdcli.Alert, title string) {
 // It adds the returned table as a new TUI page view.
 func initIncidentsUI(tui *ui.TUI, c client.PagerDutyClient) {
 	incidentHeaders := []string{"INCIDENT ID", "NAME", "SEVERITY", "STATUS", "SERVICE"}
-	tui.IncidentsTable = tui.InitTable(incidentHeaders, tui.Incidents, true, true, "Incidents")
+	tui.IncidentsTable = tui.InitTable(incidentHeaders, tui.Incidents, true, true, ui.IncidentsTableTitle)
 	tui.SetIncidentsTableEvents()
 
 	tui.Pages.AddPage(ui.AckIncidentsPageTitle, tui.IncidentsTable, true, false)

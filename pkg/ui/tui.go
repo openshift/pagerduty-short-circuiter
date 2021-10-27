@@ -12,18 +12,19 @@ import (
 type TUI struct {
 
 	// Main UI elements
-	App            *tview.Application
-	AlertMetadata  *tview.TextView
-	Table          *tview.Table
-	IncidentsTable *tview.Table
-	Pages          *tview.Pages
-	Info           *tview.TextView
-	Layout         *tview.Flex
-	Footer         *tview.TextView
+	App                 *tview.Application
+	AlertMetadata       *tview.TextView
+	Table               *tview.Table
+	IncidentsTable      *tview.Table
+	NextOncallTable     *tview.Table
+	AllTeamsOncallTable *tview.Table
+	Pages               *tview.Pages
+	Info                *tview.TextView
+	Layout              *tview.Flex
+	Footer              *tview.TextView
 
 	// Misc. UI elements
-	isMouseEnabled bool
-	secondaryText  string
+	secondaryText string
 
 	// Internals
 	Username          string
@@ -34,25 +35,35 @@ type TUI struct {
 	AckIncidents      []string
 	ClusterID         string
 	Client            client.PagerDutyClient
+	Primary           string
+	Secondary         string
 }
 
 const (
 	// Table Titles
-	AlertsTableTitle       = "[ Alerts ]"
-	AlertMetadataViewTitle = "[ Alert Data ]"
+	AlertsTableTitle         = "[ ALERTS ]"
+	AlertMetadataViewTitle   = "[ ALERT DATA ]"
+	IncidentsTableTitle      = "[ INCIDENTS ]"
+	OncallTableTitle         = "[ ONCALL ]"
+	NextOncallTableTitle     = "[ NEXT ONCALL ]"
+	AllTeamsOncallTableTitle = "[ ALL TEAMS ONCALL ]"
 
 	// Page Titles
-	AlertsPageTitle       = "Alerts"
-	AlertDataPageTitle    = "Metadata"
-	AckIncidentsPageTitle = "Incidents"
+	AlertsPageTitle         = "Alerts"
+	AlertDataPageTitle      = "Metadata"
+	AckIncidentsPageTitle   = "Incidents"
+	OncallPageTitle         = "Oncall"
+	NextOncallPageTitle     = "Next Oncall"
+	AllTeamsOncallPageTitle = "All Teams Oncall"
 
 	// Text Format
 	TitleFmt = " [lightcyan::b]%s "
 
 	// Footer
-	FooterText       = "[Q] Quit | [Esc] Go Back | [M] Enable/Disable Mouse"
+	FooterText       = "[Q] Quit | [Esc] Go Back"
 	FooterTextAlerts = FooterText + " | [A] Ack Mode"
 	FooterTextAck    = FooterText + " | [ENTER] Select Incident  | [CTRL+A] Acknowledge Incidents"
+	FooterTextOncall = FooterText + " | [N] View Your Next Oncall Schedule | [A] View All Teams Oncall"
 
 	// Colors
 	TableTitleColor = tcell.ColorLightCyan
@@ -148,6 +159,9 @@ func (t *TUI) initFooter() {
 
 	case AlertsPageTitle:
 		t.Footer.SetText(FooterTextAlerts)
+
+	case OncallPageTitle:
+		t.Footer.SetText(FooterTextOncall)
 
 	default:
 		t.Footer.SetText(FooterText)

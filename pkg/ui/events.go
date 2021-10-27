@@ -2,7 +2,7 @@ package ui
 
 import (
 	"github.com/gdamore/tcell/v2"
-	"github.com/openshift/pagerduty-short-circuiter/pkg/pdcli"
+	pdcli "github.com/openshift/pagerduty-short-circuiter/pkg/pdcli/alerts"
 )
 
 // SetAlertsTableEvents is the event handler for the alerts table.

@@ -2,7 +2,7 @@ package ui
 
 import (
 	"github.com/gdamore/tcell/v2"
-	"github.com/openshift/pagerduty-short-circuiter/pkg/pdcli"
+	pdcli "github.com/openshift/pagerduty-short-circuiter/pkg/pdcli/alerts"
 )
 
 // initKeyboard initializes the keyboard event handlers for all the TUI components.
@@ -21,15 +21,16 @@ func (tui *TUI) initKeyboard() {
 				tui.showDefaultSecondaryView()
 			}
 
+			if tui.Pages.HasPage(OncallPageTitle) {
+				tui.Pages.SwitchToPage(OncallPageTitle)
+				tui.Footer.SetText(FooterTextOncall)
+			}
+
 			return nil
 		}
 
 		if event.Rune() == 'q' || event.Rune() == 'Q' {
 			tui.App.Stop()
-		}
-
-		if event.Rune() == 'm' || event.Rune() == 'M' {
-			tui.toggleMouse()
 		}
 
 		return event
@@ -49,6 +50,22 @@ func (tui *TUI) initKeyboard() {
 			}
 		} else {
 			tui.Footer.SetText(FooterText)
+		}
+
+		if tui.NextOncallTable != nil {
+			if event.Rune() == 'N' || event.Rune() == 'n' {
+				tui.Pages.SwitchToPage(NextOncallPageTitle)
+
+				if len(tui.AckIncidents) == 0 {
+					tui.showSecondaryView("You are not scheduled for any oncall duties for the next 3 months. Cheer up!")
+				}
+			}
+		}
+
+		if tui.AllTeamsOncallTable != nil {
+			if event.Rune() == 'A' || event.Rune() == 'a' {
+				tui.Pages.SwitchToPage(AllTeamsOncallPageTitle)
+			}
 		}
 
 		return event
@@ -96,15 +113,4 @@ func (tui *TUI) initKeyboard() {
 		return event
 	})
 
-}
-
-// toggleMouse enables & disables mouse events in TUI.
-func (tui *TUI) toggleMouse() {
-	if tui.isMouseEnabled {
-		tui.App.EnableMouse(false)
-	} else {
-		tui.App.EnableMouse(true)
-	}
-
-	tui.isMouseEnabled = !tui.isMouseEnabled
 }
