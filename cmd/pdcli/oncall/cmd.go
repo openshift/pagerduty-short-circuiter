@@ -23,37 +23,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var options struct {
-	allTeams   bool
-	nextOncall bool
-}
-
 var Cmd = &cobra.Command{
 	Use:   "oncall",
 	Short: "oncall to the PagerDuty CLI",
 	Long:  "Running the pdcli oncall command will display the current primary and secondary oncall SRE",
 	Args:  cobra.NoArgs,
 	RunE:  oncallHandler,
-}
-
-func init() {
-
-	// Shows who is on-call in all teams
-	Cmd.Flags().BoolVarP(
-		&options.allTeams,
-		"all",
-		"a",
-		false,
-		"Show who is on-call in all teams",
-	)
-
-	// Next oncall
-	Cmd.Flags().BoolVar(
-		&options.nextOncall,
-		"next-oncall",
-		false,
-		"Show the current user's next oncall schedule",
-	)
 }
 
 // oncallHandler is the main handler for pdcli oncall.
@@ -130,25 +105,31 @@ func oncallHandler(cmd *cobra.Command, args []string) (err error) {
 	return nil
 }
 
+// initOncallUI initializes TUI table component.
+// It adds the returned table as a new TUI page view.
 func initOncallUI(tui *ui.TUI, onCallData []pdcli.OncallUser) {
 	headers, data := getOncallTableData(onCallData)
 	tui.Table = tui.InitTable(headers, data, false, false, ui.OncallTableTitle)
 	tui.Pages.AddPage(ui.OncallPageTitle, tui.Table, true, true)
 }
 
+// initOncallUI initializes TUI NextOncall table component.
+// It adds the returned table as a new TUI page view.
 func initNextOncallUI(tui *ui.TUI, onCallData []pdcli.OncallUser) {
 	headers, data := getOncallTableData(onCallData)
 	tui.NextOncallTable = tui.InitTable(headers, data, false, false, ui.NextOncallTableTitle)
 	tui.Pages.AddPage(ui.NextOncallPageTitle, tui.NextOncallTable, true, false)
 }
 
+// initOncallUI initializes TUI AllTeamsOncall table component.
+// It adds the returned table as a new TUI page view.
 func initAllTeamsOncallUI(tui *ui.TUI, onCallData []pdcli.OncallUser) {
 	headers, data := getOncallTableData(onCallData)
 	tui.AllTeamsOncallTable = tui.InitTable(headers, data, false, false, ui.AllTeamsOncallTableTitle)
 	tui.Pages.AddPage(ui.AllTeamsOncallPageTitle, tui.AllTeamsOncallTable, true, false)
 }
 
-//printOncalls prints data in a tabular form.
+// getOncallTableData parses and returns tabular data for the given oncall data, i.e table headers and rows.
 func getOncallTableData(oncallData []pdcli.OncallUser) ([]string, [][]string) {
 
 	var tableData [][]string
