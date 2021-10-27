@@ -23,7 +23,7 @@ import (
 	. "github.com/onsi/gomega"
 
 	mockpd "github.com/openshift/pagerduty-short-circuiter/pkg/client/mock"
-	"github.com/openshift/pagerduty-short-circuiter/pkg/pdcli"
+	pdcli "github.com/openshift/pagerduty-short-circuiter/pkg/pdcli/alerts"
 )
 
 // incident retuns a pagerduty incident object with pre-configured data.

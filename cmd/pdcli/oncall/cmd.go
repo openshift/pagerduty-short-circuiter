@@ -14,9 +14,12 @@ limitations under the License.
 package oncall
 
 import (
+	"strings"
+
+	"github.com/PagerDuty/go-pagerduty"
 	"github.com/openshift/pagerduty-short-circuiter/pkg/client"
-	"github.com/openshift/pagerduty-short-circuiter/pkg/output"
-	"github.com/openshift/pagerduty-short-circuiter/pkg/pdcli"
+	pdcli "github.com/openshift/pagerduty-short-circuiter/pkg/pdcli/oncall"
+	"github.com/openshift/pagerduty-short-circuiter/pkg/ui"
 	"github.com/spf13/cobra"
 )
 
@@ -57,6 +60,8 @@ func init() {
 func oncallHandler(cmd *cobra.Command, args []string) (err error) {
 
 	var onCallUsers []pdcli.OncallUser
+	var allTeamsOncall []pdcli.OncallUser
+	var nextOncall []pdcli.OncallUser
 
 	// Establish a secure connection with the PagerDuty API
 	client, err := client.NewClient().Connect()
@@ -65,45 +70,88 @@ func oncallHandler(cmd *cobra.Command, args []string) (err error) {
 		return err
 	}
 
-	switch {
-	case options.allTeams:
-		// Fetch oncall data from all teams
-		onCallUsers, err = pdcli.AllTeamsOncall(client)
+	user, err := client.GetCurrentUser(pagerduty.GetCurrentUserOptions{})
 
-		if err != nil {
-			return err
+	if err != nil {
+		return err
+	}
+
+	// UI
+	var tui ui.TUI
+
+	tui.Username = user.Name
+
+	// Initialize TUI
+	tui.Init()
+
+	// Fetch oncall data from Platform-SRE team
+	onCallUsers, err = pdcli.TeamSREOnCall(client)
+
+	if err != nil {
+		return err
+	}
+
+	for _, v := range onCallUsers {
+		if strings.Contains(v.OncallRole, "Primary") {
+			tui.Primary = v.Name
 		}
 
-		printOncalls(onCallUsers)
-
-	case options.nextOncall:
-		onCallUsers, err = pdcli.UserNextOncallSchedule(client)
-
-		if err != nil {
-			return err
+		if strings.Contains(v.OncallRole, "Secondary") {
+			tui.Secondary = v.Name
 		}
+	}
 
-		printOncalls(onCallUsers)
+	// Fetch oncall data from all teams
+	allTeamsOncall, err = pdcli.AllTeamsOncall(client)
 
-	default:
-		// Fetch oncall data from Platform-SRE team
-		onCallUsers, err = pdcli.TeamSREOnCall(client)
+	if err != nil {
+		return err
+	}
 
-		if err != nil {
-			return err
-		}
+	// Fetch the current user's oncall schedule
+	nextOncall, err = pdcli.UserNextOncallSchedule(client, user.ID)
 
-		printOncalls(onCallUsers)
+	if err != nil {
+		return err
+	}
+
+	initOncallUI(&tui, onCallUsers)
+	initAllTeamsOncallUI(&tui, allTeamsOncall)
+	initNextOncallUI(&tui, nextOncall)
+
+	tui.SetOncallSecondaryData()
+
+	err = tui.StartApp()
+
+	if err != nil {
+		return err
 	}
 
 	return nil
 }
 
-//printOncalls prints data in a tabular form.
-func printOncalls(oncallData []pdcli.OncallUser) {
+func initOncallUI(tui *ui.TUI, onCallData []pdcli.OncallUser) {
+	headers, data := getOncallTableData(onCallData)
+	tui.Table = tui.InitTable(headers, data, false, false, ui.OncallTableTitle)
+	tui.Pages.AddPage(ui.OncallPageTitle, tui.Table, true, true)
+}
 
-	// Initialize table writer
-	table := output.NewTable(false)
+func initNextOncallUI(tui *ui.TUI, onCallData []pdcli.OncallUser) {
+	headers, data := getOncallTableData(onCallData)
+	tui.NextOncallTable = tui.InitTable(headers, data, false, false, ui.NextOncallTableTitle)
+	tui.Pages.AddPage(ui.NextOncallPageTitle, tui.NextOncallTable, true, false)
+}
+
+func initAllTeamsOncallUI(tui *ui.TUI, onCallData []pdcli.OncallUser) {
+	headers, data := getOncallTableData(onCallData)
+	tui.AllTeamsOncallTable = tui.InitTable(headers, data, false, false, ui.AllTeamsOncallTableTitle)
+	tui.Pages.AddPage(ui.AllTeamsOncallPageTitle, tui.AllTeamsOncallTable, true, false)
+}
+
+//printOncalls prints data in a tabular form.
+func getOncallTableData(oncallData []pdcli.OncallUser) ([]string, [][]string) {
+
+	var tableData [][]string
 
 	for _, v := range oncallData {
 
@@ -139,12 +187,10 @@ func printOncalls(oncallData []pdcli.OncallUser) {
 			data = append(data, "N/A")
 		}
 
-		table.AddRow(data)
+		tableData = append(tableData, data)
 	}
 
 	headers := []string{"Escalation Policy", "Name", "Oncall Role", "From", "To"}
 
-	table.SetHeaders(headers)
-	table.SetData()
-	table.Print()
+	return headers, tableData
 }

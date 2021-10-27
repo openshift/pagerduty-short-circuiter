@@ -6,7 +6,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	mockpd "github.com/openshift/pagerduty-short-circuiter/pkg/client/mock"
-	"github.com/openshift/pagerduty-short-circuiter/pkg/pdcli"
+	pdcli "github.com/openshift/pagerduty-short-circuiter/pkg/pdcli/oncall"
 )
 
 var _ = Describe("pdcli oncall", func() {

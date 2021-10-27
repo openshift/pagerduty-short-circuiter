@@ -110,19 +110,13 @@ func AllTeamsOncall(c client.PagerDutyClient) ([]OncallUser, error) {
 
 // UserNextOncallSchedule displays the current user's
 // next oncall schedule.
-func UserNextOncallSchedule(c client.PagerDutyClient) ([]OncallUser, error) {
+func UserNextOncallSchedule(c client.PagerDutyClient, userID string) ([]OncallUser, error) {
 	var callOpts pagerduty.ListOnCallOptions
 	var nextOncallData []OncallUser
 
 	callOpts.Until = time.Now().AddDate(0, 3, 0).String()
 
-	user, err := c.GetCurrentUser(pagerduty.GetCurrentUserOptions{})
-
-	if err != nil {
-		return nil, err
-	}
-
-	callOpts.UserIDs = append(callOpts.UserIDs, user.ID)
+	callOpts.UserIDs = append(callOpts.UserIDs, userID)
 
 	// Fetch the oncall data from pagerduty API
 	onCallOncallUser, err := c.ListOnCalls(callOpts)
