@@ -98,7 +98,7 @@ func (tui *TUI) initKeyboard() {
 			err := pdcli.ClusterLogin(tui.ClusterID)
 
 			if err != nil {
-				panic(err)
+				tui.showError(err.Error())
 			}
 		}
 
