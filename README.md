@@ -57,6 +57,17 @@ pdcli login --api-key <api-key>
 ```
 Once logged in you need not login ever again unless there is a change in the API key.
 
+## Teams
+
+A user account might belong to a single or multiple pagerduty teams.
+
+To set (or) change your pdcli team, use the command:
+
+```
+pdcli teams
+```
+This will list out all the teams a user is a part of and will prompt the user to select a team for pdcli.
+
 ## View Alerts
 
 To view the alerts triggered by PagerDuty, use the command:
