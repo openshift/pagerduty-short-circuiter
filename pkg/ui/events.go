@@ -62,5 +62,24 @@ func (tui *TUI) ackowledgeSelectedIncidents() {
 		text = text + v.ID + " - " + v.Title + "\n"
 	}
 
+	var i int
+
+	// Remove ack'ed alerts from table
+	for i < tui.IncidentsTable.GetRowCount() {
+		for _, v := range tui.AckIncidents {
+			if tui.IncidentsTable.GetCell(i, 0).Text == v {
+				tui.IncidentsTable.RemoveRow(i)
+			}
+		}
+
+		i++
+	}
+
+	tui.AckIncidents = []string{}
+
+	// Refresh Page
+	tui.SetIncidentsTableEvents()
+	tui.Pages.SwitchToPage(AckIncidentsPageTitle)
+
 	tui.showSecondaryView(text)
 }

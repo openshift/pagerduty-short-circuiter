@@ -85,7 +85,6 @@ func (tui *TUI) initKeyboard() {
 					tui.showSecondaryView("Please select atleast one incident to acknowledge")
 				} else {
 					tui.ackowledgeSelectedIncidents()
-					tui.AckIncidents = []string{}
 				}
 			}
 
