@@ -95,18 +95,10 @@ func (tui *TUI) initKeyboard() {
 
 	tui.AlertMetadata.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		if event.Rune() == 'Y' || event.Rune() == 'y' {
-			tui.App.Stop()
+			err := pdcli.ClusterLogin(tui.ClusterID)
 
-			hasExited, _ := pdcli.ClusterLogin(tui.ClusterID)
-
-			if hasExited {
-				tui.Init()
-				tui.Pages.AddAndSwitchToPage(AlertsPageTitle, tui.Table, true)
-				err := tui.StartApp()
-
-				if err != nil {
-					panic(err)
-				}
+			if err != nil {
+				panic(err)
 			}
 		}
 

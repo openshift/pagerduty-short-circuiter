@@ -3,8 +3,8 @@ package pdcli
 import (
 	"errors"
 	"fmt"
-	"os"
 	"os/exec"
+	"runtime"
 	"strings"
 
 	pdApi "github.com/PagerDuty/go-pagerduty"
@@ -268,7 +268,9 @@ func ParseAlertMetaData(alert Alert) string {
 }
 
 // ClusterLogin spawns an instance of ocm-container.
-func ClusterLogin(clusterID string) (bool, error) {
+func ClusterLogin(clusterID string) error {
+
+	var cmd *exec.Cmd
 
 	// Check if ocm-container is installed locally
 	ocmContainer, err := exec.LookPath("ocm-container")
@@ -277,22 +279,21 @@ func ClusterLogin(clusterID string) (bool, error) {
 		fmt.Println("ocm-container is not found.\nPlease install it via:", constants.OcmContainerURL)
 	}
 
-	cmd := exec.Command(ocmContainer, clusterID)
+	// Check if the current OS is Linux
+	if runtime.GOOS == "linux" {
+		cmd = exec.Command("gnome-terminal", "--", ocmContainer, clusterID)
+	}
 
-	cmd.Stdin = os.Stdin
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
+	// Check if the current OS in windows
+	if runtime.GOOS == "windows" {
+		cmd = exec.Command("cmd", "/C", "start", ocmContainer, clusterID)
+	}
 
 	err = cmd.Run()
 
 	if err != nil {
-		return false, err
+		return err
 	}
 
-	// If the command exits, switch control flow back to the UI.
-	if cmd.ProcessState.Exited() {
-		return true, nil
-	}
-
-	return false, nil
+	return nil
 }
