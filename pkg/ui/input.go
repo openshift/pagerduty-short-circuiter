@@ -104,28 +104,28 @@ func (tui *TUI) initKeyboard() {
 					tui.showError(err.Error())
 				}
 			} else {
-
 				tui.App.Stop()
 
-				hasExited, err := pdcli.ClusterLoginShell(tui.ClusterID)
+				cmd := pdcli.ClusterLoginShell(tui.ClusterID)
+
+				err := cmd.Run()
 
 				if err != nil {
 					tui.showError(err.Error())
 				}
 
-				if hasExited {
+				cmd.Wait()
 
-					// Spin up TUI
-					tui.Init()
-					tui.Pages.AddAndSwitchToPage(AlertsPageTitle, tui.Table, true)
-					tui.Pages.AddPage(AckIncidentsPageTitle, tui.IncidentsTable, true, false)
+				tui.Init()
+				tui.Pages.AddAndSwitchToPage(AlertsPageTitle, tui.Table, true)
+				tui.Pages.AddPage(AckIncidentsPageTitle, tui.IncidentsTable, true, false)
 
-					err := tui.StartApp()
+				err = tui.StartApp()
 
-					if err != nil {
-						panic(err)
-					}
+				if err != nil {
+					panic(err)
 				}
+
 			}
 		}
 

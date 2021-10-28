@@ -334,7 +334,7 @@ func ClusterLoginEmulator(clusterID string) error {
 }
 
 // ClusterLoginShell spawns an instance of ocm-container in the same shell.
-func ClusterLoginShell(clusterID string) (bool, error) {
+func ClusterLoginShell(clusterID string) *exec.Cmd {
 
 	// Check if ocm-container is installed locally
 	ocmContainer, err := exec.LookPath("ocm-container")
@@ -349,16 +349,5 @@ func ClusterLoginShell(clusterID string) (bool, error) {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
-	err = cmd.Run()
-
-	if err != nil {
-		return false, err
-	}
-
-	// If the command exits, switch control flow back to the UI.
-	if cmd.ProcessState.Exited() {
-		return true, nil
-	}
-
-	return false, nil
+	return cmd
 }
