@@ -96,37 +96,42 @@ func (tui *TUI) initKeyboard() {
 
 		if event.Rune() == 'Y' || event.Rune() == 'y' {
 
-			if tui.HasEmulator {
-				err := pdcli.ClusterLoginEmulator(tui.ClusterID)
+			// if tui.HasEmulator {
+			// 	err := pdcli.ClusterLoginEmulator(tui.ClusterID)
 
-				if err != nil {
-					tui.showError(err.Error())
-				}
-			} else {
-				tui.App.Stop()
+			// 	if err != nil {
+			// 		tui.showError(err.Error())
+			// 	}
+			// } else {
+			tui.App.Stop()
 
-				cmd := pdcli.ClusterLoginShell(tui.ClusterID)
+			cmd := pdcli.ClusterLoginShell(tui.ClusterID)
 
-				err := cmd.Run()
+			err := cmd.Start()
 
-				if err != nil {
-					tui.showError(err.Error())
-				}
-
-				cmd.Wait()
-
-				tui.Init()
-				tui.Pages.AddAndSwitchToPage(AlertsPageTitle, tui.Table, true)
-				tui.Pages.AddPage(AckIncidentsPageTitle, tui.IncidentsTable, true, false)
-
-				err = tui.StartApp()
-
-				if err != nil {
-					panic(err)
-				}
-
+			if err != nil {
+				tui.showError(err.Error())
 			}
+
+			err = cmd.Wait()
+
+			tui.Init()
+
+			if err != nil {
+				tui.showError(err.Error())
+			}
+
+			tui.Pages.AddAndSwitchToPage(AlertsPageTitle, tui.Table, true)
+			tui.Pages.AddPage(AckIncidentsPageTitle, tui.IncidentsTable, true, false)
+
+			err = tui.StartApp()
+
+			if err != nil {
+				panic(err)
+			}
+
 		}
+		//}
 
 		return event
 	})
