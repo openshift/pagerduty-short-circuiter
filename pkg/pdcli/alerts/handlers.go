@@ -3,6 +3,7 @@ package pdcli
 import (
 	"errors"
 	"fmt"
+	"os"
 	"os/exec"
 	"strings"
 
@@ -268,32 +269,6 @@ func ParseAlertMetaData(alert Alert) string {
 	return alertData
 }
 
-// ClusterLogin spawns an instance of ocm-container.
-func ClusterLogin(clusterID string) error {
-
-	var cmd *exec.Cmd
-
-	// Check if ocm-container is installed locally
-	ocmContainer, err := exec.LookPath("ocm-container")
-
-	if err != nil {
-		return errors.New("ocm-container is not found.\nPlease install it via: " + constants.OcmContainerURL)
-	}
-
-	// OCM container command to be executed for cluster login
-	ocmCommand := ocmContainer + " " + clusterID
-
-	cmd = exec.Command(Terminal, "-e", ocmCommand)
-
-	err = cmd.Run()
-
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 // InitTerminalEmulator tries to set a terminal emulator by trying some known terminal emulators.
 func InitTerminalEmulator() {
 	emulators := []string{
@@ -320,13 +295,70 @@ func InitTerminalEmulator() {
 
 		output, _ := cmd.CombinedOutput()
 
+		cmd.ProcessState.Exited()
+
 		term := string(output)
 
 		term = strings.TrimSpace(term)
 
 		if term != "" {
 			Terminal = term
-			return
 		}
 	}
+}
+
+// ClusterLoginEmulator spawns an instance of ocm-container in a new terminal.
+func ClusterLoginEmulator(clusterID string) error {
+
+	var cmd *exec.Cmd
+
+	// Check if ocm-container is installed locally
+	ocmContainer, err := exec.LookPath("ocm-container")
+
+	if err != nil {
+		return errors.New("ocm-container is not found.\nPlease install it via: " + constants.OcmContainerURL)
+	}
+
+	// OCM container command to be executed for cluster login
+	ocmCommand := ocmContainer + " " + clusterID
+
+	cmd = exec.Command(Terminal, "-e", ocmCommand)
+
+	err = cmd.Run()
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// ClusterLoginShell spawns an instance of ocm-container in the same shell.
+func ClusterLoginShell(clusterID string) (bool, error) {
+
+	// Check if ocm-container is installed locally
+	ocmContainer, err := exec.LookPath("ocm-container")
+
+	if err != nil {
+		fmt.Println("ocm-container is not found.\nPlease install it via:", constants.OcmContainerURL)
+	}
+
+	cmd := exec.Command(ocmContainer, clusterID)
+
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	err = cmd.Run()
+
+	if err != nil {
+		return false, err
+	}
+
+	// If the command exits, switch control flow back to the UI.
+	if cmd.ProcessState.Exited() {
+		return true, nil
+	}
+
+	return false, nil
 }

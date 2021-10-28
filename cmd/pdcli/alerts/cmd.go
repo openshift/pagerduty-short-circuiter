@@ -94,9 +94,6 @@ func alertsHandler(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	// Determine terminal emulator for cluster login
-	pdcli.InitTerminalEmulator()
-
 	// Fetch the currently logged in user's ID.
 	user, err := client.GetCurrentUser(pdApi.GetCurrentUserOptions{})
 
@@ -209,6 +206,13 @@ func alertsHandler(cmd *cobra.Command, args []string) error {
 
 	tui.AssginedTo = options.assignment
 	tui.FetchedAlerts = strconv.Itoa(len(alerts))
+
+	// Determine terminal emulator for cluster login
+	pdcli.InitTerminalEmulator()
+
+	if pdcli.Terminal != "" {
+		tui.HasEmulator = true
+	}
 
 	// Setup TUI
 	tui.Init()

@@ -94,12 +94,35 @@ func (tui *TUI) initKeyboard() {
 	}
 
 	tui.AlertMetadata.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
-		if event.Rune() == 'Y' || event.Rune() == 'y' {
-			err := pdcli.ClusterLogin(tui.ClusterID)
 
-			if err != nil {
-				tui.showError(err.Error())
+		if event.Rune() == 'Y' || event.Rune() == 'y' {
+			if tui.HasEmulator {
+				err := pdcli.ClusterLoginEmulator(tui.ClusterID)
+
+				if err != nil {
+					tui.showError(err.Error())
+				}
+			} else {
+
+				tui.App.Stop()
+
+				hasExited, err := pdcli.ClusterLoginShell(tui.ClusterID)
+
+				if err != nil {
+					tui.showError(err.Error())
+				}
+
+				if hasExited {
+					tui.Init()
+					tui.Pages.AddAndSwitchToPage(AlertsPageTitle, tui.Table, true)
+					err := tui.StartApp()
+
+					if err != nil {
+						panic(err)
+					}
+				}
 			}
+
 		}
 
 		return event
