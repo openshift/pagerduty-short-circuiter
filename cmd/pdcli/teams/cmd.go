@@ -38,13 +38,14 @@ func teamsHandler(cmd *cobra.Command, args []string) error {
 	}
 
 	// Fetch the user selected team ID
-	teamID, err := SelectTeam(pdClient, os.Stdin)
+	teamID, teamName, err := SelectTeam(pdClient, os.Stdin)
 
 	if err != nil {
 		return err
 	}
 
 	cfg.TeamID = teamID
+	cfg.Team = teamName
 
 	// Save the modified configuration
 	err = config.Save(cfg)
@@ -58,18 +59,19 @@ func teamsHandler(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-// SelectTeam prompts the user to select a team and returns the selected team ID.
-func SelectTeam(c client.PagerDutyClient, stdin io.Reader) (string, error) {
-	var selectedTeam string
+// SelectTeam prompts the user to select a team and returns the selected team ID and team name.
+func SelectTeam(c client.PagerDutyClient, stdin io.Reader) (string, string, error) {
+	var selectedTeamID string
+	var selectedTeamName string
 	var userOptions pdApi.GetCurrentUserOptions
 
-	userTeams := make(map[string]string)
+	userTeams := make(map[string][]string)
 
 	// Fetch the currently logged in user details
 	user, err := c.GetCurrentUser(userOptions)
 
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
 	// Check if the user belongs to any team
@@ -80,7 +82,7 @@ func SelectTeam(c client.PagerDutyClient, stdin io.Reader) (string, error) {
 
 	for i, team := range user.Teams {
 		index := strconv.Itoa(i + 1)
-		userTeams[index] = team.ID
+		userTeams[index] = []string{team.ID, team.Summary}
 		fmt.Printf("%s. %s\n", index, team.Summary)
 	}
 
@@ -91,16 +93,17 @@ func SelectTeam(c client.PagerDutyClient, stdin io.Reader) (string, error) {
 	input, err := reader.ReadString('\n')
 
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
 	input = strings.TrimSpace(input)
 
 	if val, ok := userTeams[input]; ok {
-		selectedTeam = val
+		selectedTeamID = val[0]
+		selectedTeamName = val[1]
 	} else {
-		return "", fmt.Errorf("please select a valid option")
+		return "", "", fmt.Errorf("please select a valid option")
 	}
 
-	return selectedTeam, nil
+	return selectedTeamID, selectedTeamName, nil
 }
