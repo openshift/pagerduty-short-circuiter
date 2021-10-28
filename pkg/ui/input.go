@@ -107,15 +107,20 @@ func (tui *TUI) initKeyboard() {
 
 				cmd := pdcli.ClusterLoginShell(tui.ClusterID)
 
-				err := cmd.Run()
+				err := cmd.Start()
 
 				if err != nil {
 					tui.showError(err.Error())
 				}
 
-				cmd.Wait()
+				err = cmd.Wait()
 
 				tui.Init()
+
+				if err != nil {
+					tui.showError(err.Error())
+				}
+
 				tui.Pages.AddAndSwitchToPage(AlertsPageTitle, tui.Table, true)
 				tui.Pages.AddPage(AckIncidentsPageTitle, tui.IncidentsTable, true, false)
 
