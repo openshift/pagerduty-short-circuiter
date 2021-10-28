@@ -37,6 +37,7 @@ type TUI struct {
 	Client            client.PagerDutyClient
 	Primary           string
 	Secondary         string
+	HasEmulator       bool
 }
 
 const (

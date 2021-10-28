@@ -85,7 +85,6 @@ func (tui *TUI) initKeyboard() {
 					tui.showSecondaryView("Please select atleast one incident to acknowledge")
 				} else {
 					tui.ackowledgeSelectedIncidents()
-					tui.AckIncidents = []string{}
 				}
 			}
 
@@ -94,19 +93,38 @@ func (tui *TUI) initKeyboard() {
 	}
 
 	tui.AlertMetadata.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+
 		if event.Rune() == 'Y' || event.Rune() == 'y' {
-			tui.App.Stop()
 
-			hasExited, _ := pdcli.ClusterLogin(tui.ClusterID)
+			if tui.HasEmulator {
+				err := pdcli.ClusterLoginEmulator(tui.ClusterID)
 
-			if hasExited {
+				if err != nil {
+					tui.showError(err.Error())
+				}
+			} else {
+				tui.App.Stop()
+
+				cmd := pdcli.ClusterLoginShell(tui.ClusterID)
+
+				err := cmd.Run()
+
+				if err != nil {
+					tui.showError(err.Error())
+				}
+
+				cmd.Wait()
+
 				tui.Init()
 				tui.Pages.AddAndSwitchToPage(AlertsPageTitle, tui.Table, true)
-				err := tui.StartApp()
+				tui.Pages.AddPage(AckIncidentsPageTitle, tui.IncidentsTable, true, false)
+
+				err = tui.StartApp()
 
 				if err != nil {
 					panic(err)
 				}
+
 			}
 		}
 
