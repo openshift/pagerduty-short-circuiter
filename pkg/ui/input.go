@@ -96,6 +96,7 @@ func (tui *TUI) initKeyboard() {
 	tui.AlertMetadata.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 
 		if event.Rune() == 'Y' || event.Rune() == 'y' {
+
 			if tui.HasEmulator {
 				err := pdcli.ClusterLoginEmulator(tui.ClusterID)
 
@@ -113,8 +114,12 @@ func (tui *TUI) initKeyboard() {
 				}
 
 				if hasExited {
+
+					// Spin up TUI
 					tui.Init()
 					tui.Pages.AddAndSwitchToPage(AlertsPageTitle, tui.Table, true)
+					tui.Pages.AddPage(AckIncidentsPageTitle, tui.IncidentsTable, true, false)
+
 					err := tui.StartApp()
 
 					if err != nil {
@@ -122,7 +127,6 @@ func (tui *TUI) initKeyboard() {
 					}
 				}
 			}
-
 		}
 
 		return event
