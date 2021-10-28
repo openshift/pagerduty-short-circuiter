@@ -277,7 +277,7 @@ func ClusterLogin(clusterID string) error {
 	ocmContainer, err := exec.LookPath("ocm-container")
 
 	if err != nil {
-		fmt.Println("ocm-container is not found.\nPlease install it via:", constants.OcmContainerURL)
+		return errors.New("ocm-container is not found.\nPlease install it via: " + constants.OcmContainerURL)
 	}
 
 	// OCM container command to be executed for cluster login
