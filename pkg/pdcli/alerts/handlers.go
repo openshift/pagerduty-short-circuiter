@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"os/exec"
-	"runtime"
 	"strings"
 
 	pdApi "github.com/PagerDuty/go-pagerduty"
@@ -31,6 +30,8 @@ type Alert struct {
 	Tags        string
 	WebURL      string
 }
+
+var Terminal string
 
 // GetIncidents returns a slice of pagerduty incidents.
 func GetIncidents(c client.PagerDutyClient, opts *pdApi.ListIncidentsOptions) ([]pdApi.Incident, error) {
@@ -279,15 +280,10 @@ func ClusterLogin(clusterID string) error {
 		fmt.Println("ocm-container is not found.\nPlease install it via:", constants.OcmContainerURL)
 	}
 
-	// Check if the current OS is Linux
-	if runtime.GOOS == "linux" {
-		cmd = exec.Command("gnome-terminal", "--", ocmContainer, clusterID)
-	}
+	// OCM container command to be executed for cluster login
+	ocmCommand := ocmContainer + " " + clusterID
 
-	// Check if the current OS in windows
-	if runtime.GOOS == "windows" {
-		cmd = exec.Command("cmd", "/C", "start", ocmContainer, clusterID)
-	}
+	cmd = exec.Command(Terminal, "-e", ocmCommand)
 
 	err = cmd.Run()
 
@@ -296,4 +292,41 @@ func ClusterLogin(clusterID string) error {
 	}
 
 	return nil
+}
+
+// InitTerminalEmulator tries to set a terminal emulator by trying some known terminal emulators.
+func InitTerminalEmulator() {
+	emulators := []string{
+		"x-terminal-emulator",
+		"mate-terminal",
+		"gnome-terminal",
+		"terminator",
+		"xfce4-terminal",
+		"urxvt",
+		"rxvt",
+		"termit",
+		"Eterm",
+		"aterm",
+		"uxterm",
+		"xterm",
+		"roxterm",
+		"termite",
+		"kitty",
+		"hyper",
+	}
+
+	for _, t := range emulators {
+		cmd := exec.Command("command", "-v", t)
+
+		output, _ := cmd.CombinedOutput()
+
+		term := string(output)
+
+		term = strings.TrimSpace(term)
+
+		if term != "" {
+			Terminal = term
+			return
+		}
+	}
 }
