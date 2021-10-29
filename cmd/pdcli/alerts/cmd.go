@@ -75,8 +75,8 @@ func init() {
 	Cmd.Flags().StringVar(
 		&options.status,
 		"status",
-		"trigerred",
-		"Filter alerts by status (trigerred, ack, resolved)",
+		"all",
+		"Filter alerts by status (all, trigerred, ack, resolved)",
 	)
 }
 
@@ -172,18 +172,16 @@ func alertsHandler(cmd *cobra.Command, args []string) error {
 	case "silentTest":
 		// Fetch incidents assigned to silent test
 		incidentOpts.UserIDs = append(users, constants.SilentTest)
-
 		tui.AssginedTo = "Silent Test"
 
 	case "self":
 		// Fetch incidents only assigned to self
 		incidentOpts.UserIDs = append(users, user.ID)
-
+		tui.AssginedTo = user.Name
 
 	default:
 		return fmt.Errorf("please enter a valid assigned-to option")
 
-		tui.AssginedTo = user.Name
 	}
 
 	// Check urgency
@@ -202,11 +200,19 @@ func alertsHandler(cmd *cobra.Command, args []string) error {
 
 	case "ack":
 		// Fetch incidents that have been acknowledged
-		incidentOpts.Statuses = append(users, constants.StatusAcknowledged)
+		incidentOpts.Statuses = append(status, constants.StatusAcknowledged)
 
 	case "resolved":
 		// Fetch resolved incidents
-		incidentOpts.Statuses = append(users, constants.StatusResolved)
+		pdcli.FetchResolved = true
+
+	case "all":
+		// Fetch all incidents
+		pdcli.FetchAll = true
+		incidentOpts.Statuses = append(status,
+			constants.StatusTriggered,
+			constants.StatusAcknowledged,
+		)
 
 	default:
 		return fmt.Errorf("please enter a valid status")
@@ -246,6 +252,7 @@ func alertsHandler(cmd *cobra.Command, args []string) error {
 		alerts = append(alerts, incidentAlerts...)
 	}
 
+	// Total alerts retreived
 	tui.FetchedAlerts = strconv.Itoa(len(alerts))
 
 	// Determine terminal emulator for cluster login

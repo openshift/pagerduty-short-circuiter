@@ -32,7 +32,11 @@ type Alert struct {
 	WebURL      string
 }
 
-var Terminal string
+var (
+	Terminal      string // Terminal emulator
+	FetchResolved bool   // Resolved status
+	FetchAll      bool   // default status
+)
 
 // GetIncidents returns a slice of pagerduty incidents.
 func GetIncidents(c client.PagerDutyClient, opts *pdApi.ListIncidentsOptions) ([]pdApi.Incident, error) {
@@ -83,9 +87,24 @@ func GetIncidentAlerts(c client.PagerDutyClient, incidentID string) ([]Alert, er
 
 	for _, alert := range incidentAlerts.Alerts {
 
-		// Check if the alert is not resolved
-		if alert.Status != constants.StatusResolved {
+		// If the status flag is equal to resolved
+		if FetchResolved {
+			// Check if the alert is not trigerred
+			if alert.Status != constants.StatusTriggered {
+				tempAlertObj := Alert{}
+
+				err = tempAlertObj.ParseAlertData(c, &alert)
+
+				if err != nil {
+					return nil, err
+				}
+
+				alerts = append(alerts, tempAlertObj)
+			}
+
+		} else if FetchAll {
 			tempAlertObj := Alert{}
+
 			err = tempAlertObj.ParseAlertData(c, &alert)
 
 			if err != nil {
@@ -93,6 +112,20 @@ func GetIncidentAlerts(c client.PagerDutyClient, incidentID string) ([]Alert, er
 			}
 
 			alerts = append(alerts, tempAlertObj)
+
+		} else {
+			// Check if the alert is not resolved
+			if alert.Status != constants.StatusResolved {
+				tempAlertObj := Alert{}
+
+				err = tempAlertObj.ParseAlertData(c, &alert)
+
+				if err != nil {
+					return nil, err
+				}
+
+				alerts = append(alerts, tempAlertObj)
+			}
 		}
 
 	}
