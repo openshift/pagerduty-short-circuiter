@@ -12,14 +12,23 @@ func (tui *TUI) initKeyboard() {
 
 		if event.Key() == tcell.KeyEscape {
 
+			// Check if alerts command is executed
 			if tui.Pages.HasPage(AlertsPageTitle) {
-				tui.InitAlertsUI(pdcli.AllAlerts, AlertsTableTitle, AlertsPageTitle)
-				tui.Footer.SetText(FooterTextAlerts)
+				page, _ := tui.Pages.GetFrontPage()
 
-				tui.Pages.SwitchToPage(AlertsPageTitle)
-				tui.showDefaultSecondaryView()
+				if page == AlertDataPageTitle {
+					tui.Pages.SwitchToPage(tui.FrontPage)
+					tui.showDefaultSecondaryView()
+				} else {
+					tui.InitAlertsUI(pdcli.AllAlerts, AlertsTableTitle, AlertsPageTitle)
+					tui.Footer.SetText(FooterTextAlerts)
+
+					tui.Pages.SwitchToPage(AlertsPageTitle)
+					tui.showDefaultSecondaryView()
+				}
 			}
 
+			// Check if oncall command is executed
 			if tui.Pages.HasPage(OncallPageTitle) {
 				tui.Pages.SwitchToPage(OncallPageTitle)
 				tui.Footer.SetText(FooterTextOncall)
