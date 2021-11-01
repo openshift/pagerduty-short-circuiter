@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/PagerDuty/go-pagerduty"
 	"github.com/gdamore/tcell/v2"
 	"github.com/openshift/pagerduty-short-circuiter/pkg/client"
+	pdcli "github.com/openshift/pagerduty-short-circuiter/pkg/pdcli/alerts"
 	"github.com/rivo/tview"
 )
 
@@ -26,54 +28,23 @@ type TUI struct {
 	// Misc. UI elements
 	secondaryText string
 
+	// API related
+	Client       client.PagerDutyClient
+	IncidentOpts pagerduty.ListIncidentsOptions
+
 	// Internals
+	SelectedIncidents map[string]string
+	Incidents         [][]string
+	AckIncidents      []string
 	Username          string
 	AssginedTo        string
+	Columns           string
 	FetchedAlerts     string
-	Incidents         [][]string
-	SelectedIncidents map[string]string
-	AckIncidents      []string
 	ClusterID         string
-	Client            client.PagerDutyClient
 	Primary           string
 	Secondary         string
 	HasEmulator       bool
 }
-
-const (
-	// Table Titles
-	AlertsTableTitle         = "[ ALERTS ]"
-	AlertMetadataViewTitle   = "[ ALERT DATA ]"
-	IncidentsTableTitle      = "[ INCIDENTS ]"
-	OncallTableTitle         = "[ ONCALL ]"
-	NextOncallTableTitle     = "[ NEXT ONCALL ]"
-	AllTeamsOncallTableTitle = "[ ALL TEAMS ONCALL ]"
-
-	// Page Titles
-	AlertsPageTitle         = "Alerts"
-	AlertDataPageTitle      = "Metadata"
-	AckIncidentsPageTitle   = "Incidents"
-	OncallPageTitle         = "Oncall"
-	NextOncallPageTitle     = "Next Oncall"
-	AllTeamsOncallPageTitle = "All Teams Oncall"
-
-	// Text Format
-	TitleFmt = " [lightcyan::b]%s "
-
-	// Footer
-	FooterText       = "[Q] Quit | [Esc] Go Back"
-	FooterTextAlerts = FooterText + " | [A] Ack Mode"
-	FooterTextAck    = FooterText + " | [ENTER] Select Incident  | [CTRL+A] Acknowledge Incidents"
-	FooterTextOncall = FooterText + " | [N] View Your Next Oncall Schedule | [A] View All Teams Oncall"
-
-	// Colors
-	TableTitleColor = tcell.ColorLightCyan
-	BorderColor     = tcell.ColorLightGray
-	FooterTextColor = tcell.ColorGray
-	InfoTextColor   = tcell.ColorLightSlateGray
-	ErrorTextColor  = tcell.ColorRed
-	PromptTextColor = tcell.ColorLightGreen
-)
 
 // queueUpdateDraw is used to synchronize access to primitives from non-main goroutines.
 func (tui *TUI) queueUpdateDraw(f func()) {
@@ -114,6 +85,50 @@ func (tui *TUI) showError(msg string) {
 	go time.AfterFunc(5*time.Second, tui.showDefaultSecondaryView)
 }
 
+// InitAlertsUI initializes TUI table component.
+// It adds the returned table as a new TUI page view.
+func (tui *TUI) InitAlertsUI(alerts []pdcli.Alert, tableTitle string, pageTitle string) {
+	headers, data := pdcli.GetTableData(alerts, tui.Columns)
+	tui.Table = tui.InitTable(headers, data, true, false, tableTitle)
+	tui.SetAlertsTableEvents(alerts)
+	tui.SetAlertsSecondaryData()
+
+	tui.Pages.AddPage(pageTitle, tui.Table, true, true)
+}
+
+// InitIncidentsUI initializes TUI table component.
+// It adds the returned table as a new TUI page view.
+func (tui *TUI) InitIncidentsUI(incidents [][]string, tableTitle string, pageTitle string, isSelectable bool) {
+	incidentHeaders := []string{"INCIDENT ID", "NAME", "SEVERITY", "STATUS", "SERVICE"}
+
+	if isSelectable {
+		tui.IncidentsTable = tui.InitTable(incidentHeaders, incidents, true, true, tableTitle)
+		tui.SetIncidentsTableEvents()
+	} else {
+		tui.IncidentsTable = tui.InitTable(incidentHeaders, incidents, false, false, tableTitle)
+	}
+
+	tui.Pages.AddPage(pageTitle, tui.IncidentsTable, true, false)
+}
+
+// initFooter initializes the footer text depending on the page currently visible.
+func (t *TUI) initFooter() {
+	name, _ := t.Pages.GetFrontPage()
+
+	switch name {
+
+	case AlertsPageTitle:
+		t.Footer.SetText(FooterTextAlerts)
+
+	case OncallPageTitle:
+		t.Footer.SetText(FooterTextOncall)
+
+	default:
+		t.Footer.SetText(FooterText)
+
+	}
+}
+
 // Init initializes all the TUI main elements.
 func (tui *TUI) Init() {
 
@@ -150,24 +165,6 @@ func (tui *TUI) Init() {
 		AddItem(tui.Pages, 0, 6, true).
 		AddItem(tui.Info, 0, 1, false).
 		AddItem(tui.Footer, 0, 1, false)
-}
-
-// initFooter initializes the footer text depending on the page currently visible.
-func (t *TUI) initFooter() {
-	name, _ := t.Pages.GetFrontPage()
-
-	switch name {
-
-	case AlertsPageTitle:
-		t.Footer.SetText(FooterTextAlerts)
-
-	case OncallPageTitle:
-		t.Footer.SetText(FooterTextOncall)
-
-	default:
-		t.Footer.SetText(FooterText)
-
-	}
 }
 
 // StartApp sets the UI layout and renders all the TUI elements.
