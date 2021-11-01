@@ -55,6 +55,16 @@ func (tui *TUI) setupAlertsPageInput() {
 				tui.InitAlertsUI(pdcli.TrigerredAlerts, TrigerredAlertsTableTitle, TrigerredAlertsPageTitle)
 			}
 
+			if event.Rune() == '3' {
+				tui.SeedAckIncidentsUI()
+
+				if len(tui.Incidents) == 0 {
+					tui.showSecondaryView("No acknowledged incidents assigned to " + tui.Username + " found.")
+				}
+
+				tui.Pages.SwitchToPage(AckIncidentsPageTitle)
+			}
+
 			if event.Rune() == 'A' || event.Rune() == 'a' {
 
 				tui.SeedIncidentsUI()
@@ -87,17 +97,6 @@ func (tui *TUI) setupIncidentsPageInput() {
 				} else {
 					tui.ackowledgeSelectedIncidents()
 				}
-			}
-
-			if event.Rune() == '1' {
-
-				tui.SeedAckIncidentsUI()
-
-				if len(tui.Incidents) == 0 {
-					tui.showSecondaryView("No acknowledged incidents assigned to " + tui.Username + " found.")
-				}
-
-				tui.Pages.SwitchToPage(AckIncidentsPageTitle)
 			}
 
 			return event

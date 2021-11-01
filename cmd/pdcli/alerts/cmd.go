@@ -164,7 +164,7 @@ func alertsHandler(cmd *cobra.Command, args []string) error {
 		incidentOpts.TeamIDs = append(teams, teamID)
 
 		// Fetch incidents with the following statuses
-		incidentOpts.Statuses = append(status, constants.StatusTriggered, constants.StatusAcknowledged, constants.StatusResolved)
+		incidentOpts.Statuses = append(status, constants.StatusTriggered, constants.StatusAcknowledged)
 
 	case "silentTest":
 		// Fetch incidents assigned to silent test
@@ -172,7 +172,7 @@ func alertsHandler(cmd *cobra.Command, args []string) error {
 		tui.AssginedTo = "Silent Test"
 
 		// Fetch incidents with the following statuses
-		incidentOpts.Statuses = append(status, constants.StatusTriggered, constants.StatusAcknowledged, constants.StatusResolved)
+		incidentOpts.Statuses = append(status, constants.StatusTriggered, constants.StatusAcknowledged)
 
 	case "self":
 		// Fetch incidents only assigned to self
@@ -180,7 +180,7 @@ func alertsHandler(cmd *cobra.Command, args []string) error {
 		tui.AssginedTo = user.Name
 
 		// Fetch only acknowledged incidents when option is self (default)
-		incidentOpts.Statuses = append(status, constants.StatusAcknowledged, constants.StatusResolved)
+		incidentOpts.Statuses = append(status, constants.StatusAcknowledged)
 
 	default:
 		return fmt.Errorf("please enter a valid assigned-to option")

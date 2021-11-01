@@ -12,7 +12,7 @@ const (
 	ResolvedAlertsTableTitle  = "[ RESOLVED ALERTS ]"
 	TrigerredAlertsTableTitle = "[ TRIGERRED ALERTS ]"
 	AlertMetadataViewTitle    = "[ ALERT DATA ]"
-	IncidentsTableTitle       = "[ INCIDENTS ]"
+	IncidentsTableTitle       = "[ TRIGERRED INCIDENTS ]"
 	AckIncidentsTableTitle    = "[ ACKNOWLEDGED INCIDENTS ]"
 	OncallTableTitle          = "[ ONCALL ]"
 	NextOncallTableTitle      = "[ NEXT ONCALL ]"
@@ -31,7 +31,7 @@ const (
 
 	// Footer
 	FooterText          = "[Q] Quit | [Esc] Go Back"
-	FooterTextAlerts    = FooterText + " | [A] Ack Mode | [1] View Resolved Alerts | [2] View Trigerred Alerts"
+	FooterTextAlerts    = FooterText + " | [A] View Trigerred Incidents | [1] View Resolved Alerts | [2] View Trigerred Alerts | [3] View Open Incidents"
 	FooterTextIncidents = FooterText + " | [ENTER] Select Incident  | [CTRL+A] Acknowledge Incidents | [1] View Acknowledged Incidents"
 	FooterTextOncall    = FooterText + " | [N] View Your Next Oncall Schedule | [A] View All Teams Oncall"
 
