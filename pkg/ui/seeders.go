@@ -26,7 +26,7 @@ func (tui *TUI) SeedAckIncidentsUI() {
 
 	tui.InitIncidentsUI(tui.Incidents, AckIncidentsTableTitle, AckIncidentsPageTitle, false)
 
-	tui.Footer.SetText(FooterText)
+	tui.Footer.SetText(FooterTextAlerts)
 }
 
 // SeedIncidentsUI fetches trigerred incidents and initializes a TUI table/page component.
