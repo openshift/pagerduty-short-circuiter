@@ -24,6 +24,7 @@ type TUI struct {
 	Info                *tview.TextView
 	Layout              *tview.Flex
 	Footer              *tview.TextView
+	FrontPage           string
 
 	// Misc. UI elements
 	secondaryText string
@@ -94,6 +95,7 @@ func (tui *TUI) InitAlertsUI(alerts []pdcli.Alert, tableTitle string, pageTitle 
 	tui.SetAlertsSecondaryData()
 
 	tui.Pages.AddPage(pageTitle, tui.Table, true, true)
+	tui.FrontPage = pageTitle
 }
 
 // InitIncidentsUI initializes TUI table component.
