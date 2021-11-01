@@ -65,7 +65,7 @@ func (tui *TUI) setupAlertsPageInput() {
 				tui.Pages.SwitchToPage(AckIncidentsPageTitle)
 			}
 
-			if event.Rune() == 'A' || event.Rune() == 'a' {
+			if event.Rune() == '4' {
 
 				tui.SeedIncidentsUI()
 
