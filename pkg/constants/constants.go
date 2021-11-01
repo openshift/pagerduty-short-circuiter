@@ -24,7 +24,7 @@ const (
 
 	// Regex
 	APIKeyRegex     = "^[a-z|A-Z0-9+_-]{20}$"
-	IncidentIdRegex = "^[A-Z0-9]{14}$"
+	IncidentIdRegex = "^[A-Z0-9]{7,14}$"
 	TeamIdRegex     = "^[A-Z0-9]{7}$"
 
 	// Sample API key for testing
