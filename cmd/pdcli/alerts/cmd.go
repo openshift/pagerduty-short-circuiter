@@ -102,11 +102,6 @@ func alertsHandler(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	// UI internals
-	tui.Client = client
-	tui.Username = user.Name
-	tui.Columns = options.columns
-
 	// Check for incident ID argument
 	if len(args) > 0 {
 		incidentID = strings.TrimSpace(args[0])
@@ -193,7 +188,11 @@ func alertsHandler(cmd *cobra.Command, args []string) error {
 		incidentOpts.Urgencies = []string{"high"}
 	}
 
+	// UI internals
+	tui.Client = client
 	tui.IncidentOpts = incidentOpts
+	tui.Username = user.Name
+	tui.Columns = options.columns
 
 	// Fetch incidents
 	incidents, err := pdcli.GetIncidents(client, &incidentOpts)
