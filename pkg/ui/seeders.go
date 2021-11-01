@@ -5,6 +5,32 @@ import (
 	pdcli "github.com/openshift/pagerduty-short-circuiter/pkg/pdcli/alerts"
 )
 
+// SeedHighAlertsUI fetches trigerred alerts with status high and initializes a TUI table/page component.
+func (tui *TUI) SeedHighAlertsUI() {
+	var triggeredHigh []pdcli.Alert
+
+	for _, alert := range pdcli.TrigerredAlerts {
+		if alert.Severity == constants.StatusHigh {
+			triggeredHigh = append(triggeredHigh, alert)
+		}
+	}
+
+	tui.InitAlertsUI(triggeredHigh, HighAlertsTableTitle, HighAlertsPageTitle)
+}
+
+// SeedHLowAlertsUI fetches trigerred alerts with status low and initializes a TUI table/page component.
+func (tui *TUI) SeedHLowAlertsUI() {
+	var triggeredLow []pdcli.Alert
+
+	for _, alert := range pdcli.TrigerredAlerts {
+		if alert.Severity == constants.StatusLow {
+			triggeredLow = append(triggeredLow, alert)
+		}
+	}
+
+	tui.InitAlertsUI(triggeredLow, LowAlertsTableTitle, LowAlertsPageTitle)
+}
+
 // SeedAckIncidentsUI fetches acknlowedged incidents and initializes a TUI table/page component.
 func (tui *TUI) SeedAckIncidentsUI() {
 

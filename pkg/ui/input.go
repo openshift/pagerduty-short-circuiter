@@ -76,6 +76,20 @@ func (tui *TUI) setupAlertsPageInput() {
 				tui.Pages.SwitchToPage(IncidentsPageTitle)
 			}
 
+			if event.Rune() == 'H' || event.Rune() == 'h' {
+
+				tui.SeedHighAlertsUI()
+
+				tui.Pages.SwitchToPage(HighAlertsPageTitle)
+			}
+
+			if event.Rune() == 'L' || event.Rune() == 'l' {
+
+				tui.SeedHLowAlertsUI()
+
+				tui.Pages.SwitchToPage(LowAlertsPageTitle)
+			}
+
 			return event
 		})
 	}
