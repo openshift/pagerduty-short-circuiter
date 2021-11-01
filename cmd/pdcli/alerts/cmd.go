@@ -50,10 +50,6 @@ var Cmd = &cobra.Command{
 
 func init() {
 
-	// Urgency
-	Cmd.Flags().BoolVar(&options.low, "low", false, "View all low alerts")
-	Cmd.Flags().BoolVar(&options.high, "high", true, "View all high alerts")
-
 	// Incident Assignment
 	Cmd.Flags().StringVar(
 		&options.assignment,
