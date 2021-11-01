@@ -69,14 +69,6 @@ func init() {
 		"incident.id,alert.id,cluster.name,alert,cluster.id,status,severity",
 		"Specify which columns to display separated by commas without any space in between",
 	)
-
-	// Alerts status
-	Cmd.Flags().StringVar(
-		&options.status,
-		"status",
-		"all",
-		"Filter alerts by status (all, trigerred, ack, resolved)",
-	)
 }
 
 // alertsHandler is the main alerts command handler.
