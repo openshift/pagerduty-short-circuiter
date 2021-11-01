@@ -169,7 +169,7 @@ func validateKey(apiKey string) (string, error) {
 func validateTeamID(teamID string) (string, error) {
 	teamID = strings.TrimSpace(teamID)
 
-	match, _ := regexp.MatchString(constants.IncidentIdRegex, teamID)
+	match, _ := regexp.MatchString(constants.TeamIdRegex, teamID)
 
 	if !match {
 		return "", fmt.Errorf("invalid Team ID")

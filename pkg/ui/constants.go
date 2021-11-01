@@ -32,7 +32,7 @@ const (
 	// Footer
 	FooterText          = "[Q] Quit | [Esc] Go Back"
 	FooterTextAlerts    = FooterText + " | [A] View Trigerred Incidents | [1] View Resolved Alerts | [2] View Trigerred Alerts | [3] View Open Incidents"
-	FooterTextIncidents = FooterText + " | [ENTER] Select Incident  | [CTRL+A] Acknowledge Incidents | [1] View Acknowledged Incidents"
+	FooterTextIncidents = FooterText + " | [ENTER] Select Incident  | [CTRL+A] Acknowledge Incidents"
 	FooterTextOncall    = FooterText + " | [N] View Your Next Oncall Schedule | [A] View All Teams Oncall"
 
 	// Colors
