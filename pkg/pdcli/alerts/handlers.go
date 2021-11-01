@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"sort"
 	"strings"
 
 	pdApi "github.com/PagerDuty/go-pagerduty"
@@ -33,9 +34,10 @@ type Alert struct {
 }
 
 var (
-	Terminal      string // Terminal emulator
-	FetchResolved bool   // Resolved status
-	FetchAll      bool   // default status
+	TrigerredAlerts []Alert
+	ResolvedAlerts  []Alert
+	AllAlerts       []Alert
+	Terminal        string // Terminal emulator
 )
 
 // GetIncidents returns a slice of pagerduty incidents.
@@ -87,48 +89,35 @@ func GetIncidentAlerts(c client.PagerDutyClient, incidentID string) ([]Alert, er
 
 	for _, alert := range incidentAlerts.Alerts {
 
-		// If the status flag is equal to resolved
-		if FetchResolved {
-			// Check if the alert is not trigerred
-			if alert.Status != constants.StatusTriggered {
-				tempAlertObj := Alert{}
+		status := alert.Status
 
-				err = tempAlertObj.ParseAlertData(c, &alert)
+		tempAlertObj := Alert{}
 
-				if err != nil {
-					return nil, err
-				}
+		switch status {
 
-				alerts = append(alerts, tempAlertObj)
-			}
-
-		} else if FetchAll {
-			tempAlertObj := Alert{}
-
+		case constants.StatusResolved:
 			err = tempAlertObj.ParseAlertData(c, &alert)
 
 			if err != nil {
 				return nil, err
 			}
 
-			alerts = append(alerts, tempAlertObj)
+			ResolvedAlerts = append(ResolvedAlerts, tempAlertObj)
 
-		} else {
-			// Check if the alert is not resolved
-			if alert.Status != constants.StatusResolved {
-				tempAlertObj := Alert{}
+		case constants.StatusTriggered:
+			err = tempAlertObj.ParseAlertData(c, &alert)
 
-				err = tempAlertObj.ParseAlertData(c, &alert)
-
-				if err != nil {
-					return nil, err
-				}
-
-				alerts = append(alerts, tempAlertObj)
+			if err != nil {
+				return nil, err
 			}
+
+			TrigerredAlerts = append(TrigerredAlerts, tempAlertObj)
 		}
 
+		alerts = append(alerts, tempAlertObj)
 	}
+
+	AllAlerts = append(AllAlerts, alerts...)
 
 	return alerts, nil
 }
@@ -383,4 +372,86 @@ func ClusterLoginShell(clusterID string) *exec.Cmd {
 	cmd.Stderr = os.Stderr
 
 	return cmd
+}
+
+// getTableData parses and returns tabular data for the given alerts, i.e table headers and rows.
+func GetTableData(alerts []Alert, cols string) ([]string, [][]string) {
+	var headers []string
+	var tableData [][]string
+
+	// columns returned by the columns flag
+	columns := strings.Split(cols, ",")
+
+	columnsMap := make(map[string]bool)
+
+	for _, c := range columns {
+		columnsMap[c] = true
+	}
+
+	headersMap := make(map[int]string)
+
+	for _, alert := range alerts {
+
+		var values []string
+
+		var i int
+
+		if columnsMap["incident.id"] {
+			i++
+			headersMap[i] = "INCIDENT ID"
+			values = append(values, alert.IncidentID)
+		}
+
+		if columnsMap["alert.id"] {
+			i++
+			headersMap[i] = "ALERT ID"
+			values = append(values, alert.AlertID)
+		}
+
+		if columnsMap["alert"] {
+			i++
+			headersMap[i] = "ALERT"
+			values = append(values, alert.Name)
+		}
+
+		if columnsMap["cluster.name"] {
+			i++
+			headersMap[i] = "CLUSTER NAME"
+			values = append(values, alert.ClusterName)
+		}
+
+		if columnsMap["cluster.id"] {
+			i++
+			headersMap[i] = "CLUSTER ID"
+			values = append(values, alert.ClusterID)
+		}
+
+		if columnsMap["status"] {
+			i++
+			headersMap[i] = "STATUS"
+			values = append(values, alert.Status)
+		}
+
+		if columnsMap["severity"] {
+			i++
+			headersMap[i] = "SEVERITY"
+			values = append(values, alert.Severity)
+		}
+
+		tableData = append(tableData, values)
+	}
+
+	keys := make([]int, 0)
+
+	for k := range headersMap {
+		keys = append(keys, k)
+	}
+
+	sort.Ints(keys)
+
+	for _, v := range keys {
+		headers = append(headers, headersMap[v])
+	}
+
+	return headers, tableData
 }

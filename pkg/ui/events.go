@@ -8,6 +8,7 @@ import (
 // SetAlertsTableEvents is the event handler for the alerts table.
 // It handles the program flow when a table selection is made.
 func (tui *TUI) SetAlertsTableEvents(alerts []pdcli.Alert) {
+
 	tui.Table.SetSelectedFunc(func(row int, column int) {
 		alertID := tui.Table.GetCell(row, 1).Text
 
@@ -22,19 +23,15 @@ func (tui *TUI) SetAlertsTableEvents(alerts []pdcli.Alert) {
 		tui.Pages.AddAndSwitchToPage(AlertDataPageTitle, tui.AlertMetadata, true)
 		tui.promptSecondaryView("Press 'Y' to proceed with cluster login")
 	})
-
 }
 
 // SetIncidentsTableEvents is the event handler for the incidents table in ack mode.
 // It handles the program flow when a table selection is made.
 func (tui *TUI) SetIncidentsTableEvents() {
 	tui.SelectedIncidents = make(map[string]string)
-	var text bool
 	tui.IncidentsTable.SetSelectedFunc(func(row, column int) {
 
 		incidentID := tui.IncidentsTable.GetCell(row, 0).Text
-
-		text = !text
 
 		if _, ok := tui.SelectedIncidents[incidentID]; !ok || tui.SelectedIncidents[incidentID] == "" {
 			tui.IncidentsTable.GetCell(row, 0).SetTextColor(tcell.ColorLimeGreen)
@@ -79,7 +76,8 @@ func (tui *TUI) ackowledgeSelectedIncidents() {
 
 	// Refresh Page
 	tui.SetIncidentsTableEvents()
-	tui.Pages.SwitchToPage(AckIncidentsPageTitle)
+
+	tui.Pages.SwitchToPage(IncidentsPageTitle)
 
 	tui.showSecondaryView(text)
 }

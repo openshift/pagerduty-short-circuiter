@@ -13,11 +13,10 @@ func (tui *TUI) initKeyboard() {
 		if event.Key() == tcell.KeyEscape {
 
 			if tui.Pages.HasPage(AlertsPageTitle) {
-
+				tui.InitAlertsUI(pdcli.AllAlerts, AlertsTableTitle, AlertsPageTitle)
 				tui.Footer.SetText(FooterTextAlerts)
 
 				tui.Pages.SwitchToPage(AlertsPageTitle)
-
 				tui.showDefaultSecondaryView()
 			}
 
@@ -33,46 +32,48 @@ func (tui *TUI) initKeyboard() {
 			tui.App.Stop()
 		}
 
+		tui.setupAlertsPageInput()
+		tui.setupIncidentsPageInput()
+		tui.setupAlertDetailsPageInput()
+		tui.setupOncallPageInput()
+
 		return event
 	})
 
-	tui.Table.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+}
 
-		if tui.IncidentsTable != nil {
+func (tui *TUI) setupAlertsPageInput() {
+	if title, _ := tui.Pages.GetFrontPage(); title == AlertsPageTitle {
+
+		tui.Pages.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+
+			if event.Rune() == '1' {
+				tui.InitAlertsUI(pdcli.ResolvedAlerts, ResolvedAlertsTableTitle, ResolvedAlertsPageTitle)
+			}
+
+			if event.Rune() == '2' {
+				tui.InitAlertsUI(pdcli.TrigerredAlerts, TrigerredAlertsTableTitle, TrigerredAlertsPageTitle)
+			}
+
 			if event.Rune() == 'A' || event.Rune() == 'a' {
+
+				tui.SeedIncidentsUI()
+
 				if len(tui.Incidents) == 0 {
-					tui.showSecondaryView("No incidents assigned to " + tui.Username + " found.")
+					tui.showSecondaryView("No unacknowledged incidents assigned to " + tui.Username + " found.")
 				}
 
-				tui.Footer.SetText(FooterTextAck)
-
-				tui.Pages.SwitchToPage(AckIncidentsPageTitle)
+				tui.Pages.SwitchToPage(IncidentsPageTitle)
 			}
-		} else {
-			tui.Footer.SetText(FooterText)
-		}
 
-		if tui.NextOncallTable != nil {
-			if event.Rune() == 'N' || event.Rune() == 'n' {
-				tui.Pages.SwitchToPage(NextOncallPageTitle)
+			return event
+		})
+	}
+}
 
-				if len(tui.AckIncidents) == 0 {
-					tui.showSecondaryView("You are not scheduled for any oncall duties for the next 3 months. Cheer up!")
-				}
-			}
-		}
-
-		if tui.AllTeamsOncallTable != nil {
-			if event.Rune() == 'A' || event.Rune() == 'a' {
-				tui.Pages.SwitchToPage(AllTeamsOncallPageTitle)
-			}
-		}
-
-		return event
-	})
-
-	if tui.IncidentsTable != nil {
-		tui.IncidentsTable.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+func (tui *TUI) setupIncidentsPageInput() {
+	if title, _ := tui.Pages.GetFrontPage(); title == IncidentsPageTitle {
+		tui.Pages.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 			if event.Key() == tcell.KeyCtrlA {
 
 				for _, v := range tui.SelectedIncidents {
@@ -88,10 +89,23 @@ func (tui *TUI) initKeyboard() {
 				}
 			}
 
+			if event.Rune() == '1' {
+
+				tui.SeedAckIncidentsUI()
+
+				if len(tui.Incidents) == 0 {
+					tui.showSecondaryView("No acknowledged incidents assigned to " + tui.Username + " found.")
+				}
+
+				tui.Pages.SwitchToPage(AckIncidentsPageTitle)
+			}
+
 			return event
 		})
 	}
+}
 
+func (tui *TUI) setupAlertDetailsPageInput() {
 	tui.AlertMetadata.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 
 		if event.Rune() == 'Y' || event.Rune() == 'y' {
@@ -102,6 +116,7 @@ func (tui *TUI) initKeyboard() {
 				if err != nil {
 					tui.showError(err.Error())
 				}
+
 			} else {
 				tui.App.Stop()
 
@@ -135,5 +150,29 @@ func (tui *TUI) initKeyboard() {
 
 		return event
 	})
+}
 
+func (tui *TUI) setupOncallPageInput() {
+	if title, _ := tui.Pages.GetFrontPage(); title == OncallPageTitle {
+		tui.Table.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+
+			if tui.NextOncallTable != nil {
+				if event.Rune() == 'N' || event.Rune() == 'n' {
+					tui.Pages.SwitchToPage(NextOncallPageTitle)
+
+					if len(tui.AckIncidents) == 0 {
+						tui.showSecondaryView("You are not scheduled for any oncall duties for the next 3 months. Cheer up!")
+					}
+				}
+			}
+
+			if tui.AllTeamsOncallTable != nil {
+				if event.Rune() == 'A' || event.Rune() == 'a' {
+					tui.Pages.SwitchToPage(AllTeamsOncallPageTitle)
+				}
+			}
+
+			return event
+		})
+	}
 }
