@@ -184,7 +184,7 @@ func alertsHandler(cmd *cobra.Command, args []string) error {
 
 	case "self":
 		// Fetch incidents only assigned to self
-		incidentOpts.UserIDs = append(users, "PH47AWT")
+		incidentOpts.UserIDs = append(users, user.ID)
 		tui.AssginedTo = user.Name
 
 		// Fetch only acknowledged incidents when option is self (default)
