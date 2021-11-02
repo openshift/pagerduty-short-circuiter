@@ -29,12 +29,13 @@ import (
 // incident retuns a pagerduty incident object with pre-configured data.
 func incident(incidentID string) pdApi.Incident {
 	return pdApi.Incident{
-		Id: incidentID,
+		Id:      incidentID,
+		Urgency: "high",
 	}
 }
 
 // alert retuns a pagerduty alert object with pre-configured data.
-func alert(incidentID string, serviceID string, name string, clusterID string, severity string, status string) pdApi.IncidentAlert {
+func alert(incidentID string, serviceID string, name string, clusterID string, status string) pdApi.IncidentAlert {
 	return pdApi.IncidentAlert{
 
 		Incident: pdApi.APIReference{
@@ -55,8 +56,7 @@ func alert(incidentID string, serviceID string, name string, clusterID string, s
 			},
 		},
 
-		Severity: severity,
-		Status:   status,
+		Status: status,
 	}
 }
 
@@ -95,8 +95,8 @@ var _ = Describe("view alerts", func() {
 			}
 
 			expectedIncidents := []pdApi.Incident{
-				{Id: "incident-id-1"},
-				{Id: "incident-id-2"},
+				{Id: "incident-id-1", Urgency: "high"},
+				{Id: "incident-id-2", Urgency: "high"},
 			}
 
 			mockClient.EXPECT().ListIncidents(gomock.Any()).Return(incidentsResponse, nil).Times(1)
@@ -132,6 +132,8 @@ var _ = Describe("view alerts", func() {
 	When("the alerts command is run", func() {
 		It("returns alerts for an incident", func() {
 
+			incident := incident("incident-id-1")
+
 			alertResponse := &pdApi.ListAlertsResponse{
 				APIListObject: pdApi.APIListObject{},
 				Alerts: []pdApi.IncidentAlert{
@@ -140,7 +142,6 @@ var _ = Describe("view alerts", func() {
 						"my-service-id",
 						"alert-name",
 						"cluster-id",
-						"critical",
 						"triggered",
 					),
 				},
@@ -159,7 +160,7 @@ var _ = Describe("view alerts", func() {
 					Name:        "alert-name",
 					Console:     "<nil>",
 					Labels:      "<nil>",
-					Severity:    "critical",
+					Severity:    "high",
 					Status:      "triggered",
 					Sop:         "<nil>",
 				},
@@ -169,7 +170,7 @@ var _ = Describe("view alerts", func() {
 
 			mockClient.EXPECT().ListIncidentAlerts(gomock.Any()).Return(alertResponse, nil).Times(1)
 
-			result, err := pdcli.GetIncidentAlerts(mockClient, "incident-id-5")
+			result, err := pdcli.GetIncidentAlerts(mockClient, incident)
 
 			Expect(err).ShouldNot(HaveOccurred())
 
@@ -183,14 +184,12 @@ var _ = Describe("view alerts", func() {
 			var alertData pdcli.Alert
 
 			alertResponse := &pdApi.ListAlertsResponse{
-				APIListObject: pdApi.APIListObject{},
 				Alerts: []pdApi.IncidentAlert{
 					alert(
 						"incident-id-1",
 						"my-service-id",
 						"alert-name",
 						"cluster-id",
-						"critical",
 						"triggered",
 					),
 				},
@@ -206,7 +205,6 @@ var _ = Describe("view alerts", func() {
 				Name:        "alert-name",
 				ClusterID:   "cluster-id",
 				ClusterName: "my-cluster-name",
-				Severity:    "critical",
 				Status:      "triggered",
 				Console:     "<nil>",
 				Labels:      "<nil>",
