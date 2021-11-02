@@ -10,7 +10,7 @@
 - Users can switch between different PagerDuty teams they're a part of.
 - Users can acknowledge incidents assigned to them.
 - Users can query who is oncall.
-- Users can query when a they are scheduled for next oncall.
+- Users can query when they are scheduled for next oncall.
 - `pdcli` requires zero configuration, just one-time login is required.
 
 ## Prerequisites:
@@ -142,16 +142,27 @@ To view the current oncalls as per PagerDuty, use the command:
 ```
 pdcli oncall
 ```
-This will list all the oncalls for each escalation policy of **Platform-SRE** team by default.
+This will list all the Oncalls for each Escalation policy of **Platform-SRE** team by default.
 
-You can choose to see the oncalls for all teams on PagerDuty using **All Teams Oncall** on the interactive window.
+You can choose to see the Oncalls for all teams on PagerDuty using **All Teams Oncall** on the interactive window.
 
-To view your next oncall schedule as per PagerDuty, use **Your Next Oncall Schedule** on the interactive window.
+To view your next Oncall schedule as per PagerDuty, use **Your Next Oncall Schedule** on the interactive window.
 
-### Options
+
+### Oncall View Navigation
+
+By default, all the escalations and Oncalls are displayed for team **Platform-SRE** by default in the main view.
+
+| Action                                                         | Key                           | Comment                                                                |
+|----------------------------------------------------------------|-------------------------------|------------------------------------------------------------------------|
+| All Teams Oncall                                               | `A`                           | Displays Escalations and Oncalls for all teams.                              |
+| Your Next Oncall Schedule                                      | `N`                           | Displays your Oncall schedule.                                        |
+| Go back                                                        | `Esc`                         | Navigate to the previous page.                                         |
+| Quit                                                           | `Q` / `q`                     | Exit the application.                                                  |
+
+
 ```
-[A]              View escalations and oncalls for all teams
-[N]              View your oncall schedule
+
 ```
 
 
