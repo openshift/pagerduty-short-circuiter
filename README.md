@@ -78,7 +78,7 @@ This will list out all the teams a user is a part of and will prompt the user to
 
 ## Alerts
 
-To view the alerts triggered by PagerDuty, use the command:
+To view the PagerDuty alerts, use the command:
 
 ```
 pdcli alerts
@@ -104,6 +104,7 @@ By default, all the incident alerts are displayed in the main view.
 | View alert data                                                | `Enter`⏎                      | Displays the alert details.                                        |
 | Cluster login                                                  | `Y` / `y`                     | In the alert details view, once pressed, spawns an ocm-container instance and proceeds with login into the alert specific cluster.|
 | Go back                                                        | `Esc`                         | Navigate to the previous page.                                         |
+| Quit                                                           | `Q` / `q`                     | Exit the application.                                                  |
 
 
 ### Incidents View Navigation
