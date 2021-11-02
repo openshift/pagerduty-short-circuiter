@@ -36,7 +36,7 @@ const (
 	// Footer
 	FooterText          = "[Q] Quit | [Esc] Go Back"
 	FooterTextStatus    = "[H] High Alerts | [L] Low Alerts\n"
-	FooterTextAlerts    = "[1] Resolved Alerts | [2] Trigerred Alerts | [3] Acknowledged Incidents | [4] Trigerred Incidents | " + FooterTextStatus + FooterText
+	FooterTextAlerts    = "[1] Resolved Alerts | [2] Trigerred Alerts | [3] Acknowledged Incidents | [4] Trigerred Incidents\n" + FooterTextStatus + FooterText
 	FooterTextIncidents = "[ENTER] Select Incident  | [CTRL+A] Acknowledge Incidents\n" + FooterText
 	FooterTextOncall    = "[N] Your Next Oncall Schedule | [A] All Teams Oncall\n" + FooterText
 

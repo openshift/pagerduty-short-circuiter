@@ -149,7 +149,7 @@ func (tui *TUI) Init() {
 	tui.Footer.
 		SetTextAlign(tview.AlignLeft).
 		SetTextColor(FooterTextColor).
-		SetBorderPadding(2, 2, 1, 1)
+		SetBorderPadding(1, 0, 1, 1)
 
 	tui.AlertMetadata.
 		SetScrollable(true).
