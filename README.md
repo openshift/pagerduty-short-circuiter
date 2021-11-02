@@ -9,8 +9,8 @@
 - Users will be provided with alert metadata in the terminal.
 - Users can switch between different PagerDuty teams they're a part of.
 - Users can acknowledge incidents assigned to them.
-- Users can query who is oncall.
-- Users can query when they are scheduled for next oncall.
+- Users can query who is oncall for each escalation.
+- Users can query when are they scheduled next for oncall.
 - `pdcli` requires zero configuration, just one-time login is required.
 
 ## Prerequisites:
