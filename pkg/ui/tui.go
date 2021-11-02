@@ -24,6 +24,7 @@ type TUI struct {
 	Info                *tview.TextView
 	Layout              *tview.Flex
 	Footer              *tview.TextView
+	FrontPage           string
 
 	// Misc. UI elements
 	secondaryText string
@@ -94,6 +95,13 @@ func (tui *TUI) InitAlertsUI(alerts []pdcli.Alert, tableTitle string, pageTitle 
 	tui.SetAlertsSecondaryData()
 
 	tui.Pages.AddPage(pageTitle, tui.Table, true, true)
+	tui.FrontPage = pageTitle
+
+	if pageTitle == TrigerredAlertsPageTitle {
+		tui.Footer.SetText(FooterTextTrigerredAlerts)
+	} else {
+		tui.Footer.SetText(FooterTextAlerts)
+	}
 }
 
 // InitIncidentsUI initializes TUI table component.
@@ -147,7 +155,7 @@ func (tui *TUI) Init() {
 	tui.Footer.
 		SetTextAlign(tview.AlignLeft).
 		SetTextColor(FooterTextColor).
-		SetBorderPadding(2, 2, 1, 1)
+		SetBorderPadding(1, 0, 1, 1)
 
 	tui.AlertMetadata.
 		SetScrollable(true).
