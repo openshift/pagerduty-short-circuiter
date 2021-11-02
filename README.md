@@ -146,12 +146,12 @@ This will list all the Oncalls for each Escalation policy of **Platform-SRE** te
 
 You can choose to see the Oncalls for all teams on PagerDuty using **All Teams Oncall** on the interactive window.
 
-To view your next Oncall schedule as per PagerDuty, use **Your Next Oncall Schedule** on the interactive window.
+To view your next Oncall schedule, use **Your Next Oncall Schedule** on the interactive window.
 
 
 ### Oncall View Navigation
 
-By default, all the escalations and Oncalls are displayed for team **Platform-SRE** by default in the main view.
+By default, all the escalations and Oncalls are displayed for team **Platform-SRE** in the main view.
 
 | Action                                                         | Key                           | Comment                                                                |
 |----------------------------------------------------------------|-------------------------------|------------------------------------------------------------------------|
