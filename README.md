@@ -5,11 +5,19 @@
 
 ## Features:
 
-- Users can select the alert, which they want to work upon, through CLI, and they will be able to quickly login to the cluster, using ocm-container, without having to copy-paste information from the alert metadata and will be taken straight to the problematic namespace.
+- Users can select the alert, which they want to work upon, through CLI, and they will be able to quickly login to the cluster, using ocm-container, without having to copy-paste information from the alert metadata.
 - Users will be provided with alert metadata in the terminal.
-- Can query who is oncall.
+- Users can switch between different PagerDuty teams they're a part of.
+- Users can acknowledge incidents assigned to them.
+- Users can query who is oncall.
+- Users can query when a they are scheduled for next oncall.
 - `pdcli` requires zero configuration, just one-time login is required.
-- Sets helpful environment variables inside ocm-container like $NAMESPACE, $JOB, $POD, $INSTANCE, $VERSION based on the alert metadata.
+
+## Prerequisites:
+
+You will need to have [ocm-container](https://github.com/openshift/ocm-container) installed and configured locally for the cluster login functionality to work.
+
+For further installation instructions please follow the repository [docs](https://github.com/openshift/ocm-container#readme).
 
 ## Installation
 First clone the repository somewhere in your $PATH. A common place would be within your $GOPATH. <br>
@@ -68,33 +76,47 @@ pdcli teams
 ```
 This will list out all the teams a user is a part of and will prompt the user to select a team for pdcli.
 
-## View Alerts
+## Alerts
 
-To view the alerts triggered by PagerDuty, use the command:
+To view the PagerDuty alerts, use the command:
 
 ```
 pdcli alerts
 ```
-This will list all the high alerts assigned to **self** by default.
+This will list all the alerts assigned to **self** by default.
 
-You can modify the alerts returned with the `assigned-to` option, you can either choose to list alerts which are assigned to *self, team* or *silentTest*.
+You can modify the alerts returned with the `assigned-to` option, you can either choose to list alerts which are assigned to **self**, **team** or **silentTest**.
 
-When you use the option `assigned-to=team`, it will fetch all the alerts assigned to **Platform-SRE** team.
+When viewing alerts assigned to *self*, only acknowledged incident alerts are displayed.
 
-### Interactive Mode
+### Alerts View Navigation
 
-To view alerts in interactive mode, use the command:
+By default, all the incident alerts are displayed in the main view.
 
-```
-pdcli alerts -i
-```
-This will prompt the user to select an incident from a list of incidents.
+| Action                                                         | Key                           | Comment                                                                |
+|----------------------------------------------------------------|-------------------------------|------------------------------------------------------------------------|
+| View resolved alerts                                           | `1`                           | Displays all alerts with status resolved.                              |
+| View triggered alerts                                          | `2`                           | Displays all unresolved alerts.                                        |
+| View acknowledged incidents                                    | `3`                           | Displays all acknowledged incidents.                                   |
+| View triggered incidents                                       | `4`                           | Displays all open incidents assigned to the user.                      |
+| View high alerts                                               | `H` / `h`                     | In the trigerred alerts view, when pressed, displays all the alerts with urgency high.|
+| View low alerts                                                | `L` / `l`                     | In the trigerred alerts view, when pressed, displays all the alerts with urgency low.|
+| View alert data                                                | `Enter`⏎                      | Displays the alert details.                                        |
+| Cluster login                                                  | `Y` / `y`                     | In the alert details view, once pressed, spawns an ocm-container instance and proceeds with login into the alert specific cluster.|
+| Go back                                                        | `Esc`                         | Navigate to the previous page.                                         |
+| Quit                                                           | `Q` / `q`                     | Exit the application.                                                  |
 
-Once an incident is selected, all the alerts related to that particular incident are listed.
 
-On alert selection, the alert metadata is displayed and the user is asked if they want to proceed with cluster login.
+### Incidents View Navigation
 
-If yes, then an instance of ocm container is spawned with the cluster already logged in.
+When a user navigates to `[3]` trigerred incidents page.
+
+| Action                                                         | Key                           | Comment                                                                |
+|----------------------------------------------------------------|-------------------------------|------------------------------------------------------------------------|
+| Select/Deselect incident                                       | `Enter`⏎                      | Add or Remove an incident to be acknowledged.                          |
+| Acknowledge incident(s)                                        | `ctrl-a`                      | Acknowledge the selected incidents.                                    |
+| Go back                                                        | `Esc`                         | Navigate back to alerts main view.                                     |
+
 
 ### View Incident Alerts
 
@@ -103,33 +125,12 @@ To view alerts related to a particular incident, use the command:
 ```
 pdcli alerts <Incident ID>
 ```
-This will list all the alerts belonging to that incident in interactive mode.
+This will list all the alerts belonging to that incident.
 
-### Acknowledge Incidents
-
-To acknowledge an incident assigned to your user account, use the command:
-
-```
-pdcli alerts --ack
-```
-This will list all the incidents currently assigned to self and will prompt the user to choose incident(s) to be acknowledged.
-
-A user can acknowledge a single incident or multiple incidents at once.
-
-To acknowledge all the incidents assgined to your user account, use the command:
-
-```
-pdcli alerts --ack-all
-```
 
 ### Options
 ```
---ack                  Select and acknowledge incidents assigned to self
---ack-all              Acknowledge all incidents assigned to self
 --assigned-to          Filter alerts based on user or team (default "self")
---high                 View all high alerts (default true)
---low                  View all low alerts
---interactive, -i      View alerts in interactive mode and proceed with cluster login
 --columns              Specify which columns to display separated by commas without any space in between 
                        (default "incident.id,alert,cluster.name,cluster.id,status,severity")
 ```
