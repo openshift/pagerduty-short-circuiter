@@ -134,6 +134,27 @@ pdcli alerts --ack-all
                        (default "incident.id,alert,cluster.name,cluster.id,status,severity")
 ```
 
+## Oncall
+
+To view the current oncalls as per PagerDuty, use the command:
+
+```
+pdcli oncall
+```
+This will list all the oncalls for each escalation policy of **Platform-SRE** team by default.
+
+You can choose to see the oncalls for all teams on PagerDuty using **All Teams Oncall** on the interactive window.
+
+To view your next oncall schedule as per PagerDuty, use **Your Next Oncall Schedule** on the interactive window.
+
+### Options
+```
+[A]              View escalations and oncalls for all teams
+[N]              View your oncall schedule
+```
+
+
+
 ## Running Tests
 The test suite uses the [Ginkgo](https://onsi.github.io/ginkgo/) to run comprehensive tests using Behavior-Driven Development.<br>
 The mocking framework used for testing is [gomock](https://github.com/golang/mock).
