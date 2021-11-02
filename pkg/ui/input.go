@@ -19,6 +19,8 @@ func (tui *TUI) initKeyboard() {
 				if page == AlertDataPageTitle {
 					tui.Pages.SwitchToPage(tui.FrontPage)
 					tui.showDefaultSecondaryView()
+				} else if page == HighAlertsPageTitle || page == LowAlertsPageTitle {
+					tui.Pages.SwitchToPage(TrigerredAlertsPageTitle)
 				} else {
 					tui.InitAlertsUI(pdcli.AllAlerts, AlertsTableTitle, AlertsPageTitle)
 					tui.Footer.SetText(FooterTextAlerts)
@@ -85,18 +87,21 @@ func (tui *TUI) setupAlertsPageInput() {
 				tui.Pages.SwitchToPage(IncidentsPageTitle)
 			}
 
-			if event.Rune() == 'H' || event.Rune() == 'h' {
+			if title, _ := tui.Pages.GetFrontPage(); title == TrigerredAlertsPageTitle {
 
-				tui.SeedHighAlertsUI()
+				if event.Rune() == 'H' || event.Rune() == 'h' {
 
-				tui.Pages.SwitchToPage(HighAlertsPageTitle)
-			}
+					tui.SeedHighAlertsUI()
 
-			if event.Rune() == 'L' || event.Rune() == 'l' {
+					tui.Pages.SwitchToPage(HighAlertsPageTitle)
+				}
 
-				tui.SeedHLowAlertsUI()
+				if event.Rune() == 'L' || event.Rune() == 'l' {
 
-				tui.Pages.SwitchToPage(LowAlertsPageTitle)
+					tui.SeedHLowAlertsUI()
+
+					tui.Pages.SwitchToPage(LowAlertsPageTitle)
+				}
 			}
 
 			return event

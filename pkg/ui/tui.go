@@ -96,6 +96,12 @@ func (tui *TUI) InitAlertsUI(alerts []pdcli.Alert, tableTitle string, pageTitle 
 
 	tui.Pages.AddPage(pageTitle, tui.Table, true, true)
 	tui.FrontPage = pageTitle
+
+	if pageTitle == TrigerredAlertsPageTitle {
+		tui.Footer.SetText(FooterTextTrigerredAlerts)
+	} else {
+		tui.Footer.SetText(FooterTextAlerts)
+	}
 }
 
 // InitIncidentsUI initializes TUI table component.
