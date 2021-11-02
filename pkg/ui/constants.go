@@ -11,6 +11,8 @@ const (
 	AlertsTableTitle          = "[ ALERTS ]"
 	ResolvedAlertsTableTitle  = "[ RESOLVED ALERTS ]"
 	TrigerredAlertsTableTitle = "[ TRIGERRED ALERTS ]"
+	HighAlertsTableTitle      = "[ TRIGERRED ALERTS - HIGH ]"
+	LowAlertsTableTitle       = "[ TRIGERRED ALERTS - LOW ]"
 	AlertMetadataViewTitle    = "[ ALERT DATA ]"
 	IncidentsTableTitle       = "[ TRIGERRED INCIDENTS ]"
 	AckIncidentsTableTitle    = "[ ACKNOWLEDGED INCIDENTS ]"
@@ -23,6 +25,8 @@ const (
 	AlertDataPageTitle       = "Metadata"
 	ResolvedAlertsPageTitle  = "Resolved"
 	TrigerredAlertsPageTitle = "Trigerred"
+	HighAlertsPageTitle      = "High Alerts"
+	LowAlertsPageTitle       = "Low Alerts"
 	IncidentsPageTitle       = "Incidents"
 	AckIncidentsPageTitle    = "AckIncidents"
 	OncallPageTitle          = "Oncall"
@@ -31,9 +35,10 @@ const (
 
 	// Footer
 	FooterText          = "[Q] Quit | [Esc] Go Back"
-	FooterTextAlerts    = FooterText + " | [1] Resolved Alerts | [2] Trigerred Alerts | [3] Acknowledged Incidents | [4] Trigerred Incidents"
-	FooterTextIncidents = FooterText + " | [ENTER] Select Incident  | [CTRL+A] Acknowledge Incidents"
-	FooterTextOncall    = FooterText + " | [N] Your Next Oncall Schedule | [A] All Teams Oncall"
+	FooterTextStatus    = "[H] High Alerts | [L] Low Alerts\n"
+	FooterTextAlerts    = "[1] Resolved Alerts | [2] Trigerred Alerts | [3] Acknowledged Incidents | [4] Trigerred Incidents | " + FooterTextStatus + FooterText
+	FooterTextIncidents = "[ENTER] Select Incident  | [CTRL+A] Acknowledge Incidents\n" + FooterText
+	FooterTextOncall    = "[N] Your Next Oncall Schedule | [A] All Teams Oncall\n" + FooterText
 
 	// Colors
 	TableTitleColor = tcell.ColorLightCyan

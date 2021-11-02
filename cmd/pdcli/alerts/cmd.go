@@ -50,10 +50,6 @@ var Cmd = &cobra.Command{
 
 func init() {
 
-	// Urgency
-	Cmd.Flags().BoolVar(&options.low, "low", false, "View all low alerts")
-	Cmd.Flags().BoolVar(&options.high, "high", true, "View all high alerts")
-
 	// Incident Assignment
 	Cmd.Flags().StringVar(
 		&options.assignment,
@@ -118,7 +114,12 @@ func alertsHandler(cmd *cobra.Command, args []string) error {
 			return fmt.Errorf("invalid incident ID")
 		}
 
-		alerts, err := pdcli.GetIncidentAlerts(client, incidentID)
+		// Create PD Incident Object with given ID
+		incident := pdApi.Incident{
+			Id: incidentID,
+		}
+
+		alerts, err := pdcli.GetIncidentAlerts(client, incident)
 
 		if err != nil {
 			return err
@@ -127,7 +128,6 @@ func alertsHandler(cmd *cobra.Command, args []string) error {
 		tui.FetchedAlerts = strconv.Itoa(len(alerts))
 
 		tui.Init()
-
 		tui.InitAlertsUI(alerts, ui.AlertsTableTitle, ui.AlertsPageTitle)
 
 		err = tui.StartApp()
@@ -141,6 +141,9 @@ func alertsHandler(cmd *cobra.Command, args []string) error {
 
 	// Set the limit on incidents fetched
 	incidentOpts.Limit = constants.IncidentsLimit
+
+	// Set incidents urgency
+	incidentOpts.Urgencies = []string{constants.StatusLow, constants.StatusHigh}
 
 	// Check the assigned-to flag
 	switch options.assignment {
@@ -186,15 +189,6 @@ func alertsHandler(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("please enter a valid assigned-to option")
 	}
 
-	// Check urgency
-	if options.low {
-		incidentOpts.Urgencies = []string{"low"}
-	} else if options.high {
-		incidentOpts.Urgencies = []string{"high"}
-	}
-
-	tui.IncidentOpts = incidentOpts
-
 	// Fetch incidents
 	incidents, err := pdcli.GetIncidents(client, &incidentOpts)
 
@@ -212,7 +206,7 @@ func alertsHandler(cmd *cobra.Command, args []string) error {
 	for _, incident := range incidents {
 
 		// An incident can have more than one alert
-		incidentAlerts, err = pdcli.GetIncidentAlerts(client, incident.Id)
+		incidentAlerts, err = pdcli.GetIncidentAlerts(client, incident)
 
 		if err != nil {
 			return err
@@ -223,6 +217,8 @@ func alertsHandler(cmd *cobra.Command, args []string) error {
 
 	// Total alerts retreived
 	tui.FetchedAlerts = strconv.Itoa(len(alerts))
+
+	tui.IncidentOpts = incidentOpts
 
 	// Determine terminal emulator for cluster login
 	pdcli.InitTerminalEmulator()

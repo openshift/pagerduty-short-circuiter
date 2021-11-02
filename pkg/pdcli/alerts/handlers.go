@@ -65,12 +65,12 @@ func GetIncidents(c client.PagerDutyClient, opts *pdApi.ListIncidentsOptions) ([
 }
 
 // GetIncidentAlerts returns all the alerts belong to a particular incident.
-func GetIncidentAlerts(c client.PagerDutyClient, incidentID string) ([]Alert, error) {
+func GetIncidentAlerts(c client.PagerDutyClient, incident pdApi.Incident) ([]Alert, error) {
 
 	var alerts []Alert
 
 	// Fetch alerts related to an incident via pagerduty API
-	incidentAlerts, err := c.ListIncidentAlerts(incidentID)
+	incidentAlerts, err := c.ListIncidentAlerts(incident.Id)
 
 	if err != nil {
 		var aerr pdApi.APIError
@@ -92,6 +92,13 @@ func GetIncidentAlerts(c client.PagerDutyClient, incidentID string) ([]Alert, er
 		status := alert.Status
 
 		tempAlertObj := Alert{}
+
+		// Fetch incident Urgency
+		tempAlertObj.Severity = incident.Urgency
+
+		if tempAlertObj.Severity == "" {
+			tempAlertObj.Severity = alert.Severity
+		}
 
 		switch status {
 
@@ -173,7 +180,6 @@ func (a *Alert) ParseAlertData(c client.PagerDutyClient, alert *pdApi.IncidentAl
 	a.IncidentID = alert.Incident.ID
 	a.AlertID = alert.ID
 	a.Name = alert.Summary
-	a.Severity = alert.Severity
 	a.Status = alert.Status
 	a.WebURL = alert.HTMLURL
 
