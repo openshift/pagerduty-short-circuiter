@@ -17,7 +17,7 @@ limitations under the License.
 package constants
 
 const (
-	ConfigFilepath = "pagerduty-cli/config.json"
+	ConfigFilepath = "kite/config.json"
 
 	APIKeyURL       = "https://support.pagerduty.com/docs/generating-api-keys#generating-a-personal-rest-api-key"
 	OcmContainerURL = "https://github.com/openshift/ocm-container"
