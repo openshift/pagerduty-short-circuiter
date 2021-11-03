@@ -3,7 +3,7 @@
 
 ***Note that pdcli is not a reinvention of another PagerDuty CLI tool instead it is a wrapper over go-pagerduty and provides you with all go-pagerduty cli features and much more.***
 
-## Features:
+## Features
 
 - Users can select the alert, which they want to work upon, through CLI, and they will be able to quickly login to the cluster, using ocm-container, without having to copy-paste information from the alert metadata.
 - Users will be provided with alert metadata in the terminal.
@@ -13,7 +13,7 @@
 - Users can query when are they scheduled next for oncall.
 - `pdcli` requires zero configuration, just one-time login is required.
 
-## Prerequisites:
+## Prerequisites
 
 You will need to have [ocm-container](https://github.com/openshift/ocm-container) installed and configured locally for the cluster login functionality to work.
 
