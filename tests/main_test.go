@@ -144,7 +144,7 @@ func (tc *TestCommand) Run() *TestResult {
 	}
 
 	// Add to the environment the variable that points to a configuration file
-	envMap["PDCLI_CONFIG"] = configFile
+	envMap["KITE_CONFIG"] = configFile
 
 	// Reconstruct the environment list
 	envList := make([]string, 0, len(envMap))
