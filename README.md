@@ -152,10 +152,6 @@ By default, all the escalations and Oncalls are displayed for team **Platform-SR
 | Your Next Oncall Schedule                                      | `N`                           | Displays your Oncall schedule.                                        |
 | Go back                                                        | `Esc`                         | Navigate to the previous page.                                         |
 | Quit                                                           | `Q` / `q`                     | Exit the application.                                                  |
-
-
-
-
 ## Running Tests
 The test suite uses the [Ginkgo](https://onsi.github.io/ginkgo/) to run comprehensive tests using Behavior-Driven Development.<br>
 The mocking framework used for testing is [gomock](https://github.com/golang/mock).
