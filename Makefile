@@ -26,11 +26,11 @@ GOPATH := $(shell go env GOPATH)
 
 .PHONY: build
 build:
-	go build -o pdcli ./cmd/pdcli
+	go build -o kite ./cmd/kite
 
 .PHONY: install
 install:
-	go build -o ${GOPATH}/bin/pdcli ./cmd/pdcli
+	go build -o ${GOPATH}/bin/kite ./cmd/kite
 
 .PHONY: tools
 tools:

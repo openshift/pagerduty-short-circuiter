@@ -7,7 +7,7 @@ import (
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/openshift/pagerduty-short-circuiter/cmd/pdcli/teams"
+	"github.com/openshift/pagerduty-short-circuiter/cmd/kite/teams"
 	mockpd "github.com/openshift/pagerduty-short-circuiter/pkg/client/mock"
 )
 
@@ -26,7 +26,7 @@ var _ = Describe("select team", func() {
 		mockCtrl.Finish()
 	})
 
-	When("pdcli teams is run", func() {
+	When("kite teams is run", func() {
 		It("prompts the user to select a team and retuns the team ID", func() {
 
 			userResponse := &pdApi.User{

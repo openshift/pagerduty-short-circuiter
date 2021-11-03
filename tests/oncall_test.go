@@ -9,7 +9,7 @@ import (
 	pdcli "github.com/openshift/pagerduty-short-circuiter/pkg/pdcli/oncall"
 )
 
-var _ = Describe("pdcli oncall", func() {
+var _ = Describe("kite oncall", func() {
 	var (
 		mockCtrl   *gomock.Controller
 		mockClient *mockpd.MockPagerDutyClient
@@ -33,7 +33,7 @@ var _ = Describe("pdcli oncall", func() {
 		})
 	})
 
-	When("pdcli oncall is run", func() {
+	When("kite oncall is run", func() {
 		It("shows users currently oncall", func() {
 
 			listOnCallsResponse := &pdApi.ListOnCallsResponse{
@@ -76,7 +76,7 @@ var _ = Describe("pdcli oncall", func() {
 			Expect(result).To(Equal(expectedResponse))
 		})
 	})
-	When("pdcli oncall --next-oncall is run", func() {
+	When("kite oncall --next-oncall is run", func() {
 		It("Shows next oncall schedule of current user", func() {
 			listOnCallsResponse := &pdApi.ListOnCallsResponse{
 				OnCalls: []pdApi.OnCall{
@@ -116,7 +116,7 @@ var _ = Describe("pdcli oncall", func() {
 			Expect(result).To(Equal(expectedResponse))
 		})
 	})
-	When("pdcli oncall --all is run", func() {
+	When("kite oncall --all is run", func() {
 		It("Shows current oncall users for all teams", func() {
 			listOnCallsResponse := &pdApi.ListOnCallsResponse{
 				OnCalls: []pdApi.OnCall{
