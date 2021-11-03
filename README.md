@@ -1,7 +1,7 @@
-# PagerDuty Short Circuiter
-`pdcli` is an integration of [go-pagerduty](https://github.com/PagerDuty/go-pagerduty) and [ocm-container](https://github.com/openshift/ocm-container) which lets you spawn ocm-container with automatic cluster login and other features based on the PagerDuty alert.
+# Kite
+`kite` is an integration of [go-pagerduty](https://github.com/PagerDuty/go-pagerduty) and [ocm-container](https://github.com/openshift/ocm-container) which lets you spawn ocm-container with automatic cluster login and other features based on the PagerDuty alert.
 
-***Note that pdcli is not a reinvention of another PagerDuty CLI tool instead it is a wrapper over go-pagerduty and provides you with all go-pagerduty cli features and much more.***
+***Note that kite is not a reinvention of another PagerDuty CLI tool instead it is a wrapper over go-pagerduty and provides you with all go-pagerduty cli features and much more.***
 
 ## Features
 
@@ -11,7 +11,7 @@
 - Users can acknowledge incidents assigned to them.
 - Users can query who is oncall for each escalation.
 - Users can query when are they scheduled next for oncall.
-- `pdcli` requires zero configuration, just one-time login is required.
+- `kite` requires zero configuration, just one-time login is required.
 
 ## Prerequisites
 
@@ -33,14 +33,14 @@ You need to have go installed, the minimal version required is go 1.15.
 
 ### Option 1: Install binary
 
-Build and copy `pdcli` to your $GOPATH/bin:
+Build and copy `kite` to your $GOPATH/bin:
 
 ```
 $ make install
 ```
 ### Option 2: Build from source
 
-This command will build the PagerDuty CLI binary, named `pdcli`. This binary will be created in the root of your project folder.
+This command will build the PagerDuty CLI binary, named `kite`. This binary will be created in the root of your project folder.
 
 ```
 $ make build
@@ -54,14 +54,14 @@ $ make build
 To log into PagerDuty CLI use the command:
 
 ```
-pdcli login
+kite login
 ```
-This will prompt the user for an API key with necessary instructions of how to generate one. The API key will be saved for future use to the `~/.config/pagerduty-cli/config.json` file.
+This will prompt the user for an API key with necessary instructions of how to generate one. The API key will be saved for future use to the `~/.config/kite/config.json` file.
 
 The `login` command has options to login overwriting the existing API key. For example, if you want to login via another user account or your API key has changed, you can login like this:
 
 ```
-pdcli login --api-key <api-key>
+kite login --api-key <api-key>
 ```
 Once logged in you need not login ever again unless there is a change in the API key.
 
@@ -69,19 +69,19 @@ Once logged in you need not login ever again unless there is a change in the API
 
 A user account might belong to a single or multiple pagerduty teams.
 
-To set (or) change your pdcli team, use the command:
+To set (or) change your kite team, use the command:
 
 ```
-pdcli teams
+kite teams
 ```
-This will list out all the teams a user is a part of and will prompt the user to select a team for pdcli.
+This will list out all the teams a user is a part of and will prompt the user to select a team for kite.
 
 ## Alerts
 
 To view the PagerDuty alerts, use the command:
 
 ```
-pdcli alerts
+kite alerts
 ```
 This will list all the alerts assigned to **self** by default.
 
@@ -123,7 +123,7 @@ When a user navigates to `[3]` trigerred incidents page.
 To view alerts related to a particular incident, use the command:
 
 ```
-pdcli alerts <Incident ID>
+kite alerts <Incident ID>
 ```
 This will list all the alerts belonging to that incident.
 
@@ -140,7 +140,7 @@ This will list all the alerts belonging to that incident.
 To view the current oncalls as per PagerDuty, use the command:
 
 ```
-pdcli oncall
+kite oncall
 ```
 ### Oncall View Navigation
 

@@ -15,15 +15,15 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func TestPDCLI(t *testing.T) {
+func TestKite(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "PDCLI Test Suite")
+	RunSpecs(t, "Kite Test Suite")
 }
 
 var executable string
 
 var _ = BeforeSuite(func() {
-	executableName := "pdcli"
+	executableName := "kite"
 
 	if runtime.GOOS == "windows" {
 		executableName += ".exe"
@@ -31,8 +31,8 @@ var _ = BeforeSuite(func() {
 
 	executable = filepath.Join("..", executableName)
 
-	// Create the PDCLI binary in the project root directory
-	cmd := exec.Command("go", "build", "-o", executable, "../cmd/pdcli")
+	// Create the kite binary in the project root directory
+	cmd := exec.Command("go", "build", "-o", executable, "../cmd/kite")
 	err := cmd.Run()
 
 	Expect(err).ToNot(HaveOccurred(), "Error creating binary file for test suite", executable)
@@ -104,7 +104,7 @@ func (tc *TestCommand) Run() *TestResult {
 	var err error
 
 	// Create a temporary config directory
-	tmpDir, err := ioutil.TempDir("", "pdcli-test-*.d")
+	tmpDir, err := ioutil.TempDir("", "kite-test-*.d")
 
 	ExpectWithOffset(1, err).ToNot(HaveOccurred())
 
@@ -144,7 +144,7 @@ func (tc *TestCommand) Run() *TestResult {
 	}
 
 	// Add to the environment the variable that points to a configuration file
-	envMap["PDCLI_CONFIG"] = configFile
+	envMap["KITE_CONFIG"] = configFile
 
 	// Reconstruct the environment list
 	envList := make([]string, 0, len(envMap))
@@ -164,7 +164,7 @@ func (tc *TestCommand) Run() *TestResult {
 	outBuf := &bytes.Buffer{}
 	errBuf := &bytes.Buffer{}
 
-	// Create the pdcli command
+	// Create the kite command
 	cmd := exec.Command(executable, tc.args...)
 	cmd.Env = envList
 	cmd.Stdin = inBuf
@@ -203,6 +203,6 @@ func (tc *TestCommand) Run() *TestResult {
 }
 
 var _ = AfterSuite(func() {
-	err := os.Remove("../pdcli")
+	err := os.Remove("../kite")
 	Expect(err).ToNot(HaveOccurred())
 })

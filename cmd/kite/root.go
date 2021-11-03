@@ -16,17 +16,17 @@ limitations under the License.
 package main
 
 import (
-	"github.com/openshift/pagerduty-short-circuiter/cmd/pdcli/alerts"
-	"github.com/openshift/pagerduty-short-circuiter/cmd/pdcli/login"
-	"github.com/openshift/pagerduty-short-circuiter/cmd/pdcli/oncall"
-	"github.com/openshift/pagerduty-short-circuiter/cmd/pdcli/teams"
+	"github.com/openshift/pagerduty-short-circuiter/cmd/kite/alerts"
+	"github.com/openshift/pagerduty-short-circuiter/cmd/kite/login"
+	"github.com/openshift/pagerduty-short-circuiter/cmd/kite/oncall"
+	"github.com/openshift/pagerduty-short-circuiter/cmd/kite/teams"
 	"github.com/spf13/cobra"
 )
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:           "pdcli",
-	Short:         "A CLI application called pdcli short for PagerDuty CLI.",
+	Use:           "kite",
+	Short:         "An all-in-one incident response tool called kite.",
 	Long:          `It can be used reduce the time taken, from the time, SRE receives a PD alert to the time where troubleshooting on the cluster actually begins. `,
 	SilenceErrors: true,
 }

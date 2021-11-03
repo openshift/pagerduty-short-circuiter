@@ -45,7 +45,7 @@ func NewClient() *PDClient {
 	return &PDClient{}
 }
 
-// Connect uses the information stored in new client to create a new PDCLI connection.
+// Connect uses the information stored in new client to create a new PagerDuty connection.
 // It returns the PDClient object with pagerduty API connection initialized.
 func (pd *PDClient) Connect() (client *PDClient, err error) {
 
@@ -55,17 +55,17 @@ func (pd *PDClient) Connect() (client *PDClient, err error) {
 		pd.cfg, err = config.Load()
 
 		if err != nil {
-			err = fmt.Errorf("configuration file not found, run the 'pdcli login' command")
+			err = fmt.Errorf("configuration file not found, run the 'kite login' command")
 			return nil, err
 		}
 
 		if pd.cfg == nil {
-			err = fmt.Errorf("not logged in, run the 'pdcli login' command")
+			err = fmt.Errorf("not logged in, run the 'kite login' command")
 			return nil, err
 		}
 
 		if err != nil {
-			err = fmt.Errorf("invalid API key, run the 'pdcli login' command")
+			err = fmt.Errorf("invalid API key, run the 'kite login' command")
 			return nil, err
 		}
 

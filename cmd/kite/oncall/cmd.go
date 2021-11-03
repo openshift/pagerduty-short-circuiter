@@ -26,12 +26,12 @@ import (
 var Cmd = &cobra.Command{
 	Use:   "oncall",
 	Short: "oncall to the PagerDuty CLI",
-	Long:  "Running the pdcli oncall command will display the current primary and secondary oncall SRE",
+	Long:  "Running the kite oncall command will display the current primary and secondary oncall SRE",
 	Args:  cobra.NoArgs,
 	RunE:  oncallHandler,
 }
 
-// oncallHandler is the main handler for pdcli oncall.
+// oncallHandler is the main handler for kite oncall.
 func oncallHandler(cmd *cobra.Command, args []string) (err error) {
 
 	var onCallUsers []pdcli.OncallUser

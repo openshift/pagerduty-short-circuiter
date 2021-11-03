@@ -160,7 +160,7 @@ func alertsHandler(cmd *cobra.Command, args []string) error {
 		tui.AssginedTo = cfg.Team
 
 		if teamID == "" {
-			return fmt.Errorf("no team selected, please run 'pdcli teams' to set a team")
+			return fmt.Errorf("no team selected, please run 'kite teams' to set a team")
 		}
 
 		// Fetch incidents belonging to a specific team
