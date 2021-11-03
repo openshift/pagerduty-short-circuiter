@@ -3,17 +3,17 @@
 
 ***Note that pdcli is not a reinvention of another PagerDuty CLI tool instead it is a wrapper over go-pagerduty and provides you with all go-pagerduty cli features and much more.***
 
-## Features:
+## Features
 
 - Users can select the alert, which they want to work upon, through CLI, and they will be able to quickly login to the cluster, using ocm-container, without having to copy-paste information from the alert metadata.
 - Users will be provided with alert metadata in the terminal.
 - Users can switch between different PagerDuty teams they're a part of.
 - Users can acknowledge incidents assigned to them.
-- Users can query who is oncall.
-- Users can query when a they are scheduled for next oncall.
+- Users can query who is oncall for each escalation.
+- Users can query when are they scheduled next for oncall.
 - `pdcli` requires zero configuration, just one-time login is required.
 
-## Prerequisites:
+## Prerequisites
 
 You will need to have [ocm-container](https://github.com/openshift/ocm-container) installed and configured locally for the cluster login functionality to work.
 
@@ -135,6 +135,23 @@ This will list all the alerts belonging to that incident.
                        (default "incident.id,alert,cluster.name,cluster.id,status,severity")
 ```
 
+## Oncall
+
+To view the current oncalls as per PagerDuty, use the command:
+
+```
+pdcli oncall
+```
+### Oncall View Navigation
+
+By default, all the escalations and Oncalls are displayed for team **Platform-SRE** in the main view.
+
+| Action                                                         | Key                           | Comment                                                                |
+|----------------------------------------------------------------|-------------------------------|------------------------------------------------------------------------|
+| All Teams Oncall                                               | `A`                           | Displays Escalations and Oncalls for all teams.                              |
+| Your Next Oncall Schedule                                      | `N`                           | Displays your Oncall schedule.                                        |
+| Go back                                                        | `Esc`                         | Navigate to the previous page.                                         |
+| Quit                                                           | `Q` / `q`                     | Exit the application.                                                  |
 ## Running Tests
 The test suite uses the [Ginkgo](https://onsi.github.io/ginkgo/) to run comprehensive tests using Behavior-Driven Development.<br>
 The mocking framework used for testing is [gomock](https://github.com/golang/mock).
