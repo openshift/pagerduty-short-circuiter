@@ -146,10 +146,6 @@ pdcli oncall
 
 By default, all the escalations and Oncalls are displayed for team **Platform-SRE** in the main view.
 
-You can choose to view the Oncalls for each Escalation for all teams on PagerDuty using **All Teams Oncall**.
-
-To view your Oncall schedule, use **Your Next Oncall Schedule**.
-
 | Action                                                         | Key                           | Comment                                                                |
 |----------------------------------------------------------------|-------------------------------|------------------------------------------------------------------------|
 | All Teams Oncall                                               | `A`                           | Displays Escalations and Oncalls for all teams.                              |
