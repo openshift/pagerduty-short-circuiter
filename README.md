@@ -56,7 +56,7 @@ To log into PagerDuty CLI use the command:
 ```
 kite login
 ```
-This will prompt the user for an API key with necessary instructions of how to generate one. The API key will be saved for future use to the `~/.config/pagerduty-cli/config.json` file.
+This will prompt the user for an API key with necessary instructions of how to generate one. The API key will be saved for future use to the `~/.config/kite/config.json` file.
 
 The `login` command has options to login overwriting the existing API key. For example, if you want to login via another user account or your API key has changed, you can login like this:
 
