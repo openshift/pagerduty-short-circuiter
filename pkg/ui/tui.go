@@ -116,7 +116,9 @@ func (tui *TUI) InitIncidentsUI(incidents [][]string, tableTitle string, pageTit
 		tui.IncidentsTable = tui.InitTable(incidentHeaders, incidents, false, false, tableTitle)
 	}
 
-	tui.Pages.AddPage(pageTitle, tui.IncidentsTable, true, false)
+	if !tui.Pages.HasPage(pageTitle) {
+		tui.Pages.AddPage(pageTitle, tui.IncidentsTable, true, false)
+	}
 }
 
 // initFooter initializes the footer text depending on the page currently visible.
