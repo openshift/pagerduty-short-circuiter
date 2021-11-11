@@ -31,7 +31,8 @@ const (
 	SampleKey = "y_NbAkKc66ryYTWUXYEu"
 
 	// Set limit to number of incidents fetched from pagerduty
-	IncidentsLimit = 10
+	IncidentsLimit          = 10
+	TrigerredIncidentsLimit = 25
 
 	// PagerDuty IDs
 	TeamID     = "PASPK4G"

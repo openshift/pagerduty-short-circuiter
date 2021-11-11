@@ -18,7 +18,6 @@ package alerts
 
 import (
 	"fmt"
-	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -126,6 +125,7 @@ func alertsHandler(cmd *cobra.Command, args []string) error {
 		}
 
 		tui.FetchedAlerts = strconv.Itoa(len(alerts))
+		tui.Alerts = alerts
 
 		tui.Init()
 		tui.InitAlertsUI(alerts, ui.AlertsTableTitle, ui.AlertsPageTitle)
@@ -196,12 +196,6 @@ func alertsHandler(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	// Check if there are no incidents returned
-	if len(incidents) == 0 {
-		fmt.Println("Currently there are no alerts assigned to " + options.assignment)
-		os.Exit(0)
-	}
-
 	// Get incident alerts
 	for _, incident := range incidents {
 
@@ -217,6 +211,7 @@ func alertsHandler(cmd *cobra.Command, args []string) error {
 
 	// Total alerts retreived
 	tui.FetchedAlerts = strconv.Itoa(len(alerts))
+	tui.Alerts = alerts
 
 	tui.IncidentOpts = incidentOpts
 
@@ -229,7 +224,7 @@ func alertsHandler(cmd *cobra.Command, args []string) error {
 
 	// Setup TUI
 	tui.Init()
-	tui.InitAlertsUI(alerts, ui.AlertsTableTitle, ui.AlertsPageTitle)
+	tui.InitAlertsUI(tui.Alerts, ui.AlertsTableTitle, ui.AlertsPageTitle)
 
 	err = tui.StartApp()
 

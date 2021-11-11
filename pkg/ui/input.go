@@ -16,15 +16,16 @@ func (tui *TUI) initKeyboard() {
 			if tui.Pages.HasPage(AlertsPageTitle) {
 				page, _ := tui.Pages.GetFrontPage()
 
+				// If the user is viewing the alert metadata
 				if page == AlertDataPageTitle {
 					tui.Pages.SwitchToPage(tui.FrontPage)
 					tui.showDefaultSecondaryView()
 				} else if page == HighAlertsPageTitle || page == LowAlertsPageTitle {
 					tui.Pages.SwitchToPage(TrigerredAlertsPageTitle)
+					tui.Footer.SetText(FooterTextTrigerredAlerts)
 				} else {
-					tui.InitAlertsUI(pdcli.AllAlerts, AlertsTableTitle, AlertsPageTitle)
+					tui.InitAlertsUI(tui.Alerts, AlertsTableTitle, AlertsPageTitle)
 					tui.Footer.SetText(FooterTextAlerts)
-
 					tui.Pages.SwitchToPage(AlertsPageTitle)
 					tui.showDefaultSecondaryView()
 				}
@@ -81,27 +82,32 @@ func (tui *TUI) setupAlertsPageInput() {
 				tui.SeedIncidentsUI()
 
 				if len(tui.Incidents) == 0 {
-					tui.showSecondaryView("No unacknowledged incidents assigned to " + tui.Username + " found.")
+					tui.showSecondaryView("No triggered incidents assigned to " + tui.Username + " found.")
 				}
 
 				tui.Pages.SwitchToPage(IncidentsPageTitle)
 			}
 
+			// Filter by status
 			if title, _ := tui.Pages.GetFrontPage(); title == TrigerredAlertsPageTitle {
 
 				if event.Rune() == 'H' || event.Rune() == 'h' {
 
 					tui.SeedHighAlertsUI()
-
 					tui.Pages.SwitchToPage(HighAlertsPageTitle)
 				}
 
 				if event.Rune() == 'L' || event.Rune() == 'l' {
 
 					tui.SeedHLowAlertsUI()
-
 					tui.Pages.SwitchToPage(LowAlertsPageTitle)
 				}
+			}
+
+			// Alerts refresh
+			if event.Rune() == 'r' || event.Rune() == 'R' {
+				tui.showSecondaryView("Fetching alerts...")
+				tui.SeedAlertsUI()
 			}
 
 			return event
@@ -163,8 +169,9 @@ func (tui *TUI) setupAlertDetailsPageInput() {
 					tui.showError(err.Error())
 				}
 
-				tui.Pages.AddAndSwitchToPage(AlertsPageTitle, tui.Table, true)
-				tui.Pages.AddPage(AckIncidentsPageTitle, tui.IncidentsTable, true, false)
+				// Refresh alerts table
+				tui.SeedAlertsUI()
+				tui.Pages.SwitchToPage(AlertsPageTitle)
 
 				err = tui.StartApp()
 
