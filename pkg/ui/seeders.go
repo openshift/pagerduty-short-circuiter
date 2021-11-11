@@ -1,6 +1,8 @@
 package ui
 
 import (
+	"strconv"
+
 	"github.com/openshift/pagerduty-short-circuiter/pkg/constants"
 	pdcli "github.com/openshift/pagerduty-short-circuiter/pkg/pdcli/alerts"
 )
@@ -53,6 +55,8 @@ func (tui *TUI) SeedAckIncidentsUI() {
 	tui.InitIncidentsUI(tui.Incidents, AckIncidentsTableTitle, AckIncidentsPageTitle, false)
 
 	tui.Footer.SetText(FooterTextAlerts)
+
+	tui.Pages.SwitchToPage(AckIncidentsPageTitle)
 }
 
 // SeedIncidentsUI fetches trigerred incidents and initializes a TUI table/page component.
@@ -77,4 +81,44 @@ func (tui *TUI) SeedIncidentsUI() {
 	tui.InitIncidentsUI(tui.Incidents, IncidentsTableTitle, IncidentsPageTitle, true)
 
 	tui.Footer.SetText(FooterTextIncidents)
+}
+
+// SeedIncidentsUI fetches acknowledged incident alerts and initializes a TUI table/page component.
+func (tui *TUI) SeedAlertsUI() {
+
+	var incidentAlerts []pdcli.Alert
+	var alerts []pdcli.Alert
+
+	//Refresh triggered and resolved alerts
+	pdcli.TrigerredAlerts = []pdcli.Alert{}
+	pdcli.ResolvedAlerts = []pdcli.Alert{}
+
+	if tui.AssginedTo == tui.Username {
+		tui.IncidentOpts.Statuses = []string{constants.StatusAcknowledged}
+	} else {
+		tui.IncidentOpts.Statuses = []string{constants.StatusAcknowledged, constants.StatusTriggered}
+	}
+
+	incidents, err := pdcli.GetIncidents(tui.Client, &tui.IncidentOpts)
+
+	if err != nil {
+		tui.showError(err.Error())
+	}
+
+	for _, incident := range incidents {
+		incidentAlerts, err = pdcli.GetIncidentAlerts(tui.Client, incident)
+
+		if err != nil {
+			tui.showError(err.Error())
+		}
+
+		alerts = append(alerts, incidentAlerts...)
+	}
+
+	// Total alerts retreived
+	tui.FetchedAlerts = strconv.Itoa(len(alerts))
+
+	tui.Alerts = alerts
+
+	tui.InitAlertsUI(tui.Alerts, AlertsTableTitle, AlertsPageTitle)
 }
