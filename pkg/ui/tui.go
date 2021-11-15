@@ -32,6 +32,7 @@ type TUI struct {
 	// API related
 	Client       client.PagerDutyClient
 	IncidentOpts pagerduty.ListIncidentsOptions
+	Alerts       []pdcli.Alert
 
 	// Internals
 	SelectedIncidents map[string]string
@@ -92,7 +93,12 @@ func (tui *TUI) InitAlertsUI(alerts []pdcli.Alert, tableTitle string, pageTitle 
 	headers, data := pdcli.GetTableData(alerts, tui.Columns)
 	tui.Table = tui.InitTable(headers, data, true, false, tableTitle)
 	tui.SetAlertsTableEvents(alerts)
+
 	tui.SetAlertsSecondaryData()
+
+	if len(alerts) == 0 {
+		tui.showSecondaryView("No alerts to display")
+	}
 
 	tui.Pages.AddPage(pageTitle, tui.Table, true, true)
 	tui.FrontPage = pageTitle
