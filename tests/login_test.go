@@ -5,7 +5,7 @@ import (
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/openshift/pagerduty-short-circuiter/cmd/pdcli/login"
+	"github.com/openshift/pagerduty-short-circuiter/cmd/kite/login"
 	mockpd "github.com/openshift/pagerduty-short-circuiter/pkg/client/mock"
 	"github.com/openshift/pagerduty-short-circuiter/pkg/constants"
 )
@@ -82,7 +82,7 @@ var _ = Describe("login", func() {
 	})
 
 	When("a user tries to login with a valid API key", func() {
-		It("it sucessfully logs into pdcli and returns the username", func() {
+		It("it sucessfully logs into kite and returns the username", func() {
 
 			loginResponse := &pdApi.User{
 				Name: "my-user",

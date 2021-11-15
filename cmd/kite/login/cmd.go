@@ -23,7 +23,7 @@ import (
 	"os"
 
 	"github.com/PagerDuty/go-pagerduty"
-	"github.com/openshift/pagerduty-short-circuiter/cmd/pdcli/teams"
+	"github.com/openshift/pagerduty-short-circuiter/cmd/kite/teams"
 	"github.com/openshift/pagerduty-short-circuiter/pkg/client"
 	"github.com/openshift/pagerduty-short-circuiter/pkg/config"
 	"github.com/openshift/pagerduty-short-circuiter/pkg/constants"
@@ -37,8 +37,8 @@ var loginArgs struct {
 var Cmd = &cobra.Command{
 	Use:   "login",
 	Short: "Login to the PagerDuty CLI",
-	Long: `The pdcli login command logs a user into PagerDuty CLI given a valid API key is provided. 
-	You will have to login only once, all the pdcli commands are then available even if the terminal restarts.`,
+	Long: `The kite login command logs a user into PagerDuty CLI given a valid API key is provided. 
+	You will have to login only once, all the kite commands are then available even if the terminal restarts.`,
 	Args: cobra.NoArgs,
 	RunE: loginHandler,
 }
@@ -53,7 +53,7 @@ func init() {
 	)
 }
 
-// loginHandler handles the login flow into pdcli.
+// loginHandler handles the login flow into kite.
 func loginHandler(cmd *cobra.Command, args []string) error {
 
 	var user string

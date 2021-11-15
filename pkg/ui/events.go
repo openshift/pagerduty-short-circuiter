@@ -21,7 +21,11 @@ func (tui *TUI) SetAlertsTableEvents(alerts []pdcli.Alert) {
 		}
 
 		tui.Pages.AddAndSwitchToPage(AlertDataPageTitle, tui.AlertMetadata, true)
-		tui.promptSecondaryView("Press 'Y' to proceed with cluster login")
+
+		// Do not prompt for cluster login if there's no cluster ID associated with the alert (v3 clusters)
+		if tui.ClusterID != "N/A" && tui.ClusterID != "" {
+			tui.promptSecondaryView("Press 'Y' to proceed with cluster login")
+		}
 	})
 }
 

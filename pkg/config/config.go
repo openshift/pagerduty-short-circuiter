@@ -40,8 +40,8 @@ type Config struct {
 func Find() (string, error) {
 
 	// Return the test configuration filepath
-	if pdcliConfig := os.Getenv("PDCLI_CONFIG"); pdcliConfig != "" {
-		return pdcliConfig, nil
+	if kiteConfig := os.Getenv("KITE_CONFIG"); kiteConfig != "" {
+		return kiteConfig, nil
 	}
 
 	// Locate the standard configuration directory

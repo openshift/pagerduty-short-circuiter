@@ -36,7 +36,6 @@ type Alert struct {
 var (
 	TrigerredAlerts []Alert
 	ResolvedAlerts  []Alert
-	AllAlerts       []Alert
 	Terminal        string // Terminal emulator
 )
 
@@ -123,8 +122,6 @@ func GetIncidentAlerts(c client.PagerDutyClient, incident pdApi.Incident) ([]Ale
 
 		alerts = append(alerts, tempAlertObj)
 	}
-
-	AllAlerts = append(AllAlerts, alerts...)
 
 	return alerts, nil
 }

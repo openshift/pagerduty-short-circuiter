@@ -17,7 +17,7 @@ limitations under the License.
 package constants
 
 const (
-	ConfigFilepath = "pagerduty-cli/config.json"
+	ConfigFilepath = "kite/config.json"
 
 	APIKeyURL       = "https://support.pagerduty.com/docs/generating-api-keys#generating-a-personal-rest-api-key"
 	OcmContainerURL = "https://github.com/openshift/ocm-container"
@@ -31,7 +31,8 @@ const (
 	SampleKey = "y_NbAkKc66ryYTWUXYEu"
 
 	// Set limit to number of incidents fetched from pagerduty
-	IncidentsLimit = 10
+	IncidentsLimit          = 10
+	TrigerredIncidentsLimit = 25
 
 	// PagerDuty IDs
 	TeamID     = "PASPK4G"
