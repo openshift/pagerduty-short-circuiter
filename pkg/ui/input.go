@@ -81,7 +81,7 @@ func (tui *TUI) setupAlertsPageInput() {
 				tui.SeedIncidentsUI()
 
 				if len(tui.Incidents) == 0 {
-					tui.showSecondaryView("No unacknowledged incidents assigned to " + tui.Username + " found.")
+					tui.showSecondaryView("No triggered incidents assigned to " + tui.Username + " found.")
 				}
 
 				tui.Pages.SwitchToPage(IncidentsPageTitle)

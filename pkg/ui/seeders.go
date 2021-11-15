@@ -37,6 +37,8 @@ func (tui *TUI) SeedAckIncidentsUI() {
 	var ackIncidents [][]string
 
 	tui.IncidentOpts.Statuses = []string{constants.StatusAcknowledged}
+
+	// Fetch new incidents via PD API
 	incidents, err := pdcli.GetIncidents(tui.Client, &tui.IncidentOpts)
 
 	if err != nil {
@@ -61,6 +63,11 @@ func (tui *TUI) SeedIncidentsUI() {
 	var incidentsData [][]string
 
 	tui.IncidentOpts.Statuses = []string{constants.StatusTriggered}
+
+	// Override incidents limit when viewing triggered incidents
+	tui.IncidentOpts.Limit = constants.TrigerredIncidentsLimit
+
+	// Fetch new incidents via PD API
 	incidents, err := pdcli.GetIncidents(tui.Client, &tui.IncidentOpts)
 
 	if err != nil {
