@@ -169,8 +169,9 @@ func (tui *TUI) setupAlertDetailsPageInput() {
 					tui.showError(err.Error())
 				}
 
-				tui.Pages.AddAndSwitchToPage(AlertsPageTitle, tui.Table, true)
-				tui.Pages.AddPage(AckIncidentsPageTitle, tui.IncidentsTable, true, false)
+				// Refresh alerts table
+				tui.SeedAlertsUI()
+				tui.Pages.SwitchToPage(AlertsPageTitle)
 
 				err = tui.StartApp()
 
