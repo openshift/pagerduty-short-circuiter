@@ -20,6 +20,7 @@ import (
 	"github.com/openshift/pagerduty-short-circuiter/pkg/client"
 	pdcli "github.com/openshift/pagerduty-short-circuiter/pkg/pdcli/oncall"
 	"github.com/openshift/pagerduty-short-circuiter/pkg/ui"
+	"github.com/openshift/pagerduty-short-circuiter/pkg/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -33,33 +34,40 @@ var Cmd = &cobra.Command{
 
 // oncallHandler is the main handler for kite oncall.
 func oncallHandler(cmd *cobra.Command, args []string) (err error) {
+	var (
+		onCallUsers    []pdcli.OncallUser
+		allTeamsOncall []pdcli.OncallUser
+		nextOncall     []pdcli.OncallUser
+		primary        string
+		secondary      string
+		tui            ui.TUI
+	)
 
-	var onCallUsers []pdcli.OncallUser
-	var allTeamsOncall []pdcli.OncallUser
-	var nextOncall []pdcli.OncallUser
+	// Initialize TUI
+	tui.Init()
+	utils.InfoLogger.Print("Initialized terminal UI")
 
 	// Establish a secure connection with the PagerDuty API
+	utils.InfoLogger.Print("Connecting to PagerDuty API")
 	client, err := client.NewClient().Connect()
 
 	if err != nil {
 		return err
 	}
+	utils.InfoLogger.Print("Connection successful")
 
+	// Fetch the currently logged in user's ID.
+	utils.InfoLogger.Print("GET: fetching logged in user data")
 	user, err := client.GetCurrentUser(pagerduty.GetCurrentUserOptions{})
 
 	if err != nil {
 		return err
 	}
 
-	// UI
-	var tui ui.TUI
-
 	tui.Username = user.Name
 
-	// Initialize TUI
-	tui.Init()
-
 	// Fetch oncall data from Platform-SRE team
+	utils.InfoLogger.Print("GET: fetching on-call data of current user team")
 	onCallUsers, err = pdcli.TeamSREOnCall(client)
 
 	if err != nil {
@@ -68,15 +76,16 @@ func oncallHandler(cmd *cobra.Command, args []string) (err error) {
 
 	for _, v := range onCallUsers {
 		if strings.Contains(v.OncallRole, "Primary") {
-			tui.Primary = v.Name
+			primary = v.Name
 		}
 
 		if strings.Contains(v.OncallRole, "Secondary") {
-			tui.Secondary = v.Name
+			secondary = v.Name
 		}
 	}
 
 	// Fetch oncall data from all teams
+	utils.InfoLogger.Print("GET: fetching on-call data of all teams")
 	allTeamsOncall, err = pdcli.AllTeamsOncall(client)
 
 	if err != nil {
@@ -84,17 +93,24 @@ func oncallHandler(cmd *cobra.Command, args []string) (err error) {
 	}
 
 	// Fetch the current user's oncall schedule
+	utils.InfoLogger.Print("GET: fetching next on-call schedule of logged in user")
 	nextOncall, err = pdcli.UserNextOncallSchedule(client, user.ID)
 
 	if err != nil {
 		return err
 	}
 
+	utils.InfoLogger.Print("Initializing on-call view")
 	initOncallUI(&tui, onCallUsers)
+
+	utils.InfoLogger.Print("Initializing all teams on-call view")
 	initAllTeamsOncallUI(&tui, allTeamsOncall)
+
+	utils.InfoLogger.Print("Initializing next on-call schedule view")
 	initNextOncallUI(&tui, nextOncall)
 
-	tui.SetOncallSecondaryData()
+	utils.InfoLogger.Print("Initializing secondary view")
+	tui.InitOnCallSecondaryView(user.Name, primary, secondary)
 
 	err = tui.StartApp()
 
@@ -131,11 +147,9 @@ func initAllTeamsOncallUI(tui *ui.TUI, onCallData []pdcli.OncallUser) {
 
 // getOncallTableData parses and returns tabular data for the given oncall data, i.e table headers and rows.
 func getOncallTableData(oncallData []pdcli.OncallUser) ([]string, [][]string) {
-
 	var tableData [][]string
 
 	for _, v := range oncallData {
-
 		var data []string
 
 		if v.EscalationPolicy != "" {
