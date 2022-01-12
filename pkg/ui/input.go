@@ -11,9 +11,9 @@ func (tui *TUI) initKeyboard() {
 	tui.App.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 
 		if event.Key() == tcell.KeyEscape {
-
 			// Check if alerts command is executed
 			if tui.Pages.HasPage(AlertsPageTitle) {
+				tui.InitAlertsSecondaryView()
 				page, _ := tui.Pages.GetFrontPage()
 
 				// If the user is viewing the alert metadata

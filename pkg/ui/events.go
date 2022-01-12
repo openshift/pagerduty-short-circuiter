@@ -1,6 +1,8 @@
 package ui
 
 import (
+	"fmt"
+
 	"github.com/gdamore/tcell/v2"
 	pdcli "github.com/openshift/pagerduty-short-circuiter/pkg/pdcli/alerts"
 	"github.com/openshift/pagerduty-short-circuiter/pkg/utils"
@@ -29,8 +31,8 @@ func (tui *TUI) SetAlertsTableEvents(alerts []pdcli.Alert) {
 		tui.Pages.AddAndSwitchToPage(AlertDataPageTitle, tui.AlertMetadata, true)
 
 		// Do not prompt for cluster login if there's no cluster ID associated with the alert (v3 clusters)
-		if tui.ClusterID != "N/A" && tui.ClusterID != "" {
-			utils.InfoLogger.Printf("Press 'Y' to log into the cluster: %s", clusterName)
+		if tui.ClusterID != "N/A" && tui.ClusterID != "" && alertData != "" {
+			tui.SecondaryWindow.SetText(fmt.Sprintf("Press 'Y' to log into the cluster: %s", clusterName)).SetTextColor(PromptTextColor)
 		}
 	})
 }

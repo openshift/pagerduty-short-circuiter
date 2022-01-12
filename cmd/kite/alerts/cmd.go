@@ -117,6 +117,7 @@ func alertsHandler(cmd *cobra.Command, args []string) error {
 	tui.Client = client
 	tui.Username = user.Name
 	tui.Columns = options.columns
+	tui.Role = user.Role
 
 	// Check for incident ID argument
 	if len(args) > 0 {
@@ -238,8 +239,7 @@ func alertsHandler(cmd *cobra.Command, args []string) error {
 	tui.IncidentOpts = incidentOpts
 
 	tui.InitAlertsUI(tui.Alerts, ui.AlertsTableTitle, ui.AlertsPageTitle)
-	tui.InitAlertsSecondaryView(user.Name, tui.AssignedTo, user.Role)
-
+	tui.InitAlertsSecondaryView()
 	// Start TUI
 	err = tui.StartApp()
 

@@ -38,6 +38,7 @@ type TUI struct {
 	AckIncidents      []string
 	AssignedTo        string
 	Username          string
+	Role              string
 	Columns           string
 	ClusterID         string
 }
@@ -80,13 +81,13 @@ func (tui *TUI) InitIncidentsUI(incidents [][]string, tableTitle string, pageTit
 	}
 }
 
-func (tui *TUI) InitAlertsSecondaryView(user string, team string, role string) {
+func (tui *TUI) InitAlertsSecondaryView() {
 	tui.SecondaryWindow.SetText(
 		fmt.Sprintf("Logged in user: %s\n\nViewing alerts assigned to: %s\n\nPagerDuty role: %s",
-			user,
-			team,
-			role),
-	)
+			tui.Username,
+			tui.AssignedTo,
+			tui.Role)).
+		SetTextColor(InfoTextColor)
 }
 
 func (tui *TUI) InitOnCallSecondaryView(user string, primary string, secondary string) {
