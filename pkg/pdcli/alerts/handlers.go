@@ -3,8 +3,6 @@ package pdcli
 import (
 	"errors"
 	"fmt"
-	"os"
-	"os/exec"
 	"sort"
 	"strings"
 
@@ -36,12 +34,10 @@ type Alert struct {
 var (
 	TrigerredAlerts []Alert
 	ResolvedAlerts  []Alert
-	Terminal        string // Terminal emulator
 )
 
 // GetIncidents returns a slice of pagerduty incidents.
 func GetIncidents(c client.PagerDutyClient, opts *pdApi.ListIncidentsOptions) ([]pdApi.Incident, error) {
-
 	var aerr pdApi.APIError
 
 	// Get incidents via pagerduty API
@@ -50,22 +46,17 @@ func GetIncidents(c client.PagerDutyClient, opts *pdApi.ListIncidentsOptions) ([
 	if err != nil {
 		if errors.As(err, &aerr) {
 			if aerr.RateLimited() {
-				fmt.Println("rate limited")
-				return nil, err
+				return nil, fmt.Errorf("API rate limited")
 			}
-
-			fmt.Println("status code:", aerr.StatusCode)
-
-			return nil, err
+			return nil, fmt.Errorf("status code: %d, error: %s", aerr.StatusCode, err)
 		}
 	}
 
 	return incidents.Incidents, nil
 }
 
-// GetIncidentAlerts returns all the alerts belong to a particular incident.
+// GetIncidentAlerts returns all the alerts belonging to a particular incident.
 func GetIncidentAlerts(c client.PagerDutyClient, incident pdApi.Incident) ([]Alert, error) {
-
 	var alerts []Alert
 
 	// Fetch alerts related to an incident via pagerduty API
@@ -76,18 +67,14 @@ func GetIncidentAlerts(c client.PagerDutyClient, incident pdApi.Incident) ([]Ale
 
 		if errors.As(err, &aerr) {
 			if aerr.RateLimited() {
-				fmt.Println("rate limited")
-				return nil, err
+				return nil, fmt.Errorf("API rate limited")
 			}
 
-			fmt.Println("status code:", aerr.StatusCode)
-
-			return nil, err
+			return nil, fmt.Errorf("status code: %d, error: %s", aerr.StatusCode, err)
 		}
 	}
 
 	for _, alert := range incidentAlerts.Alerts {
-
 		status := alert.Status
 
 		tempAlertObj := Alert{}
@@ -126,9 +113,8 @@ func GetIncidentAlerts(c client.PagerDutyClient, incident pdApi.Incident) ([]Ale
 	return alerts, nil
 }
 
-// GetClusterName interacts with the PD service endpoint and returns the cluster name as a string.
+// GetClusterName interacts with the PD service endpoint and returns the cluster name string.
 func GetClusterName(servideID string, c client.PagerDutyClient) (string, error) {
-
 	service, err := c.GetService(servideID, &pdApi.GetServiceOptions{})
 
 	if err != nil {
@@ -141,7 +127,7 @@ func GetClusterName(servideID string, c client.PagerDutyClient) (string, error) 
 }
 
 // AcknowledgeIncidents acknowledges incidents for the given incident IDs
-// and retuns the acknowledged incidents
+// and retuns the acknowledged incidents.
 func AcknowledgeIncidents(c client.PagerDutyClient, incidentIDs []string) ([]pdApi.Incident, error) {
 	var incidents []pdApi.ManageIncidentsOptions
 	var opts pdApi.ManageIncidentsOptions
@@ -173,7 +159,6 @@ func AcknowledgeIncidents(c client.PagerDutyClient, incidentIDs []string) ([]pdA
 
 // ParseAlertData parses a pagerduty alert data into the Alert struct.
 func (a *Alert) ParseAlertData(c client.PagerDutyClient, alert *pdApi.IncidentAlert) (err error) {
-
 	a.IncidentID = alert.Incident.ID
 	a.AlertID = alert.ID
 	a.Name = alert.Summary
@@ -292,89 +277,6 @@ func ParseAlertMetaData(alert Alert) string {
 	}
 
 	return alertData
-}
-
-// InitTerminalEmulator tries to set a terminal emulator by trying some known terminal emulators.
-func InitTerminalEmulator() {
-	emulators := []string{
-		"x-terminal-emulator",
-		"mate-terminal",
-		"gnome-terminal",
-		"terminator",
-		"xfce4-terminal",
-		"urxvt",
-		"rxvt",
-		"termit",
-		"Eterm",
-		"aterm",
-		"uxterm",
-		"xterm",
-		"roxterm",
-		"termite",
-		"kitty",
-		"hyper",
-	}
-
-	for _, t := range emulators {
-		cmd := exec.Command("command", "-v", t)
-
-		output, _ := cmd.CombinedOutput()
-
-		cmd.ProcessState.Exited()
-
-		term := string(output)
-
-		term = strings.TrimSpace(term)
-
-		if term != "" {
-			Terminal = term
-		}
-	}
-}
-
-// ClusterLoginEmulator spawns an instance of ocm-container in a new terminal.
-func ClusterLoginEmulator(clusterID string) error {
-
-	var cmd *exec.Cmd
-
-	// Check if ocm-container is installed locally
-	ocmContainer, err := exec.LookPath("ocm-container")
-
-	if err != nil {
-		return errors.New("ocm-container is not found.\nPlease install it via: " + constants.OcmContainerURL)
-	}
-
-	// OCM container command to be executed for cluster login
-	ocmCommand := ocmContainer + " " + clusterID
-
-	cmd = exec.Command(Terminal, "-e", ocmCommand)
-
-	err = cmd.Run()
-
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// ClusterLoginShell spawns an instance of ocm-container in the same shell.
-func ClusterLoginShell(clusterID string) *exec.Cmd {
-
-	// Check if ocm-container is installed locally
-	ocmContainer, err := exec.LookPath("ocm-container")
-
-	if err != nil {
-		fmt.Println("ocm-container is not found.\nPlease install it via:", constants.OcmContainerURL)
-	}
-
-	cmd := exec.Command(ocmContainer, clusterID)
-
-	cmd.Stdin = os.Stdin
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-
-	return cmd
 }
 
 // getTableData parses and returns tabular data for the given alerts, i.e table headers and rows.

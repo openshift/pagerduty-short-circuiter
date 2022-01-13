@@ -48,4 +48,5 @@ const (
 	InfoTextColor   = tcell.ColorLightSlateGray
 	ErrorTextColor  = tcell.ColorRed
 	PromptTextColor = tcell.ColorLightGreen
+	LoggerTextColor = tcell.ColorGreen
 )
