@@ -6,7 +6,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	mockpd "github.com/openshift/pagerduty-short-circuiter/pkg/client/mock"
-	pdcli "github.com/openshift/pagerduty-short-circuiter/pkg/pdcli/oncall"
+	kite "github.com/openshift/pagerduty-short-circuiter/pkg/kite/oncall"
 )
 
 var _ = Describe("kite oncall", func() {
@@ -60,7 +60,7 @@ var _ = Describe("kite oncall", func() {
 
 			mockClient.EXPECT().ListOnCalls(gomock.Any()).Return(listOnCallsResponse, nil).Times(1)
 
-			expectedResponse := []pdcli.OncallUser{
+			expectedResponse := []kite.OncallUser{
 				{
 					EscalationPolicy: "Openshift Escalation",
 					OncallRole:       "0-SREP Weekday Primary",
@@ -70,7 +70,7 @@ var _ = Describe("kite oncall", func() {
 				},
 			}
 
-			result, err := pdcli.TeamSREOnCall(mockClient)
+			result, err := kite.TeamSREOnCall(mockClient)
 
 			Expect(err).ToNot(HaveOccurred())
 			Expect(result).To(Equal(expectedResponse))
@@ -101,7 +101,7 @@ var _ = Describe("kite oncall", func() {
 			}
 			mockClient.EXPECT().ListOnCalls(gomock.Any()).Return(listOnCallsResponse, nil).Times(1)
 
-			expectedResponse := []pdcli.OncallUser{
+			expectedResponse := []kite.OncallUser{
 				{
 					EscalationPolicy: "Openshift Escalation",
 					OncallRole:       "0-SREP Weekday Primary",
@@ -110,7 +110,7 @@ var _ = Describe("kite oncall", func() {
 					End:              "10-25-2021 08:30 UTC",
 				},
 			}
-			result, err := pdcli.TeamSREOnCall(mockClient)
+			result, err := kite.TeamSREOnCall(mockClient)
 
 			Expect(err).ToNot(HaveOccurred())
 			Expect(result).To(Equal(expectedResponse))
@@ -141,7 +141,7 @@ var _ = Describe("kite oncall", func() {
 			}
 			mockClient.EXPECT().ListOnCalls(gomock.Any()).Return(listOnCallsResponse, nil).Times(1)
 
-			expectedResponse := []pdcli.OncallUser{
+			expectedResponse := []kite.OncallUser{
 				{
 					EscalationPolicy: "Team Escalation",
 					OncallRole:       "Primary Oncall",
@@ -150,7 +150,7 @@ var _ = Describe("kite oncall", func() {
 					End:              "10-25-2021 08:30 UTC",
 				},
 			}
-			result, err := pdcli.TeamSREOnCall(mockClient)
+			result, err := kite.TeamSREOnCall(mockClient)
 
 			Expect(err).ToNot(HaveOccurred())
 			Expect(result).To(Equal(expectedResponse))

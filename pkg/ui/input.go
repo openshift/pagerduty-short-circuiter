@@ -2,7 +2,7 @@ package ui
 
 import (
 	"github.com/gdamore/tcell/v2"
-	pdcli "github.com/openshift/pagerduty-short-circuiter/pkg/pdcli/alerts"
+	kite "github.com/openshift/pagerduty-short-circuiter/pkg/kite/alerts"
 	"github.com/openshift/pagerduty-short-circuiter/pkg/utils"
 )
 
@@ -59,12 +59,12 @@ func (tui *TUI) setupAlertsPageInput() {
 
 			if event.Rune() == '1' {
 				utils.InfoLogger.Print("Switching to resolved alerts view")
-				tui.InitAlertsUI(pdcli.ResolvedAlerts, ResolvedAlertsTableTitle, ResolvedAlertsPageTitle)
+				tui.InitAlertsUI(kite.ResolvedAlerts, ResolvedAlertsTableTitle, ResolvedAlertsPageTitle)
 			}
 
 			if event.Rune() == '2' {
 				utils.InfoLogger.Print("Switching to trigerred alerts view")
-				tui.InitAlertsUI(pdcli.TrigerredAlerts, TrigerredAlertsTableTitle, TrigerredAlertsPageTitle)
+				tui.InitAlertsUI(kite.TrigerredAlerts, TrigerredAlertsTableTitle, TrigerredAlertsPageTitle)
 			}
 
 			if event.Rune() == '3' {

@@ -23,7 +23,7 @@ import (
 	. "github.com/onsi/gomega"
 
 	mockpd "github.com/openshift/pagerduty-short-circuiter/pkg/client/mock"
-	pdcli "github.com/openshift/pagerduty-short-circuiter/pkg/pdcli/alerts"
+	kite "github.com/openshift/pagerduty-short-circuiter/pkg/kite/alerts"
 )
 
 // incident retuns a pagerduty incident object with pre-configured data.
@@ -101,7 +101,7 @@ var _ = Describe("view alerts", func() {
 
 			mockClient.EXPECT().ListIncidents(gomock.Any()).Return(incidentsResponse, nil).Times(1)
 
-			result, err := pdcli.GetIncidents(mockClient, &pdApi.ListIncidentsOptions{})
+			result, err := kite.GetIncidents(mockClient, &pdApi.ListIncidentsOptions{})
 
 			Expect(err).ShouldNot(HaveOccurred())
 
@@ -121,7 +121,7 @@ var _ = Describe("view alerts", func() {
 
 			expectedResult := "my-cluster-name"
 
-			result, err := pdcli.GetClusterName("", mockClient)
+			result, err := kite.GetClusterName("", mockClient)
 
 			Expect(err).ShouldNot(HaveOccurred())
 
@@ -152,7 +152,7 @@ var _ = Describe("view alerts", func() {
 				Description: "my-cluster-name",
 			}
 
-			expectedAlert := []pdcli.Alert{
+			expectedAlert := []kite.Alert{
 				{
 					IncidentID:  "incident-id-1",
 					ClusterID:   "cluster-id",
@@ -170,7 +170,7 @@ var _ = Describe("view alerts", func() {
 
 			mockClient.EXPECT().ListIncidentAlerts(gomock.Any()).Return(alertResponse, nil).Times(1)
 
-			result, err := pdcli.GetIncidentAlerts(mockClient, incident)
+			result, err := kite.GetIncidentAlerts(mockClient, incident)
 
 			Expect(err).ShouldNot(HaveOccurred())
 
@@ -181,7 +181,7 @@ var _ = Describe("view alerts", func() {
 	When("the incident alerts are fetched", func() {
 		It("parses the alert data to the struct", func() {
 
-			var alertData pdcli.Alert
+			var alertData kite.Alert
 
 			alertResponse := &pdApi.ListAlertsResponse{
 				Alerts: []pdApi.IncidentAlert{
@@ -200,7 +200,7 @@ var _ = Describe("view alerts", func() {
 				Description: "my-cluster-name",
 			}
 
-			expectedAlertData := pdcli.Alert{
+			expectedAlertData := kite.Alert{
 				IncidentID:  "incident-id-1",
 				Name:        "alert-name",
 				ClusterID:   "cluster-id",
@@ -262,7 +262,7 @@ var _ = Describe("view alerts", func() {
 
 			mockClient.EXPECT().ManageIncidents(gomock.Any(), gomock.Any()).Return(incidentResponse, nil).Times(1)
 
-			result, err := pdcli.AcknowledgeIncidents(mockClient, []string{"ABC123"})
+			result, err := kite.AcknowledgeIncidents(mockClient, []string{"ABC123"})
 
 			Expect(err).ToNot(HaveOccurred())
 

@@ -25,7 +25,7 @@ import (
 	"github.com/openshift/pagerduty-short-circuiter/pkg/client"
 	"github.com/openshift/pagerduty-short-circuiter/pkg/config"
 	"github.com/openshift/pagerduty-short-circuiter/pkg/constants"
-	pdcli "github.com/openshift/pagerduty-short-circuiter/pkg/pdcli/alerts"
+	kite "github.com/openshift/pagerduty-short-circuiter/pkg/kite/alerts"
 	"github.com/openshift/pagerduty-short-circuiter/pkg/ui"
 	"github.com/openshift/pagerduty-short-circuiter/pkg/utils"
 	"github.com/spf13/cobra"
@@ -71,8 +71,8 @@ func alertsHandler(cmd *cobra.Command, args []string) error {
 
 	var (
 		// Internals
-		incidentAlerts []pdcli.Alert
-		alerts         []pdcli.Alert
+		incidentAlerts []kite.Alert
+		alerts         []kite.Alert
 		incidentID     string
 		incidentOpts   pdApi.ListIncidentsOptions
 		teams          []string
@@ -136,7 +136,7 @@ func alertsHandler(cmd *cobra.Command, args []string) error {
 		}
 
 		utils.InfoLogger.Printf("GET: fetching incident alerts for incident ID: %s", incident.Id)
-		alerts, err := pdcli.GetIncidentAlerts(client, incident)
+		alerts, err := kite.GetIncidentAlerts(client, incident)
 
 		if err != nil {
 			return err
@@ -216,7 +216,7 @@ func alertsHandler(cmd *cobra.Command, args []string) error {
 
 	// Fetch incidents
 	utils.InfoLogger.Printf("GET: fetching incidents")
-	incidents, err := pdcli.GetIncidents(client, &incidentOpts)
+	incidents, err := kite.GetIncidents(client, &incidentOpts)
 
 	if err != nil {
 		return err
@@ -226,7 +226,7 @@ func alertsHandler(cmd *cobra.Command, args []string) error {
 	utils.InfoLogger.Printf("GET: fetching incident alerts")
 	for _, incident := range incidents {
 		// An incident can have more than one alert
-		incidentAlerts, err = pdcli.GetIncidentAlerts(client, incident)
+		incidentAlerts, err = kite.GetIncidentAlerts(client, incident)
 
 		if err != nil {
 			return err

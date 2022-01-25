@@ -1,4 +1,4 @@
-package pdcli
+package kite
 
 import (
 	"sort"

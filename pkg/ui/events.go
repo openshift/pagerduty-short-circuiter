@@ -4,13 +4,13 @@ import (
 	"fmt"
 
 	"github.com/gdamore/tcell/v2"
-	pdcli "github.com/openshift/pagerduty-short-circuiter/pkg/pdcli/alerts"
+	kite "github.com/openshift/pagerduty-short-circuiter/pkg/kite/alerts"
 	"github.com/openshift/pagerduty-short-circuiter/pkg/utils"
 )
 
 // SetAlertsTableEvents is the event handler for the alerts table.
 // It handles the program flow when a table selection is made.
-func (tui *TUI) SetAlertsTableEvents(alerts []pdcli.Alert) {
+func (tui *TUI) SetAlertsTableEvents(alerts []kite.Alert) {
 	tui.Table.SetSelectedFunc(func(row int, column int) {
 		var clusterName string
 		var alertData string
@@ -20,7 +20,7 @@ func (tui *TUI) SetAlertsTableEvents(alerts []pdcli.Alert) {
 		for _, alert := range alerts {
 			if alertID == alert.AlertID {
 				utils.InfoLogger.Printf("GET: fetching alert metadata for alert ID: %s", alertID)
-				alertData = pdcli.ParseAlertMetaData(alert)
+				alertData = kite.ParseAlertMetaData(alert)
 				clusterName = alert.ClusterName
 				tui.ClusterID = alert.ClusterID
 				break
@@ -61,7 +61,7 @@ func (tui *TUI) SetIncidentsTableEvents() {
 // All the incidents that have been acknowledged are printed to the secondary view.
 func (tui *TUI) ackowledgeSelectedIncidents() {
 	utils.InfoLogger.Printf("PUT: acknowledging incidents: %v", tui.AckIncidents)
-	ackIncidents, err := pdcli.AcknowledgeIncidents(tui.Client, tui.AckIncidents)
+	ackIncidents, err := kite.AcknowledgeIncidents(tui.Client, tui.AckIncidents)
 
 	if err != nil {
 		utils.ErrorLogger.Printf("%v", err)

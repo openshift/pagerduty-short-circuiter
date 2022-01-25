@@ -18,7 +18,7 @@ import (
 
 	"github.com/PagerDuty/go-pagerduty"
 	"github.com/openshift/pagerduty-short-circuiter/pkg/client"
-	pdcli "github.com/openshift/pagerduty-short-circuiter/pkg/pdcli/oncall"
+	kite "github.com/openshift/pagerduty-short-circuiter/pkg/kite/oncall"
 	"github.com/openshift/pagerduty-short-circuiter/pkg/ui"
 	"github.com/openshift/pagerduty-short-circuiter/pkg/utils"
 	"github.com/spf13/cobra"
@@ -35,9 +35,9 @@ var Cmd = &cobra.Command{
 // oncallHandler is the main handler for kite oncall.
 func oncallHandler(cmd *cobra.Command, args []string) (err error) {
 	var (
-		onCallUsers    []pdcli.OncallUser
-		allTeamsOncall []pdcli.OncallUser
-		nextOncall     []pdcli.OncallUser
+		onCallUsers    []kite.OncallUser
+		allTeamsOncall []kite.OncallUser
+		nextOncall     []kite.OncallUser
 		primary        string
 		secondary      string
 		tui            ui.TUI
@@ -68,7 +68,7 @@ func oncallHandler(cmd *cobra.Command, args []string) (err error) {
 
 	// Fetch oncall data from Platform-SRE team
 	utils.InfoLogger.Print("GET: fetching on-call data of current user team")
-	onCallUsers, err = pdcli.TeamSREOnCall(client)
+	onCallUsers, err = kite.TeamSREOnCall(client)
 
 	if err != nil {
 		return err
@@ -86,7 +86,7 @@ func oncallHandler(cmd *cobra.Command, args []string) (err error) {
 
 	// Fetch oncall data from all teams
 	utils.InfoLogger.Print("GET: fetching on-call data of all teams")
-	allTeamsOncall, err = pdcli.AllTeamsOncall(client)
+	allTeamsOncall, err = kite.AllTeamsOncall(client)
 
 	if err != nil {
 		return err
@@ -94,7 +94,7 @@ func oncallHandler(cmd *cobra.Command, args []string) (err error) {
 
 	// Fetch the current user's oncall schedule
 	utils.InfoLogger.Print("GET: fetching next on-call schedule of logged in user")
-	nextOncall, err = pdcli.UserNextOncallSchedule(client, user.ID)
+	nextOncall, err = kite.UserNextOncallSchedule(client, user.ID)
 
 	if err != nil {
 		return err
@@ -123,7 +123,7 @@ func oncallHandler(cmd *cobra.Command, args []string) (err error) {
 
 // initOncallUI initializes TUI table component.
 // It adds the returned table as a new TUI page view.
-func initOncallUI(tui *ui.TUI, onCallData []pdcli.OncallUser) {
+func initOncallUI(tui *ui.TUI, onCallData []kite.OncallUser) {
 	headers, data := getOncallTableData(onCallData)
 	tui.Table = tui.InitTable(headers, data, false, false, ui.OncallTableTitle)
 	tui.Pages.AddPage(ui.OncallPageTitle, tui.Table, true, true)
@@ -131,7 +131,7 @@ func initOncallUI(tui *ui.TUI, onCallData []pdcli.OncallUser) {
 
 // initOncallUI initializes TUI NextOncall table component.
 // It adds the returned table as a new TUI page view.
-func initNextOncallUI(tui *ui.TUI, onCallData []pdcli.OncallUser) {
+func initNextOncallUI(tui *ui.TUI, onCallData []kite.OncallUser) {
 	headers, data := getOncallTableData(onCallData)
 	tui.NextOncallTable = tui.InitTable(headers, data, false, false, ui.NextOncallTableTitle)
 	tui.Pages.AddPage(ui.NextOncallPageTitle, tui.NextOncallTable, true, false)
@@ -139,14 +139,14 @@ func initNextOncallUI(tui *ui.TUI, onCallData []pdcli.OncallUser) {
 
 // initOncallUI initializes TUI AllTeamsOncall table component.
 // It adds the returned table as a new TUI page view.
-func initAllTeamsOncallUI(tui *ui.TUI, onCallData []pdcli.OncallUser) {
+func initAllTeamsOncallUI(tui *ui.TUI, onCallData []kite.OncallUser) {
 	headers, data := getOncallTableData(onCallData)
 	tui.AllTeamsOncallTable = tui.InitTable(headers, data, false, false, ui.AllTeamsOncallTableTitle)
 	tui.Pages.AddPage(ui.AllTeamsOncallPageTitle, tui.AllTeamsOncallTable, true, false)
 }
 
 // getOncallTableData parses and returns tabular data for the given oncall data, i.e table headers and rows.
-func getOncallTableData(oncallData []pdcli.OncallUser) ([]string, [][]string) {
+func getOncallTableData(oncallData []kite.OncallUser) ([]string, [][]string) {
 	var tableData [][]string
 
 	for _, v := range oncallData {

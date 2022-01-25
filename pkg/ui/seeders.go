@@ -2,17 +2,17 @@ package ui
 
 import (
 	"github.com/openshift/pagerduty-short-circuiter/pkg/constants"
-	pdcli "github.com/openshift/pagerduty-short-circuiter/pkg/pdcli/alerts"
+	kite "github.com/openshift/pagerduty-short-circuiter/pkg/kite/alerts"
 	"github.com/openshift/pagerduty-short-circuiter/pkg/utils"
 )
 
 // SeedHighAlertsUI fetches trigerred alerts with status high and initializes a TUI table/page component.
 func (tui *TUI) SeedHighAlertsUI() {
-	var triggeredHigh []pdcli.Alert
+	var triggeredHigh []kite.Alert
 
 	utils.InfoLogger.Print("Fetching high alerts")
 
-	for _, alert := range pdcli.TrigerredAlerts {
+	for _, alert := range kite.TrigerredAlerts {
 		if alert.Severity == constants.StatusHigh {
 			triggeredHigh = append(triggeredHigh, alert)
 		}
@@ -23,11 +23,11 @@ func (tui *TUI) SeedHighAlertsUI() {
 
 // SeedHLowAlertsUI fetches trigerred alerts with status low and initializes a TUI table/page component.
 func (tui *TUI) SeedHLowAlertsUI() {
-	var triggeredLow []pdcli.Alert
+	var triggeredLow []kite.Alert
 
 	utils.InfoLogger.Print("Fetching low alerts")
 
-	for _, alert := range pdcli.TrigerredAlerts {
+	for _, alert := range kite.TrigerredAlerts {
 		if alert.Severity == constants.StatusLow {
 			triggeredLow = append(triggeredLow, alert)
 		}
@@ -45,7 +45,7 @@ func (tui *TUI) SeedAckIncidentsUI() {
 
 	// Fetch new incidents via PD API
 	utils.InfoLogger.Print("GET: fetching acknowledged incidents")
-	incidents, err := pdcli.GetIncidents(tui.Client, &tui.IncidentOpts)
+	incidents, err := kite.GetIncidents(tui.Client, &tui.IncidentOpts)
 
 	if err != nil {
 		utils.ErrorLogger.Print(err)
@@ -76,7 +76,7 @@ func (tui *TUI) SeedIncidentsUI() {
 
 	// Fetch new incidents via PD API
 	utils.InfoLogger.Print("GET: fetching incidents")
-	incidents, err := pdcli.GetIncidents(tui.Client, &tui.IncidentOpts)
+	incidents, err := kite.GetIncidents(tui.Client, &tui.IncidentOpts)
 
 	if err != nil {
 		utils.ErrorLogger.Print(err)
@@ -95,12 +95,12 @@ func (tui *TUI) SeedIncidentsUI() {
 
 // SeedIncidentsUI fetches acknowledged incident alerts and initializes a TUI table/page component.
 func (tui *TUI) SeedAlertsUI() {
-	var incidentAlerts []pdcli.Alert
-	var alerts []pdcli.Alert
+	var incidentAlerts []kite.Alert
+	var alerts []kite.Alert
 
 	// Refresh triggered and resolved alerts
-	pdcli.TrigerredAlerts = []pdcli.Alert{}
-	pdcli.ResolvedAlerts = []pdcli.Alert{}
+	kite.TrigerredAlerts = []kite.Alert{}
+	kite.ResolvedAlerts = []kite.Alert{}
 
 	if tui.AssignedTo == tui.Username {
 		utils.InfoLogger.Printf("Incidents status set to: %s", constants.StatusAcknowledged)
@@ -112,7 +112,7 @@ func (tui *TUI) SeedAlertsUI() {
 
 	// Fetch new incidents via PD API
 	utils.InfoLogger.Print("GET: fetching incidents")
-	incidents, err := pdcli.GetIncidents(tui.Client, &tui.IncidentOpts)
+	incidents, err := kite.GetIncidents(tui.Client, &tui.IncidentOpts)
 
 	if err != nil {
 		utils.ErrorLogger.Print(err)
@@ -121,7 +121,7 @@ func (tui *TUI) SeedAlertsUI() {
 	// Fetch new incident alerts via PD API
 	utils.InfoLogger.Print("GET: fetching incident alerts")
 	for _, incident := range incidents {
-		incidentAlerts, err = pdcli.GetIncidentAlerts(tui.Client, incident)
+		incidentAlerts, err = kite.GetIncidentAlerts(tui.Client, incident)
 
 		if err != nil {
 			utils.ErrorLogger.Print(err)

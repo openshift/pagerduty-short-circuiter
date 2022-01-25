@@ -6,7 +6,7 @@ import (
 	"github.com/PagerDuty/go-pagerduty"
 	"github.com/gdamore/tcell/v2"
 	"github.com/openshift/pagerduty-short-circuiter/pkg/client"
-	pdcli "github.com/openshift/pagerduty-short-circuiter/pkg/pdcli/alerts"
+	kite "github.com/openshift/pagerduty-short-circuiter/pkg/kite/alerts"
 	"github.com/openshift/pagerduty-short-circuiter/pkg/utils"
 	"github.com/rivo/tview"
 )
@@ -30,7 +30,7 @@ type TUI struct {
 	// API related
 	Client       client.PagerDutyClient
 	IncidentOpts pagerduty.ListIncidentsOptions
-	Alerts       []pdcli.Alert
+	Alerts       []kite.Alert
 
 	// Internals
 	SelectedIncidents map[string]string
@@ -45,8 +45,8 @@ type TUI struct {
 
 // InitAlertsUI initializes TUI table component.
 // It adds the returned table as a new TUI page view.
-func (tui *TUI) InitAlertsUI(alerts []pdcli.Alert, tableTitle string, pageTitle string) {
-	headers, data := pdcli.GetTableData(alerts, tui.Columns)
+func (tui *TUI) InitAlertsUI(alerts []kite.Alert, tableTitle string, pageTitle string) {
+	headers, data := kite.GetTableData(alerts, tui.Columns)
 	tui.Table = tui.InitTable(headers, data, true, false, tableTitle)
 	tui.SetAlertsTableEvents(alerts)
 
