@@ -232,6 +232,11 @@ var _ = Describe("view alerts", func() {
 				Email: "example@redhat.com",
 			}
 
+			pdUser := kite.User{
+				UserID: userResponse.ID,
+				Email:  userResponse.Email,
+			}
+
 			incidentResponse := &pdApi.ListIncidentsResponse{
 				Incidents: []pdApi.Incident{
 					{
@@ -258,11 +263,9 @@ var _ = Describe("view alerts", func() {
 				},
 			}
 
-			mockClient.EXPECT().GetCurrentUser(gomock.Any()).Return(userResponse, nil).Times(1)
-
 			mockClient.EXPECT().ManageIncidents(gomock.Any(), gomock.Any()).Return(incidentResponse, nil).Times(1)
 
-			result, err := kite.AcknowledgeIncidents(mockClient, []string{"ABC123"})
+			result, err := kite.AcknowledgeIncidents(mockClient, []string{"ABC123"}, pdUser)
 
 			Expect(err).ToNot(HaveOccurred())
 

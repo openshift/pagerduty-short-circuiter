@@ -3,7 +3,6 @@ package kite
 import (
 	"errors"
 	"fmt"
-	"sort"
 	"strings"
 
 	pdApi "github.com/PagerDuty/go-pagerduty"
@@ -31,10 +30,14 @@ type Alert struct {
 	WebURL      string
 }
 
-var (
-	TrigerredAlerts []Alert
-	ResolvedAlerts  []Alert
-)
+type User struct {
+	UserID     string
+	Name       string
+	Role       string
+	Team       string
+	Email      string
+	AssignedTo string
+}
 
 // GetIncidents returns a slice of pagerduty incidents.
 func GetIncidents(c client.PagerDutyClient, opts *pdApi.ListIncidentsOptions) ([]pdApi.Incident, error) {
@@ -75,39 +78,24 @@ func GetIncidentAlerts(c client.PagerDutyClient, incident pdApi.Incident) ([]Ale
 	}
 
 	for _, alert := range incidentAlerts.Alerts {
-		status := alert.Status
+		if alert.Status != constants.StatusResolved {
+			tempAlertObj := Alert{}
 
-		tempAlertObj := Alert{}
-
-		// Fetch incident Urgency
-		tempAlertObj.Severity = incident.Urgency
-
-		if tempAlertObj.Severity == "" {
-			tempAlertObj.Severity = alert.Severity
-		}
-
-		switch status {
-
-		case constants.StatusResolved:
 			err = tempAlertObj.ParseAlertData(c, &alert)
 
 			if err != nil {
 				return nil, err
 			}
 
-			ResolvedAlerts = append(ResolvedAlerts, tempAlertObj)
+			// Fetch incident Urgency
+			tempAlertObj.Severity = incident.Urgency
 
-		case constants.StatusTriggered:
-			err = tempAlertObj.ParseAlertData(c, &alert)
-
-			if err != nil {
-				return nil, err
+			if tempAlertObj.Severity == "" {
+				tempAlertObj.Severity = alert.Severity
 			}
 
-			TrigerredAlerts = append(TrigerredAlerts, tempAlertObj)
+			alerts = append(alerts, tempAlertObj)
 		}
-
-		alerts = append(alerts, tempAlertObj)
 	}
 
 	return alerts, nil
@@ -121,14 +109,14 @@ func GetClusterName(servideID string, c client.PagerDutyClient) (string, error) 
 		return "", err
 	}
 
-	clusterName := strings.Split(service.Description, " ")[0]
+	ClusterName := strings.Split(service.Description, " ")[0]
 
-	return clusterName, nil
+	return ClusterName, nil
 }
 
 // AcknowledgeIncidents acknowledges incidents for the given incident IDs
 // and retuns the acknowledged incidents.
-func AcknowledgeIncidents(c client.PagerDutyClient, incidentIDs []string) ([]pdApi.Incident, error) {
+func AcknowledgeIncidents(c client.PagerDutyClient, incidentIDs []string, pdUser User) ([]pdApi.Incident, error) {
 	var incidents []pdApi.ManageIncidentsOptions
 	var opts pdApi.ManageIncidentsOptions
 
@@ -142,13 +130,7 @@ func AcknowledgeIncidents(c client.PagerDutyClient, incidentIDs []string) ([]pdA
 		incidents = append(incidents, opts)
 	}
 
-	user, err := c.GetCurrentUser(pdApi.GetCurrentUserOptions{})
-
-	if err != nil {
-		return nil, err
-	}
-
-	response, err = c.ManageIncidents(user.Email, incidents)
+	response, err := c.ManageIncidents(pdUser.Email, incidents)
 
 	if err != nil {
 		return nil, err
@@ -280,83 +262,80 @@ func ParseAlertMetaData(alert Alert) string {
 }
 
 // getTableData parses and returns tabular data for the given alerts, i.e table headers and rows.
-func GetTableData(alerts []Alert, cols string) ([]string, [][]string) {
-	var headers []string
+func GetAlertsTableData(alerts []Alert) ([]string, [][]string) {
+	headers := []string{"INCIDENT ID", "ALERT ID", "ALERT", "CLUSTER", "CLUSTER ID", "STATUS", "SEVERITY"}
+
 	var tableData [][]string
 
-	// columns returned by the columns flag
-	columns := strings.Split(cols, ",")
-
-	columnsMap := make(map[string]bool)
-
-	for _, c := range columns {
-		columnsMap[c] = true
-	}
-
-	headersMap := make(map[int]string)
-
 	for _, alert := range alerts {
-
-		var values []string
-
-		var i int
-
-		if columnsMap["incident.id"] {
-			i++
-			headersMap[i] = "INCIDENT ID"
-			values = append(values, alert.IncidentID)
-		}
-
-		if columnsMap["alert.id"] {
-			i++
-			headersMap[i] = "ALERT ID"
-			values = append(values, alert.AlertID)
-		}
-
-		if columnsMap["alert"] {
-			i++
-			headersMap[i] = "ALERT"
-			values = append(values, alert.Name)
-		}
-
-		if columnsMap["cluster.name"] {
-			i++
-			headersMap[i] = "CLUSTER NAME"
-			values = append(values, alert.ClusterName)
-		}
-
-		if columnsMap["cluster.id"] {
-			i++
-			headersMap[i] = "CLUSTER ID"
-			values = append(values, alert.ClusterID)
-		}
-
-		if columnsMap["status"] {
-			i++
-			headersMap[i] = "STATUS"
-			values = append(values, alert.Status)
-		}
-
-		if columnsMap["severity"] {
-			i++
-			headersMap[i] = "SEVERITY"
-			values = append(values, alert.Severity)
-		}
-
-		tableData = append(tableData, values)
-	}
-
-	keys := make([]int, 0)
-
-	for k := range headersMap {
-		keys = append(keys, k)
-	}
-
-	sort.Ints(keys)
-
-	for _, v := range keys {
-		headers = append(headers, headersMap[v])
+		tableData = append(tableData, []string{
+			alert.IncidentID,
+			alert.AlertID,
+			alert.Name,
+			alert.ClusterName,
+			alert.ClusterID,
+			alert.Status,
+			alert.Severity,
+		})
 	}
 
 	return headers, tableData
+}
+
+// getTableData parses and returns tabular data for the given incidents, i.e table rows.
+func GetIncidentsTableData(ackIncidents []pdApi.Incident, triggeredIncidents []pdApi.Incident) (ackTableData, triggeredTableData [][]string) {
+	for _, incident := range ackIncidents {
+		ackTableData = append(ackTableData, []string{
+			incident.Id,
+			incident.Title,
+			incident.Urgency,
+			incident.Status,
+			incident.Service.Summary,
+			incident.Acknowledgements[0].Acknowledger.Summary,
+		})
+	}
+
+	for _, incident := range triggeredIncidents {
+		triggeredTableData = append(triggeredTableData, []string{
+			incident.Id,
+			incident.Title,
+			incident.Urgency,
+			incident.Status,
+			incident.Service.Summary,
+			incident.Assignments[0].Assignee.Summary,
+		})
+	}
+
+	return ackTableData, triggeredTableData
+}
+
+// FilterAlertsByStatus filters the given alerts based on its status and returns low, high alerts.
+func FilterAlertsByStatus(alerts []Alert) (low, high []Alert) {
+	for _, alert := range alerts {
+		if alert.Severity == constants.StatusHigh {
+			high = append(high, alert)
+		}
+
+		if alert.Severity == constants.StatusLow {
+			low = append(low, alert)
+		}
+	}
+
+	return low, high
+}
+
+// FilterIncidentsByStatus filters the given incidents based on its urgency
+// and returns acknowledged and trigerred (un-acknowledged) incidents tabular data.
+func FilterIncidentsByStatus(incidents []pdApi.Incident) (ackIncidents, trigerredIncidents []pdApi.Incident) {
+	for _, incident := range incidents {
+		if incident.Status == constants.StatusAcknowledged {
+			ackIncidents = append(ackIncidents, incident)
+		}
+
+		if incident.Status == constants.StatusTriggered {
+			trigerredIncidents = append(trigerredIncidents, incident)
+		}
+	}
+
+	return ackIncidents, trigerredIncidents
 }
