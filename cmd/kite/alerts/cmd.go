@@ -32,12 +32,8 @@ import (
 )
 
 var options struct {
-	high       bool
-	low        bool
 	assignment string
-	columns    string
 	incidentID bool
-	status     string
 }
 
 var Cmd = &cobra.Command{
@@ -55,14 +51,6 @@ func init() {
 		"assigned-to",
 		"self",
 		"Filter alerts based on user or team",
-	)
-
-	// Columns displayed
-	Cmd.Flags().StringVar(
-		&options.columns,
-		"columns",
-		"incident.id,alert.id,cluster.name,alert,cluster.id,status,severity",
-		"Specify which columns to display separated by commas without any space in between",
 	)
 }
 
@@ -116,7 +104,6 @@ func alertsHandler(cmd *cobra.Command, args []string) error {
 	// UI internals
 	tui.Client = client
 	tui.Username = user.Name
-	tui.Columns = options.columns
 	tui.Role = user.Role
 
 	// Check for incident ID argument

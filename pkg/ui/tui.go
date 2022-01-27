@@ -39,14 +39,13 @@ type TUI struct {
 	AssignedTo        string
 	Username          string
 	Role              string
-	Columns           string
 	ClusterID         string
 }
 
 // InitAlertsUI initializes TUI table component.
 // It adds the returned table as a new TUI page view.
 func (tui *TUI) InitAlertsUI(alerts []kite.Alert, tableTitle string, pageTitle string) {
-	headers, data := kite.GetTableData(alerts, tui.Columns)
+	headers, data := kite.GetAlertsTableData(alerts)
 	tui.Table = tui.InitTable(headers, data, true, false, tableTitle)
 	tui.SetAlertsTableEvents(alerts)
 
