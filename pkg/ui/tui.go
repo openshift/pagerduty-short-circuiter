@@ -3,99 +3,23 @@ package ui
 import (
 	"fmt"
 
-	"github.com/PagerDuty/go-pagerduty"
 	"github.com/gdamore/tcell/v2"
-	"github.com/openshift/pagerduty-short-circuiter/pkg/client"
-	kite "github.com/openshift/pagerduty-short-circuiter/pkg/kite/alerts"
 	"github.com/openshift/pagerduty-short-circuiter/pkg/utils"
 	"github.com/rivo/tview"
 )
 
 type TUI struct {
-
-	// Main UI elements
-	App                 *tview.Application
-	AlertMetadata       *tview.TextView
-	Table               *tview.Table
-	IncidentsTable      *tview.Table
-	NextOncallTable     *tview.Table
-	AllTeamsOncallTable *tview.Table
-	Pages               *tview.Pages
-	SecondaryWindow     *tview.TextView
-	LogWindow           *tview.TextView
-	Layout              *tview.Flex
-	Footer              *tview.TextView
-	FrontPage           string
-
-	// API related
-	Client       client.PagerDutyClient
-	IncidentOpts pagerduty.ListIncidentsOptions
-	Alerts       []kite.Alert
-
-	// Internals
-	SelectedIncidents map[string]string
-	Incidents         [][]string
-	AckIncidents      []string
-	AssignedTo        string
-	Username          string
-	Role              string
-	ClusterID         string
-}
-
-// InitAlertsUI initializes TUI table component.
-// It adds the returned table as a new TUI page view.
-func (tui *TUI) InitAlertsUI(alerts []kite.Alert, tableTitle string, pageTitle string) {
-	headers, data := kite.GetAlertsTableData(alerts)
-	tui.Table = tui.InitTable(headers, data, true, false, tableTitle)
-	tui.SetAlertsTableEvents(alerts)
-
-	if len(alerts) == 0 && tui.Username == tui.AssignedTo {
-		utils.InfoLogger.Printf("No acknowledged alerts for user %s found", tui.Username)
-	}
-
-	tui.Pages.AddPage(pageTitle, tui.Table, true, true)
-	tui.FrontPage = pageTitle
-
-	if pageTitle == TrigerredAlertsPageTitle {
-		tui.Footer.SetText(FooterTextTrigerredAlerts)
-	} else {
-		tui.Footer.SetText(FooterTextAlerts)
-	}
-}
-
-// InitIncidentsUI initializes TUI table component.
-// It adds the returned table as a new TUI page view.
-func (tui *TUI) InitIncidentsUI(incidents [][]string, tableTitle string, pageTitle string, isSelectable bool) {
-	incidentHeaders := []string{"INCIDENT ID", "NAME", "SEVERITY", "STATUS", "SERVICE"}
-
-	if isSelectable {
-		tui.IncidentsTable = tui.InitTable(incidentHeaders, incidents, true, true, tableTitle)
-		tui.SetIncidentsTableEvents()
-	} else {
-		tui.IncidentsTable = tui.InitTable(incidentHeaders, incidents, false, false, tableTitle)
-	}
-
-	if !tui.Pages.HasPage(pageTitle) {
-		tui.Pages.AddPage(pageTitle, tui.IncidentsTable, true, false)
-	}
-}
-
-func (tui *TUI) InitAlertsSecondaryView() {
-	tui.SecondaryWindow.SetText(
-		fmt.Sprintf("Logged in user: %s\n\nViewing alerts assigned to: %s\n\nPagerDuty role: %s",
-			tui.Username,
-			tui.AssignedTo,
-			tui.Role)).
-		SetTextColor(InfoTextColor)
-}
-
-func (tui *TUI) InitOnCallSecondaryView(user string, primary string, secondary string) {
-	tui.SecondaryWindow.SetText(
-		fmt.Sprintf("Logged in user: %s\n\nPrimary on-call: %s\n\nSecondary on-call: %s",
-			user,
-			primary,
-			secondary),
-	)
+	App               *tview.Application
+	Table             *tview.Table
+	AckIncidentsTable *tview.Table
+	IncidentsTable    *tview.Table
+	AlertMetadata     *tview.TextView
+	SecondaryWindow   *tview.TextView
+	LogWindow         *tview.TextView
+	Footer            *tview.TextView
+	Pages             *tview.Pages
+	Layout            *tview.Flex
+	FrontPage         string
 }
 
 // initFooter initializes the footer text depending on the page currently visible.
@@ -173,7 +97,5 @@ func (tui *TUI) Init() {
 // StartApp sets the UI layout and renders all the TUI elements.
 func (t *TUI) StartApp() error {
 	t.initFooter()
-	t.initKeyboard()
-
 	return t.App.SetRoot(t.Layout, true).EnableMouse(true).Run()
 }

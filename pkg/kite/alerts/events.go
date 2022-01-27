@@ -1,67 +1,72 @@
-package ui
+package kite
 
 import (
 	"fmt"
 
 	"github.com/gdamore/tcell/v2"
-	kite "github.com/openshift/pagerduty-short-circuiter/pkg/kite/alerts"
+	"github.com/openshift/pagerduty-short-circuiter/pkg/client"
+	"github.com/openshift/pagerduty-short-circuiter/pkg/ui"
 	"github.com/openshift/pagerduty-short-circuiter/pkg/utils"
+)
+
+var (
+	ClusterID         string
+	AckIncidents      []string
+	SelectedIncidents map[string]string
 )
 
 // SetAlertsTableEvents is the event handler for the alerts table.
 // It handles the program flow when a table selection is made.
-func (tui *TUI) SetAlertsTableEvents(alerts []kite.Alert) {
+func SetAlertsTableEvents(alerts []Alert, tui *ui.TUI) {
 	tui.Table.SetSelectedFunc(func(row int, column int) {
-		var clusterName string
-		var alertData string
-
 		alertID := tui.Table.GetCell(row, 1).Text
 
 		for _, alert := range alerts {
 			if alertID == alert.AlertID {
 				utils.InfoLogger.Printf("GET: fetching alert metadata for alert ID: %s", alertID)
-				alertData = kite.ParseAlertMetaData(alert)
-				clusterName = alert.ClusterName
-				tui.ClusterID = alert.ClusterID
+				alertData := ParseAlertMetaData(alert)
+				ClusterID = alert.ClusterID
+
+				// Do not prompt for cluster login if there's no cluster ID associated with the alert (v3 clusters)
+				if ClusterID != "N/A" && ClusterID != "" && alertData != "" {
+					tui.SecondaryWindow.SetText(fmt.Sprintf("Press 'Y' to log into the cluster: %s", alert.ClusterName)).SetTextColor(ui.PromptTextColor)
+				}
+
+				tui.AlertMetadata.SetText(alertData)
 				break
 			}
 		}
 
-		tui.AlertMetadata.SetText(alertData)
-		tui.Pages.AddAndSwitchToPage(AlertDataPageTitle, tui.AlertMetadata, true)
-
-		// Do not prompt for cluster login if there's no cluster ID associated with the alert (v3 clusters)
-		if tui.ClusterID != "N/A" && tui.ClusterID != "" && alertData != "" {
-			tui.SecondaryWindow.SetText(fmt.Sprintf("Press 'Y' to log into the cluster: %s", clusterName)).SetTextColor(PromptTextColor)
-		}
+		tui.Pages.AddAndSwitchToPage(ui.AlertDataPageTitle, tui.AlertMetadata, true)
+		tui.Footer.SetText(ui.FooterText)
 	})
 }
 
 // SetIncidentsTableEvents is the event handler for the incidents table in ack mode.
 // It handles the program flow when a table selection is made.
-func (tui *TUI) SetIncidentsTableEvents() {
-	tui.SelectedIncidents = make(map[string]string)
+func SetIncidentsTableEvents(tui *ui.TUI) {
+	SelectedIncidents = make(map[string]string)
 	tui.IncidentsTable.SetSelectedFunc(func(row, column int) {
 
 		incidentID := tui.IncidentsTable.GetCell(row, 0).Text
 
-		if _, ok := tui.SelectedIncidents[incidentID]; !ok || tui.SelectedIncidents[incidentID] == "" {
+		if _, ok := SelectedIncidents[incidentID]; !ok || SelectedIncidents[incidentID] == "" {
 			tui.IncidentsTable.GetCell(row, 0).SetTextColor(tcell.ColorLimeGreen)
-			tui.SelectedIncidents[incidentID] = incidentID
+			SelectedIncidents[incidentID] = incidentID
 			utils.InfoLogger.Printf("Selected incident: %s", incidentID)
 		} else {
 			tui.IncidentsTable.GetCell(row, 0).SetTextColor(tcell.ColorWhite)
-			tui.SelectedIncidents[incidentID] = ""
+			SelectedIncidents[incidentID] = ""
 			utils.InfoLogger.Printf("Deselected incident: %s", incidentID)
 		}
 	})
 }
 
-// acknowledgeSelectedIncidents acknowledges the selected incidents.
+// AcknowledgeSelectedIncidents acknowledges the selected incidents.
 // All the incidents that have been acknowledged are printed to the secondary view.
-func (tui *TUI) ackowledgeSelectedIncidents() {
-	utils.InfoLogger.Printf("PUT: acknowledging incidents: %v", tui.AckIncidents)
-	ackIncidents, err := kite.AcknowledgeIncidents(tui.Client, tui.AckIncidents)
+func AckowledgeSelectedIncidents(tui *ui.TUI, client *client.PDClient, pdUser User) {
+	utils.InfoLogger.Printf("PUT: acknowledging incidents: %v", AckIncidents)
+	ackIncidents, err := AcknowledgeIncidents(client, AckIncidents, pdUser)
 
 	if err != nil {
 		utils.ErrorLogger.Printf("%v", err)
@@ -76,7 +81,7 @@ func (tui *TUI) ackowledgeSelectedIncidents() {
 
 	// Remove ack'ed alerts from table
 	for i < tui.IncidentsTable.GetRowCount() {
-		for _, v := range tui.AckIncidents {
+		for _, v := range AckIncidents {
 			if tui.IncidentsTable.GetCell(i, 0).Text == v {
 				tui.IncidentsTable.RemoveRow(i)
 			}
@@ -85,9 +90,9 @@ func (tui *TUI) ackowledgeSelectedIncidents() {
 		i++
 	}
 
-	tui.AckIncidents = []string{}
+	AckIncidents = []string{}
 
 	// Refresh Page
-	tui.SetIncidentsTableEvents()
-	tui.Pages.SwitchToPage(IncidentsPageTitle)
+	SetIncidentsTableEvents(tui)
+	tui.Pages.SwitchToPage(ui.IncidentsPageTitle)
 }
