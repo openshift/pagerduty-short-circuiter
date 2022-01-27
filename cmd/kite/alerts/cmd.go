@@ -50,7 +50,7 @@ func init() {
 		&options.assignment,
 		"assigned-to",
 		"self",
-		"Filter alerts based on user or team",
+		"Filter alerts assigned-to self/team/silentTest",
 	)
 }
 
@@ -59,13 +59,9 @@ func alertsHandler(cmd *cobra.Command, args []string) error {
 
 	var (
 		// Internals
-		incidentAlerts []kite.Alert
-		alerts         []kite.Alert
-		incidentID     string
-		incidentOpts   pdApi.ListIncidentsOptions
-		teams          []string
-		users          []string
-		status         []string
+		alerts       []kite.Alert
+		incidentID   string
+		incidentOpts pdApi.ListIncidentsOptions
 
 		//UI
 		tui ui.TUI
@@ -73,6 +69,7 @@ func alertsHandler(cmd *cobra.Command, args []string) error {
 
 	// Setup TUI
 	tui.Init()
+	fmt.Println("Initializing terminal UI")
 	utils.InfoLogger.Print("Initialized terminal UI")
 
 	// Determine terminal emulator for cluster login
@@ -85,9 +82,9 @@ func alertsHandler(cmd *cobra.Command, args []string) error {
 	}
 
 	// Create a new pagerduty client
+	fmt.Println("Connecting to PagerDuty API")
 	utils.InfoLogger.Print("Connecting to PagerDuty API")
 	client, err := client.NewClient().Connect()
-
 	if err != nil {
 		return err
 	}
@@ -96,15 +93,19 @@ func alertsHandler(cmd *cobra.Command, args []string) error {
 	// Fetch the currently logged in user's ID.
 	utils.InfoLogger.Print("GET: fetching logged in user data")
 	user, err := client.GetCurrentUser(pdApi.GetCurrentUserOptions{})
-
 	if err != nil {
 		return err
 	}
 
-	// UI internals
-	tui.Client = client
-	tui.Username = user.Name
-	tui.Role = user.Role
+	// Initialize a new user object to be used across
+	pdUser := kite.User{
+		UserID: user.ID,
+		Name:   user.Name,
+		Role:   user.Role,
+		Email:  user.Email,
+	}
+
+	fmt.Println("Fetching alerts")
 
 	// Check for incident ID argument
 	if len(args) > 0 {
@@ -124,18 +125,14 @@ func alertsHandler(cmd *cobra.Command, args []string) error {
 
 		utils.InfoLogger.Printf("GET: fetching incident alerts for incident ID: %s", incident.Id)
 		alerts, err := kite.GetIncidentAlerts(client, incident)
-
 		if err != nil {
 			return err
 		}
 
-		tui.Alerts = alerts
-
 		utils.InfoLogger.Print("Initializing alerts view")
-		tui.InitAlertsUI(alerts, ui.AlertsTableTitle, ui.AlertsPageTitle)
+		kite.InitAlertsUI(alerts, ui.AlertsTableTitle, ui.AlertsPageTitle, &tui)
 
 		err = tui.StartApp()
-
 		if err != nil {
 			return err
 		}
@@ -144,8 +141,21 @@ func alertsHandler(cmd *cobra.Command, args []string) error {
 	}
 
 	// Set incidents urgency
-	utils.InfoLogger.Printf("Incidents urgency set to: %s, %s", constants.StatusLow, constants.StatusHigh)
-	incidentOpts.Urgencies = []string{constants.StatusLow, constants.StatusHigh}
+	urgency := []string{constants.StatusLow, constants.StatusHigh}
+	incidentOpts.Urgencies = append(incidentOpts.Urgencies, urgency...)
+	utils.InfoLogger.Printf("Retrieving incidents with urgency: %v", incidentOpts.Urgencies)
+
+	// Set incidents status
+	status := []string{constants.StatusAcknowledged, constants.StatusTriggered}
+	incidentOpts.Statuses = append(incidentOpts.Statuses, status...)
+	utils.InfoLogger.Printf("Retrieving incidents with status: %v", incidentOpts.Statuses)
+
+	// Set the limit on incidents fetched
+	utils.InfoLogger.Printf("Incidents limit set to: %d", constants.IncidentsLimit)
+	incidentOpts.Limit = constants.IncidentsLimit
+
+	// Sort incidents by urgency
+	incidentOpts.SortBy = "urgency:DESC"
 
 	// Check the assigned-to flag
 	switch options.assignment {
@@ -153,68 +163,59 @@ func alertsHandler(cmd *cobra.Command, args []string) error {
 	case "team":
 		// Load the configuration file
 		cfg, err := config.Load()
-
 		if err != nil {
 			return err
 		}
 
-		teamID := cfg.TeamID
-		tui.AssignedTo = cfg.Team
+		pdUser.AssignedTo = cfg.Team
 
-		if teamID == "" {
+		if cfg.TeamID == "" {
 			return fmt.Errorf("no team selected, please run 'kite teams' to set a team")
 		}
 
 		// Fetch incidents belonging to a specific team
-		incidentOpts.TeamIDs = append(teams, teamID)
 		utils.InfoLogger.Printf("Retrieving incidents assigned to team: %s", cfg.Team)
-
-		// Fetch incidents with the following statuses
-		incidentOpts.Statuses = append(status, constants.StatusTriggered, constants.StatusAcknowledged)
-		utils.InfoLogger.Printf("Retrieving incidents with status: %s, %s", constants.StatusTriggered, constants.StatusAcknowledged)
+		incidentOpts.TeamIDs = []string{cfg.TeamID}
 
 	case "silentTest":
 		// Fetch incidents assigned to silent test
-		tui.AssignedTo = "Silent Test"
-		incidentOpts.UserIDs = append(users, constants.SilentTest)
+		pdUser.AssignedTo = "Silent Test"
 		utils.InfoLogger.Printf("Retrieving incidents assigned to Silent Test")
-
-		// Fetch incidents with the following statuses
-		incidentOpts.Statuses = append(status, constants.StatusTriggered, constants.StatusAcknowledged)
-		utils.InfoLogger.Printf("Retrieving incidents with status: %s, %s", constants.StatusTriggered, constants.StatusAcknowledged)
+		incidentOpts.UserIDs = []string{constants.SilentTest}
 
 	case "self":
 		// Fetch incidents only assigned to self
-		tui.AssignedTo = user.Name
-		incidentOpts.UserIDs = append(users, user.ID)
-		utils.InfoLogger.Printf("Retrieving incidents assigned to: %s", user.Name)
-
-		// Fetch only acknowledged incidents when option is self (default)
-		incidentOpts.Statuses = append(status, constants.StatusAcknowledged)
-		utils.InfoLogger.Printf("Retrieving incidents with status: %s", constants.StatusAcknowledged)
+		pdUser.AssignedTo = "Self"
+		utils.InfoLogger.Printf("Retrieving incidents assigned to: %s", pdUser.Name)
+		incidentOpts.UserIDs = []string{pdUser.UserID}
 
 	default:
 		return fmt.Errorf("please enter a valid assigned-to option")
 	}
 
-	// Set the limit on incidents fetched
-	utils.InfoLogger.Printf("Incidents limit set to: %d", constants.IncidentsLimit)
-	incidentOpts.Limit = constants.IncidentsLimit
-
-	// Fetch incidents
+	// Get incidents
 	utils.InfoLogger.Printf("GET: fetching incidents")
 	incidents, err := kite.GetIncidents(client, &incidentOpts)
-
 	if err != nil {
 		return err
 	}
 
-	// Get incident alerts
-	utils.InfoLogger.Printf("GET: fetching incident alerts")
+	// Filter incidents by status
+	utils.InfoLogger.Print("Filtering incidents by status")
+	ackIncidents, triggeredIncidents := kite.FilterIncidentsByStatus(incidents)
+
+	// Format incidents into tabular rows
+	ackIncidentsData, triggeredIncidentsData := kite.GetIncidentsTableData(ackIncidents, triggeredIncidents)
+
+	// If viewing alerts assigned to logged-in user fetch only ack'd incident alerts
+	if options.assignment == "self" {
+		incidents = ackIncidents
+	}
+
+	utils.InfoLogger.Print("GET: fetching incident alerts")
 	for _, incident := range incidents {
 		// An incident can have more than one alert
-		incidentAlerts, err = kite.GetIncidentAlerts(client, incident)
-
+		incidentAlerts, err := kite.GetIncidentAlerts(client, incident)
 		if err != nil {
 			return err
 		}
@@ -222,14 +223,36 @@ func alertsHandler(cmd *cobra.Command, args []string) error {
 		alerts = append(alerts, incidentAlerts...)
 	}
 
-	tui.Alerts = alerts
-	tui.IncidentOpts = incidentOpts
+	// Filter alerts by status
+	utils.InfoLogger.Print("Filtering alerts by status")
+	lowAlerts, highAlerts := kite.FilterAlertsByStatus(alerts)
 
-	tui.InitAlertsUI(tui.Alerts, ui.AlertsTableTitle, ui.AlertsPageTitle)
-	tui.InitAlertsSecondaryView()
+	// Get incident alerts & filter incidents by status
+	utils.InfoLogger.Print("GET: fetching incident alerts")
+	for _, incident := range incidents {
+		// An incident can have more than one alert
+		incidentAlerts, err := kite.GetIncidentAlerts(client, incident)
+		if err != nil {
+			return err
+		}
+
+		alerts = append(alerts, incidentAlerts...)
+	}
+
+	if len(alerts) == 0 && options.assignment == "self" {
+		utils.InfoLogger.Printf("No acknowledged alerts for user %s found", pdUser.Name)
+	}
+
+	kite.InitAlertsUI(alerts, ui.AlertsTableTitle, ui.AlertsPageTitle, &tui)
+	kite.InitAckIncidentsUI(ackIncidentsData, &tui)
+	kite.InitIncidentsUI(triggeredIncidentsData, &tui)
+	kite.InitAlertsSecondaryView(&tui, pdUser)
+	kite.InitAlertsKeyboard(&tui, client, lowAlerts, highAlerts, pdUser)
+
 	// Start TUI
+	utils.InfoLogger.Print("Initializing TUI")
+	fmt.Println("Starting TUI")
 	err = tui.StartApp()
-
 	if err != nil {
 		return err
 	}
