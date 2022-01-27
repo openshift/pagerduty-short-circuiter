@@ -44,7 +44,6 @@ var Cmd = &cobra.Command{
 }
 
 func init() {
-
 	// Incident Assignment
 	Cmd.Flags().StringVar(
 		&options.assignment,
@@ -56,7 +55,6 @@ func init() {
 
 // alertsHandler is the main alerts command handler.
 func alertsHandler(cmd *cobra.Command, args []string) error {
-
 	var (
 		// Internals
 		alerts       []kite.Alert
@@ -105,7 +103,7 @@ func alertsHandler(cmd *cobra.Command, args []string) error {
 		Email:  user.Email,
 	}
 
-	fmt.Println("Fetching alerts")
+	fmt.Println("Fetching alerts...")
 
 	// Check for incident ID argument
 	if len(args) > 0 {
