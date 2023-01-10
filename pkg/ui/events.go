@@ -69,7 +69,7 @@ func (tui *TUI) ackowledgeSelectedIncidents() {
 	}
 
 	for _, v := range ackIncidents {
-		utils.InfoLogger.Printf("Incident %s has been acknowledged", v.Id)
+		utils.InfoLogger.Printf("Incident %s has been acknowledged", v.APIObject.ID)
 	}
 
 	var i int

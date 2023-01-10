@@ -52,11 +52,10 @@ var _ = Describe("kite oncall", func() {
 						Start: "2021-10-25T03:30:00Z",
 						End:   "2021-10-25T08:30:00Z",
 						User: pdApi.User{
-							Summary: "Red Hat SRE",
-						},
+							APIObject: pdApi.APIObject{Summary: "Red Hat SRE"},
 					},
 				},
-			}
+			}}
 
 			mockClient.EXPECT().ListOnCalls(gomock.Any()).Return(listOnCallsResponse, nil).Times(1)
 
@@ -94,11 +93,11 @@ var _ = Describe("kite oncall", func() {
 						Start: "2021-10-25T03:30:00Z",
 						End:   "2021-10-25T08:30:00Z",
 						User: pdApi.User{
-							Summary: "Red Hat SRE",
-						},
+							APIObject: pdApi.APIObject{Summary: "Red Hat SRE"},
 					},
 				},
-			}
+			},
+		}
 			mockClient.EXPECT().ListOnCalls(gomock.Any()).Return(listOnCallsResponse, nil).Times(1)
 
 			expectedResponse := []pdcli.OncallUser{
@@ -134,11 +133,12 @@ var _ = Describe("kite oncall", func() {
 						Start: "2021-10-25T03:30:00Z",
 						End:   "2021-10-25T08:30:00Z",
 						User: pdApi.User{
-							Summary: "Red Hat Engineer",
-						},
+							APIObject: pdApi.APIObject{Summary: "Red Hat Engineer"},
 					},
 				},
-			}
+			},
+		}
+
 			mockClient.EXPECT().ListOnCalls(gomock.Any()).Return(listOnCallsResponse, nil).Times(1)
 
 			expectedResponse := []pdcli.OncallUser{
