@@ -32,19 +32,23 @@ build:
 install:
 	go build -o ${GOPATH}/bin/kite ./cmd/kite
 
+.PHONY: mod
+mod:
+	go mod tidy
+
+.PHONY: vendor
+vendor:
+	go mod vendor
+
 .PHONY: tools
 tools:
 	@mkdir -p $(GOPATH)/bin
-	@ls $(GOPATH)/bin/ginkgo 1>/dev/null || (echo "Installing ginkgo..." && go get -u github.com/onsi/ginkgo/ginkgo@v1.16.4)
-	@ls $(GOPATH)/bin/mockgen 1>/dev/null || (echo "Installing gomock..." && go get -u github.com/golang/mock/mockgen@v1.6.0)
-
-#   Sync the vendor dir for inconsistent vendoring
-	go mod tidy
-	go mod vendor
+	@ls $(GOPATH)/bin/ginkgo 1>/dev/null || (echo "Installing ginkgo..." && go install github.com/onsi/ginkgo/ginkgo@v1.16.4)
+	@ls $(GOPATH)/bin/mockgen 1>/dev/null || (echo "Installing gomock..." && go install github.com/golang/mock/mockgen@v1.6.0)
 	
 .PHONY: test
-test: tools
-	$(GOPATH)/bin/ginkgo -v -r tests
+test: mod vendor
+	go test ./... -covermode=atomic -coverpkg=./... -v
 
 # Installed using instructions from: https://golangci-lint.run/usage/install/#linux-and-windows
 getlint:
