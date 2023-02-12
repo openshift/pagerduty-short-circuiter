@@ -1,18 +1,9 @@
-#
-# Copyright (c) 2021 Red Hat, Inc.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#   http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
+unexport GOFLAGS
+
+GOOS?=linux
+GOARCH?=amd64
+GOENV=GOOS=${GOOS} GOARCH=${GOARCH} CGO_ENABLED=0 GOFLAGS=
+GOPATH := $(shell go env GOPATH)
 
 # Ensure go modules are enabled:
 export GO111MODULE=on
@@ -20,9 +11,6 @@ export GOPROXY=https://proxy.golang.org
 
 # Disable CGO so that we always generate static binaries:
 export CGO_ENABLED=0
-
-# Constants:
-GOPATH := $(shell go env GOPATH)
 
 .PHONY: build
 build:
@@ -36,10 +24,6 @@ install:
 mod:
 	go mod tidy
 
-.PHONY: vendor
-vendor:
-	go mod vendor
-
 .PHONY: tools
 tools:
 	@mkdir -p $(GOPATH)/bin
@@ -47,7 +31,7 @@ tools:
 	@ls $(GOPATH)/bin/mockgen 1>/dev/null || (echo "Installing gomock..." && go install github.com/golang/mock/mockgen@v1.6.0)
 	
 .PHONY: test
-test: mod vendor
+test:
 	go test ./... -covermode=atomic -coverpkg=./... -v
 
 # Installed using instructions from: https://golangci-lint.run/usage/install/#linux-and-windows
