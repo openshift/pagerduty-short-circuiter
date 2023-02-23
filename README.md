@@ -168,7 +168,6 @@ $ mockgen -source=foo.go -destination=mock/foo_mock.go
 ```
 
 ## Maintainers
-- Dominic Finn (dofinn@redhat.com)
 - Mitali Bhalla (mbhalla@redhat.com)
 - Supreeth Basabattini (sbasabat@redhat.com)
 - Tomas Dabašinskas (todabasi@redhat.com)
