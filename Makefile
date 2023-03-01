@@ -37,11 +37,34 @@ test:
 # Installed using instructions from: https://golangci-lint.run/usage/install/#linux-and-windows
 getlint:
 	@mkdir -p $(GOPATH)/bin
-	@ls $(GOPATH)/bin/golangci-lint 1>/dev/null || (echo "Installing golangci-lint..." && curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(GOPATH)/bin v1.42.0)
+	@ls $(GOPATH)/bin/golangci-lint 1>/dev/null || echo "Installing golangci-lint..." && go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
 
 .PHONY: lint
 lint: getlint
 	$(GOPATH)/bin/golangci-lint run
+
+# Set the minimum coverage threshold (in percent)
+MIN_COVERAGE := 18
+
+# Define the "test" target as a phony target
+.PHONY: test
+
+# Define the "coverage" target
+coverage: test
+	@echo "Calculating coverage..."
+	@go test ./... -covermode=atomic -coverpkg=./... -coverprofile=coverage.out
+	@echo "Checking coverage..."
+	@go tool cover -func=coverage.out | tail -n 1 | awk '{print $$3}' | \
+		awk -F'[%\t]' '{if ($$1 < $(MIN_COVERAGE)) \
+			{print "Error: Coverage ("$$1"%) is less than the minimum threshold ("$(MIN_COVERAGE)"%)"; exit 1} \
+			else {print "Coverage ("$$1"%) is greater than or equal to the minimum threshold ("$(MIN_COVERAGE)"%)"; exit 0}}'
+
+# Define the "test" target
+#test:
+#	@echo "Running tests..."
+#	@go test ./... -covermode=atomic -coverpkg=./... -v
+
+
 
 .PHONY: fmt
 fmt:
