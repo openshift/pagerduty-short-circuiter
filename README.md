@@ -172,9 +172,10 @@ $ mockgen -source=foo.go -destination=mock/foo_mock.go
 - Supreeth Basabattini (sbasabat@redhat.com)
 - Tomas Dabašinskas (todabasi@redhat.com)
 
-
 ## Feedback
 Please help us improve. Contact the Red Hat SRE-P team via:
 
 - @sd-sre-platform in slack channel #sd-sre-platform (CoreOS workspace)
+- #forum-kite a slack channel 
 - Or reach out to the [OWNERS](https://github.com/openshift/pagerduty-short-circuiter/blob/main/OWNERS).
+
