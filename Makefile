@@ -4,6 +4,8 @@ GOOS?=linux
 GOARCH?=amd64
 GOENV=GOOS=${GOOS} GOARCH=${GOARCH} CGO_ENABLED=0 GOFLAGS=
 GOPATH := $(shell go env GOPATH)
+GOCACHE=off
+GOLANGCI_LINT_VERSION=v1.51.2
 
 # Ensure go modules are enabled:
 export GO111MODULE=on
@@ -32,12 +34,23 @@ tools:
 	
 .PHONY: test
 test:
-	go test ./... -covermode=atomic -coverpkg=./... -v
+	go test ./... -covermode=atomic -coverpkg=./... -v -coverprofile=coverage.out
+
+.PHONY:coverage
+coverage:test
+	@{ \
+	set -e ;\
+	REQ_VAL=15.5 ;\
+	TEST_VAL=$$(go tool cover -func coverage.out | grep -F total | awk '{print substr($$3, 1, length($$3)-1)}' ) ;\
+	if (( $$(echo "$$REQ_VAL > $$TEST_VAL" |bc -l) )); then echo "Error: Code Coverage is less"; exit 1 ;\
+	else echo "Code Coverage Test Passed"; exit 0; fi ;\
+	}
+	@rm -rf coverage.out
 
 # Installed using instructions from: https://golangci-lint.run/usage/install/#linux-and-windows
 getlint:
 	@mkdir -p $(GOPATH)/bin
-	@ls $(GOPATH)/bin/golangci-lint 1>/dev/null || (echo "Installing golangci-lint..." && curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(GOPATH)/bin v1.42.0)
+	@ls $(GOPATH)/bin/golangci-lint 1>/dev/null || (echo "Installing golangci-lint..." && curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(GOPATH)/bin $(GOLANGCI_LINT_VERSION))
 
 .PHONY: lint
 lint: getlint
