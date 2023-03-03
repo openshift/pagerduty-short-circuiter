@@ -42,7 +42,7 @@ var options struct {
 
 var Cmd = &cobra.Command{
 	Use:   "alerts",
-	Short: "This command will list all the open high alerts assigned to self.",
+	Short: "This command will list all the open high alerts assigned to self or selected team .",
 	Args:  cobra.MaximumNArgs(1),
 	RunE:  alertsHandler,
 }
@@ -54,7 +54,7 @@ func init() {
 		&options.assignment,
 		"assigned-to",
 		"self",
-		"Filter alerts based on user or team",
+		"View alerts assigned to your logged in PagerDuty user account (default), selected team or Silent Test.",
 	)
 
 	// Columns displayed
