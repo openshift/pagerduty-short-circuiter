@@ -37,6 +37,12 @@ const (
 	// PagerDuty IDs
 	TeamID     = "PASPK4G"
 	SilentTest = "P8QS6CC"
+	NobodySREP = "P53J4TK"
+
+	// Escalation Policy IDs
+	SilentTestEscalationPolicyID         = "PCGXUDY"
+	CADSilentTestEscalationPolicyID      = "PQXIBX3"
+	CADSilentTestStageEscalationPolicyID = "PBWX63A"
 
 	// PagerDuty Incident Statuses
 	StatusTriggered    = "triggered"
