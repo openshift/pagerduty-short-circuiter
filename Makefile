@@ -39,6 +39,7 @@ test:
 
 .PHONY: coverage
 coverage:
+	chmod 755 hack/codecov.sh
 	hack/codecov.sh
 
 # Installed using instructions from: https://golangci-lint.run/usage/install/#linux-and-windows
