@@ -53,6 +53,7 @@ coverage:test-cover
 	else echo "Code Coverage Test Passed"; exit 0; fi ;\
 	}
 	@rm -rf coverage.out
+	hack/codecov.sh
 
 # Installed using instructions from: https://golangci-lint.run/usage/install/#linux-and-windows
 getlint:
