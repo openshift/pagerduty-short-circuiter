@@ -1,6 +1,7 @@
 unexport GOFLAGS
 
 GOOS?=linux
+TESTOPTS ?=
 GOARCH?=amd64
 GOENV=GOOS=${GOOS} GOARCH=${GOARCH} CGO_ENABLED=0 GOFLAGS=
 GOPATH := $(shell go env GOPATH)
@@ -34,25 +35,10 @@ tools:
 	
 .PHONY: test
 test:
-	go test ./... -covermode=atomic -coverpkg=./... -v
+	go test ./... -v $(TESTOPTS)
 
-test-cover:
-	go test -covermode=atomic -coverpkg=./... -coverprofile=coverage.out ./...
-
-.PHONY: coverage-html
-cover-html:
-	go tool cover -html=coverage.out
-
-.PHONY:coverage
-coverage:test-cover
-	@{ \
-	set -e ;\
-	REQ_COV=15.5 ;\
-	TEST_COV=$$(go tool cover -func coverage.out | grep -F total | awk '{print substr($$3, 1, length($$3)-1)}' ) ;\
-	if (( $$(echo "$$REQ_COV > $$TEST_COV" |bc -l) )); then echo "Error: Code Coverage is less"; exit 1 ;\
-	else echo "Code Coverage Test Passed"; exit 0; fi ;\
-	}
-	@rm -rf coverage.out
+.PHONY: coverage
+coverage:
 	hack/codecov.sh
 
 # Installed using instructions from: https://golangci-lint.run/usage/install/#linux-and-windows
