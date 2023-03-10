@@ -130,7 +130,7 @@ This will list all the alerts belonging to that incident.
 
 ### Options
 ```
---assigned-to          Filter alerts based on user or team (default "self")
+--assigned-to          Filter alerts based on user or team (default "self") 
 --columns              Specify which columns to display separated by commas without any space in between 
                        (default "incident.id,alert,cluster.name,cluster.id,status,severity")
 ```
@@ -152,6 +152,14 @@ By default, all the escalations and Oncalls are displayed for team **Platform-SR
 | Your Next Oncall Schedule                                      | `N`                           | Displays your Oncall schedule.                                        |
 | Go back                                                        | `Esc`                         | Navigate to the previous page.                                         |
 | Quit                                                           | `Q` / `q`                     | Exit the application.                                                  |
+
+## Terminal
+To Select a preferred terminal emulator, use the command:
+
+```
+kite terminal
+```
+This will list all the terminal emulator emulators supported by the system and will prompt the user to select an emulator for kite.
 ## Running Tests
 The test suite uses the [Ginkgo](https://onsi.github.io/ginkgo/) to run comprehensive tests using Behavior-Driven Development.<br>
 The mocking framework used for testing is [gomock](https://github.com/golang/mock).

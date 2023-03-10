@@ -53,7 +53,6 @@ func (pd *PDClient) Connect() (client *PDClient, err error) {
 
 		// Load the configuration file
 		pd.cfg, err = config.Load()
-
 		if err != nil {
 			err = fmt.Errorf("configuration file not found, run the 'kite login' command")
 			return nil, err
