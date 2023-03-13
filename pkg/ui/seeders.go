@@ -52,7 +52,7 @@ func (tui *TUI) SeedAckIncidentsUI() {
 	}
 
 	for _, i := range incidents {
-		incident := []string{i.Id, i.Title, i.Urgency, i.Status, i.Service.Summary}
+		incident := []string{i.Id, i.Title, i.Urgency, i.Status, i.Service.Summary, i.Assignments[0].Assignee.Summary}
 		ackIncidents = append(ackIncidents, incident)
 	}
 
