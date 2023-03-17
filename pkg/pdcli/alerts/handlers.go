@@ -39,9 +39,13 @@ var (
 // GetIncidents returns a slice of pagerduty incidents.
 func GetIncidents(c client.PagerDutyClient, opts *pdApi.ListIncidentsOptions) ([]pdApi.Incident, error) {
 	var aerr pdApi.APIError
+	var incidents []pdApi.Incident
+
+	// Check if incidents are fetched for a Team
+	isTeam := len(opts.TeamIDs) > 0
 
 	// Get incidents via pagerduty API
-	incidents, err := c.ListIncidents(*opts)
+	incidentsList, err := c.ListIncidents(*opts)
 
 	if err != nil {
 		if errors.As(err, &aerr) {
@@ -52,7 +56,19 @@ func GetIncidents(c client.PagerDutyClient, opts *pdApi.ListIncidentsOptions) ([
 		}
 	}
 
-	return incidents.Incidents, nil
+	for _, incident := range incidentsList.Incidents {
+		// When incidents are fetched for a team, do not include the incidents assigned to SilentTest
+		if isTeam && (incident.EscalationPolicy.ID == constants.SilentTestEscalationPolicyID ||
+			incident.EscalationPolicy.ID == constants.CADSilentTestEscalationPolicyID ||
+			incident.EscalationPolicy.ID == constants.CADSilentTestStageEscalationPolicyID ||
+			incident.Assignments[0].Assignee.ID == constants.SilentTest ||
+			incident.Assignments[0].Assignee.ID == constants.NobodySREP) {
+			continue
+		}
+		incidents = append(incidents, incident)
+	}
+
+	return incidents, nil
 }
 
 // GetIncidentAlerts returns all the alerts belonging to a particular incident.
