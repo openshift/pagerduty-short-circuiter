@@ -98,9 +98,8 @@ func (tui *TUI) SeedAlertsUI() {
 	var incidentAlerts []pdcli.Alert
 	var alerts []pdcli.Alert
 
-	// Refresh triggered and resolved alerts
+	// Refresh triggered alerts
 	pdcli.TrigerredAlerts = []pdcli.Alert{}
-	pdcli.ResolvedAlerts = []pdcli.Alert{}
 
 	if tui.AssignedTo == tui.Username {
 		utils.InfoLogger.Printf("Incidents status set to: %s", constants.StatusAcknowledged)

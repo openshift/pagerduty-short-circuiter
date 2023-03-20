@@ -33,7 +33,6 @@ type Alert struct {
 
 var (
 	TrigerredAlerts []Alert
-	ResolvedAlerts  []Alert
 )
 
 // GetIncidents returns a slice of pagerduty incidents.
@@ -102,18 +101,7 @@ func GetIncidentAlerts(c client.PagerDutyClient, incident pdApi.Incident) ([]Ale
 			tempAlertObj.Severity = alert.Severity
 		}
 
-		switch status {
-
-		case constants.StatusResolved:
-			err = tempAlertObj.ParseAlertData(c, &alert)
-
-			if err != nil {
-				return nil, err
-			}
-
-			ResolvedAlerts = append(ResolvedAlerts, tempAlertObj)
-
-		case constants.StatusTriggered:
+		if status == constants.StatusTriggered {
 			err = tempAlertObj.ParseAlertData(c, &alert)
 
 			if err != nil {
