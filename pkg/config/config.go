@@ -30,9 +30,10 @@ import (
 
 // Configuration struct to store user configuration.
 type Config struct {
-	ApiKey string `json:"api_key,omitempty"`
-	TeamID string `json:"team_id,omitempty"`
-	Team   string `json:"team,omitempty"`
+	ApiKey   string `json:"api_key,omitempty"`
+	TeamID   string `json:"team_id,omitempty"`
+	Team     string `json:"team,omitempty"`
+	Terminal string `json:"terminal,omitempty"`
 }
 
 // Find returns the pdcli configuration filepath.

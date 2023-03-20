@@ -68,7 +68,6 @@ func init() {
 
 // alertsHandler is the main alerts command handler.
 func alertsHandler(cmd *cobra.Command, args []string) error {
-
 	var (
 		// Internals
 		incidentAlerts []pdcli.Alert
@@ -86,9 +85,6 @@ func alertsHandler(cmd *cobra.Command, args []string) error {
 	// Setup TUI
 	tui.Init()
 	utils.InfoLogger.Print("Initialized terminal UI")
-
-	// Determine terminal emulator for cluster login
-	utils.InitTerminalEmulator()
 
 	if utils.Emulator != "" {
 		utils.InfoLogger.Printf("Terminal emulator for cluster login set to: %s", utils.Emulator)

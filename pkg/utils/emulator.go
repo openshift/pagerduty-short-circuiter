@@ -5,16 +5,20 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"strings"
 
 	"github.com/openshift/pagerduty-short-circuiter/pkg/constants"
+	"github.com/openshift/pagerduty-short-circuiter/pkg/terminal"
 )
 
 // Installed terminal emulator
 var Emulator string
 
 // InitTerminalEmulator tries to set a terminal emulator by trying some known terminal emulators.
-func InitTerminalEmulator() {
+func InitTerminalEmulator() string {
+	var (
+		eui terminal.EUI
+	)
+
 	emulators := []string{
 		"gnome-terminal",
 		"x-terminal-emulator",
@@ -34,17 +38,18 @@ func InitTerminalEmulator() {
 		"hyper",
 	}
 
+	terminals := []string{}
 	for _, t := range emulators {
-		cmd := exec.Command("command", "-v", t)
-		output, _ := cmd.CombinedOutput()
-		cmd.ProcessState.Exited()
-		term := string(output)
-		term = strings.TrimSpace(term)
-
-		if term != "" {
-			Emulator = term
+		_, err := exec.LookPath(t)
+		if err == nil {
+			terminals = append(terminals, t)
 		}
+
 	}
+
+	Emulator = eui.UiEmulator(terminals)
+
+	return Emulator
 }
 
 // ClusterLoginShell spawns an instance of ocm-container in the same shell.
