@@ -59,16 +59,11 @@ func (tui *TUI) setupAlertsPageInput() {
 		tui.Pages.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 
 			if event.Rune() == '1' {
-				utils.InfoLogger.Print("Switching to resolved alerts view")
-				tui.InitAlertsUI(pdcli.ResolvedAlerts, ResolvedAlertsTableTitle, ResolvedAlertsPageTitle)
-			}
-
-			if event.Rune() == '2' {
 				utils.InfoLogger.Print("Switching to trigerred alerts view")
 				tui.InitAlertsUI(pdcli.TrigerredAlerts, TrigerredAlertsTableTitle, TrigerredAlertsPageTitle)
 			}
 
-			if event.Rune() == '3' {
+			if event.Rune() == '2' {
 				utils.InfoLogger.Print("Switching to acknowledged incidents view")
 				tui.SeedAckIncidentsUI()
 
@@ -79,7 +74,7 @@ func (tui *TUI) setupAlertsPageInput() {
 				tui.Pages.SwitchToPage(AckIncidentsPageTitle)
 			}
 
-			if event.Rune() == '4' {
+			if event.Rune() == '3' {
 				utils.InfoLogger.Print("Switching to incidents view")
 				tui.SeedIncidentsUI()
 

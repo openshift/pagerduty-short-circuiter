@@ -47,7 +47,6 @@ const (
 	// PagerDuty Incident Statuses
 	StatusTriggered    = "triggered"
 	StatusAcknowledged = "acknowledged"
-	StatusResolved     = "resolved"
 	StatusHigh         = "high"
 	StatusLow          = "low"
 
