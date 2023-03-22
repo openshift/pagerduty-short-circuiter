@@ -22,6 +22,7 @@ const (
 	// Page Titles
 	AlertsPageTitle          = "Alerts"
 	AlertDataPageTitle       = "Metadata"
+	AlertMetadata            = "AlertData"
 	TrigerredAlertsPageTitle = "Trigerred"
 	HighAlertsPageTitle      = "High Alerts"
 	LowAlertsPageTitle       = "Low Alerts"
@@ -34,8 +35,8 @@ const (
 	// Footer
 	FooterText                = "[Q] Quit | [Esc] Go Back"
 	FooterTextStatus          = "[H] High Alerts | [L] Low Alerts\n"
-	FooterTextAlerts          = "[R] Refresh Alerts | [1] Trigerred Alerts | [2] Acknowledged Incidents | [3] Trigerred Incidents\n" + FooterText
-	FooterTextTrigerredAlerts = "[1] Trigerred Alerts | [2] Acknowledged Incidents | [3] Trigerred Incidents\n" + FooterTextStatus + FooterText
+	FooterTextAlerts          = "[R] Refresh Alerts | [1] Acknowledged Incidents | [2] Trigerred Incidents\n" + FooterText
+	FooterTextTrigerredAlerts = "[1] Acknowledged Incidents | [2] Trigerred Incidents\n" + FooterTextStatus + FooterText
 	FooterTextIncidents       = "[ENTER] Select Incident  | [CTRL+A] Acknowledge Incidents\n" + FooterText
 	FooterTextOncall          = "[N] Your Next Oncall Schedule | [A] All Teams Oncall\n" + FooterText
 

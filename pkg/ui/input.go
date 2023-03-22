@@ -3,7 +3,6 @@ package ui
 import (
 	"github.com/gdamore/tcell/v2"
 
-	pdcli "github.com/openshift/pagerduty-short-circuiter/pkg/pdcli/alerts"
 	"github.com/openshift/pagerduty-short-circuiter/pkg/utils"
 )
 
@@ -20,22 +19,19 @@ func (tui *TUI) initKeyboard() {
 				// If the user is viewing the alert metadata
 				if page == AlertDataPageTitle {
 					tui.Pages.SwitchToPage(tui.FrontPage)
-				} else if page == HighAlertsPageTitle || page == LowAlertsPageTitle {
-					tui.Pages.SwitchToPage(TrigerredAlertsPageTitle)
-					tui.Footer.SetText(FooterTextTrigerredAlerts)
+				} else if page == AlertMetadata {
+					tui.Pages.SwitchToPage(IncidentsPageTitle)
 				} else {
 					tui.InitAlertsUI(tui.Alerts, AlertsTableTitle, AlertsPageTitle)
 					tui.Pages.SwitchToPage(AlertsPageTitle)
 					tui.Footer.SetText(FooterTextAlerts)
 				}
 			}
-
 			// Check if oncall command is executed
 			if tui.Pages.HasPage(OncallPageTitle) {
 				tui.Pages.SwitchToPage(OncallPageTitle)
 				tui.Footer.SetText(FooterTextOncall)
 			}
-
 			return nil
 		}
 
@@ -59,11 +55,6 @@ func (tui *TUI) setupAlertsPageInput() {
 		tui.Pages.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 
 			if event.Rune() == '1' {
-				utils.InfoLogger.Print("Switching to trigerred alerts view")
-				tui.InitAlertsUI(pdcli.TrigerredAlerts, TrigerredAlertsTableTitle, TrigerredAlertsPageTitle)
-			}
-
-			if event.Rune() == '2' {
 				utils.InfoLogger.Print("Switching to acknowledged incidents view")
 				tui.SeedAckIncidentsUI()
 
@@ -74,7 +65,7 @@ func (tui *TUI) setupAlertsPageInput() {
 				tui.Pages.SwitchToPage(AckIncidentsPageTitle)
 			}
 
-			if event.Rune() == '3' {
+			if event.Rune() == '2' {
 				utils.InfoLogger.Print("Switching to incidents view")
 				tui.SeedIncidentsUI()
 
@@ -125,7 +116,6 @@ func (tui *TUI) setupIncidentsPageInput() {
 					tui.ackowledgeSelectedIncidents()
 				}
 			}
-
 			return event
 		})
 	}
