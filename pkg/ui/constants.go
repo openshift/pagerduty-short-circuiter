@@ -34,7 +34,7 @@ const (
 
 	// Footer
 	FooterText                = "[Q] Quit | [Esc] Go Back"
-	FooterTextStatus          = "[H] High Alerts | [L] Low Alerts\n"
+  FooterTextStatus          = "[H] High Alerts | [L] Low Alerts\n"
 	FooterTextAlerts          = "[R] Refresh Alerts | [1] Acknowledged Incidents | [2] Trigerred Incidents\n" + FooterText
 	FooterTextTrigerredAlerts = "[1] Acknowledged Incidents | [2] Trigerred Incidents\n" + FooterTextStatus + FooterText
 	FooterTextIncidents       = "[ENTER] Select Incident  | [CTRL+A] Acknowledge Incidents\n" + FooterText

@@ -76,19 +76,6 @@ func (tui *TUI) setupAlertsPageInput() {
 				tui.Pages.SwitchToPage(IncidentsPageTitle)
 			}
 
-			// Filter by status
-			if title, _ := tui.Pages.GetFrontPage(); title == TrigerredAlertsPageTitle {
-				if event.Rune() == 'H' || event.Rune() == 'h' {
-					tui.SeedHighAlertsUI()
-					tui.Pages.SwitchToPage(HighAlertsPageTitle)
-				}
-
-				if event.Rune() == 'L' || event.Rune() == 'l' {
-					tui.SeedHLowAlertsUI()
-					tui.Pages.SwitchToPage(LowAlertsPageTitle)
-				}
-			}
-
 			// Alerts refresh
 			if event.Rune() == 'r' || event.Rune() == 'R' {
 				utils.InfoLogger.Print("Refreshing alerts...")
@@ -177,6 +164,7 @@ func (tui *TUI) setupOncallPageInput() {
 				if event.Rune() == 'N' || event.Rune() == 'n' {
 					utils.InfoLogger.Print("Viewing user next on-call schedule")
 					tui.Pages.SwitchToPage(NextOncallPageTitle)
+					tui.Footer.SetText(FooterText)
 
 					if len(tui.AckIncidents) == 0 {
 						utils.InfoLogger.Print("You are not scheduled for any oncall duties for the next 3 months. Cheer up!")
@@ -188,6 +176,7 @@ func (tui *TUI) setupOncallPageInput() {
 				if event.Rune() == 'A' || event.Rune() == 'a' {
 					utils.InfoLogger.Print("Switching to all team on-call view")
 					tui.Pages.SwitchToPage(AllTeamsOncallPageTitle)
+					tui.Footer.SetText(FooterText)
 				}
 			}
 
