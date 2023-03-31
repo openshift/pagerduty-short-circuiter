@@ -41,6 +41,14 @@ type TUI struct {
 	Role              string
 	Columns           string
 	ClusterID         string
+
+	// Multi-Window Terminals Related
+	TerminalLayout      *tview.Flex
+	TerminalPages       *tview.Pages
+	TerminalPageBar     *tview.TextView
+	TerminalTabs        []TerminalTab
+	TerminalUIRegionIDs []int
+	TerminalInputBuffer []rune
 }
 
 // InitAlertsUI initializes TUI table component.
@@ -123,6 +131,8 @@ func (tui *TUI) Init() {
 	tui.LogWindow = tview.NewTextView()
 	tui.Footer = tview.NewTextView()
 	tui.AlertMetadata = tview.NewTextView()
+	tui.TerminalPages = tview.NewPages()
+	tui.TerminalPageBar = tview.NewTextView()
 
 	tui.SecondaryWindow.
 		SetChangedFunc(func() { tui.App.Draw() }).
@@ -169,6 +179,9 @@ func (tui *TUI) Init() {
 				AddItem(tui.LogWindow, 0, 2, false),
 			0, 2, false).
 		AddItem(tui.Footer, 0, 1, false)
+
+	kiteTab := InitKiteTab(tui, tui.Layout)
+	tui.TerminalLayout = InitTerminalMux(tui, kiteTab)
 }
 
 // StartApp sets the UI layout and renders all the TUI elements.
@@ -176,5 +189,5 @@ func (t *TUI) StartApp() error {
 	t.initFooter()
 	t.initKeyboard()
 
-	return t.App.SetRoot(t.Layout, true).EnableMouse(true).Run()
+	return t.App.SetRoot(t.TerminalLayout, true).EnableMouse(true).Run()
 }

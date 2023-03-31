@@ -1,6 +1,8 @@
 package ui
 
 import (
+	"strconv"
+
 	"github.com/gdamore/tcell/v2"
 
 	pdcli "github.com/openshift/pagerduty-short-circuiter/pkg/pdcli/alerts"
@@ -37,6 +39,41 @@ func (tui *TUI) initKeyboard() {
 			}
 
 			return nil
+		}
+
+		if event.Key() == tcell.KeyCtrlN {
+			NextSlide(tui)
+			return nil
+			// Move to the Previous Slide
+		} else if event.Key() == tcell.KeyCtrlP {
+			PreviousSlide(tui)
+			return nil
+			// Add a new Slide
+		} else if event.Key() == tcell.KeyCtrlA {
+			AddSlide(tui)
+			return nil
+			// Delete the current active Slide
+		} else if event.Key() == tcell.KeyCtrlE {
+			slideNum, _ := strconv.Atoi(tui.TerminalPageBar.GetHighlights()[0])
+			RemoveSlide(slideNum, tui)
+			return nil
+			// TODO : Handle the buffer with more edge cases
+			// Handling Backspace with input buffer
+		} else if event.Key() == tcell.KeyBackspace || event.Key() == tcell.KeyBackspace2 {
+			if len(tui.TerminalInputBuffer) > 0 {
+				tui.TerminalInputBuffer = tui.TerminalInputBuffer[:len(tui.TerminalInputBuffer)-1]
+			}
+			// Working on the input buffer
+		} else if event.Key() == tcell.KeyRune {
+			tui.TerminalInputBuffer = append(tui.TerminalInputBuffer, event.Rune())
+			// Exit the current slide when exit command is typed
+		} else if event.Key() == tcell.KeyEnter {
+			if string(tui.TerminalInputBuffer) == "exit" {
+				tui.TerminalInputBuffer = []rune{}
+				slideNum, _ := strconv.Atoi(tui.TerminalPageBar.GetHighlights()[0])
+				RemoveSlide(slideNum, tui)
+			}
+			tui.TerminalInputBuffer = []rune{}
 		}
 
 		if event.Rune() == 'q' || event.Rune() == 'Q' {
