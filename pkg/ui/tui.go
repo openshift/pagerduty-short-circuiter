@@ -43,12 +43,13 @@ type TUI struct {
 	ClusterID         string
 
 	// Multi-Window Terminals Related
-	TerminalLayout      *tview.Flex
-	TerminalPages       *tview.Pages
-	TerminalPageBar     *tview.TextView
-	TerminalTabs        []TerminalTab
-	TerminalUIRegionIDs []int
-	TerminalInputBuffer []rune
+	TerminalLayout       *tview.Flex
+	TerminalPages        *tview.Pages
+	TerminalPageBar      *tview.TextView
+	FixedTerminalPageBar *tview.TextView
+	TerminalTabs         []TerminalTab
+	TerminalUIRegionIDs  []int
+	TerminalInputBuffer  []rune
 }
 
 // InitAlertsUI initializes TUI table component.
@@ -133,6 +134,7 @@ func (tui *TUI) Init() {
 	tui.AlertMetadata = tview.NewTextView()
 	tui.TerminalPages = tview.NewPages()
 	tui.TerminalPageBar = tview.NewTextView()
+	tui.FixedTerminalPageBar = tview.NewTextView()
 
 	tui.SecondaryWindow.
 		SetChangedFunc(func() { tui.App.Draw() }).
