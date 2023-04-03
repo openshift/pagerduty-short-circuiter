@@ -49,6 +49,7 @@ type TUI struct {
 	TerminalTabs        []TerminalTab
 	TerminalUIRegionIDs []int
 	TerminalInputBuffer []rune
+	TerminalLastChars   []rune
 }
 
 // InitAlertsUI initializes TUI table component.
