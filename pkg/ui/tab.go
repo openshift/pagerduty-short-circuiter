@@ -129,10 +129,12 @@ func InitTerminalMux(tui *TUI, kiteTab *TerminalTab) *tview.Flex {
 		fmt.Fprintf(tui.TerminalPageBar, `["%d"]%s[white][""]  `, slide.index, fmt.Sprintf("%d %s", slide.index+1, slide.title))
 	}
 	tui.TerminalPageBar.Highlight("0")
+	tui.TerminalFixedFooter.SetText(TerminalFooterText)
 
 	// Returns the main view & layout for the app
 	return tview.NewFlex().
 		SetDirection(tview.FlexRow).
 		AddItem(tui.TerminalPages, 0, 1, true).
-		AddItem(tui.TerminalPageBar, 1, 1, false)
+		AddItem(tui.TerminalPageBar, 1, 1, false).
+		AddItem(tui.TerminalFixedFooter, 1, 1, false)
 }

@@ -35,8 +35,9 @@ const (
 	FooterText                = "[Q] Quit | [Esc] Go Back"
 	FooterTextAlerts          = "[R] Refresh Alerts | [1] Trigerred Alerts | [2] Acknowledged Incidents | [3] Trigerred Incidents\n" + FooterText
 	FooterTextTrigerredAlerts = "[1] Trigerred Alerts | [2] Acknowledged Incidents | [3] Trigerred Incidents\n" + FooterText
-	FooterTextIncidents       = "[ENTER] Select Incident  | [CTRL+A] Acknowledge Incidents\n" + FooterText
+	FooterTextIncidents       = "[ENTER] Select Incident | [CTRL+A] Acknowledge Incidents\n" + FooterText
 	FooterTextOncall          = "[N] Your Next Oncall Schedule | [A] All Teams Oncall\n" + FooterText
+	TerminalFooterText        = "[CTRL + N] Next Slide | [CTRL + P] Previous Slide | [CTRL + A] Add Slide | [CTRL + E] Exit Slide | [CTRL + O] New Cluster Login | [CTRL + Q] Quit "
 
 	// Colors
 	TableTitleColor = tcell.ColorLightCyan
