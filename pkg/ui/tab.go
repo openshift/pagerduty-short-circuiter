@@ -2,7 +2,6 @@ package ui
 
 import (
 	"fmt"
-	"os"
 	"os/exec"
 	"strconv"
 
@@ -36,7 +35,7 @@ func InitKiteTab(tui *TUI, layout *tview.Flex) *TerminalTab {
 }
 
 // Creates and return a new tab
-func NewTab(name string, command string, tui *TUI) *TerminalTab {
+func NewTab(name string, command string, args []string, tui *TUI) *TerminalTab {
 	TotalPageCount += 1
 	tui.TerminalUIRegionIDs = append(tui.TerminalUIRegionIDs, TotalPageCount)
 	index := len(tui.TerminalTabs)
@@ -46,13 +45,13 @@ func NewTab(name string, command string, tui *TUI) *TerminalTab {
 	return &TerminalTab{
 		index:     index,
 		title:     name,
-		primitive: newTabPrimitive(command),
+		primitive: newTabPrimitive(command, args),
 	}
 }
 
 // Returns the primitive for a new tab
-func newTabPrimitive(command string) (content tview.Primitive) {
-	cmd := exec.Command(command)
+func newTabPrimitive(command string, args []string) (content tview.Primitive) {
+	cmd := exec.Command(command, args...)
 	term := tterm.NewTerminal(cmd)
 	term.SetBorder(true)
 	term.SetTitle(fmt.Sprintf(" Welcome to %s ", command))
@@ -100,8 +99,17 @@ func RemoveSlide(s int, tui *TUI) {
 }
 
 // Adds a slide to the end of currently present slides
-func AddSlide(tui *TUI) {
-	tabSlide := *NewTab("bash", os.Getenv("SHELL"), tui)
+func AddNewSlide(tui *TUI, name string, command string, args []string, isCluster bool) {
+	if isCluster {
+		for i, tab := range tui.TerminalTabs {
+			if tab.title == args[0] {
+				tui.TerminalPageBar.Highlight(strconv.Itoa(i)).
+					ScrollToHighlight()
+				return
+			}
+		}
+	}
+	tabSlide := *NewTab(name, command, args, tui)
 	tui.TerminalTabs = append(tui.TerminalTabs, tabSlide)
 	tui.TerminalPages.AddPage(strconv.Itoa(tabSlide.index), tabSlide.primitive, true, tabSlide.index == 0)
 	fmt.Fprintf(tui.TerminalPageBar, `["%d"]%s[white][""]  `, tabSlide.index, fmt.Sprintf("%d %s", tabSlide.index+1, tabSlide.title))

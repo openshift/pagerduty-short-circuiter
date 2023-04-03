@@ -1,10 +1,13 @@
 package ui
 
 import (
+	"os"
+	"os/exec"
 	"strconv"
 
 	"github.com/gdamore/tcell/v2"
 
+	"github.com/openshift/pagerduty-short-circuiter/pkg/constants"
 	pdcli "github.com/openshift/pagerduty-short-circuiter/pkg/pdcli/alerts"
 	"github.com/openshift/pagerduty-short-circuiter/pkg/utils"
 )
@@ -50,7 +53,7 @@ func (tui *TUI) initKeyboard() {
 			return nil
 			// Add a new Slide
 		} else if event.Key() == tcell.KeyCtrlA {
-			AddSlide(tui)
+			AddNewSlide(tui, "SHELL", os.Getenv("SHELL"), []string{}, false)
 			return nil
 			// Delete the current active Slide
 		} else if event.Key() == tcell.KeyCtrlE {
@@ -159,44 +162,16 @@ func (tui *TUI) setupAlertDetailsPageInput() {
 	tui.AlertMetadata.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 
 		if event.Rune() == 'Y' || event.Rune() == 'y' {
+			// Get ocm-conatiner executable from PATH
+			ocmContainer, err := exec.LookPath("ocm-container")
 
-			if utils.Emulator != "" {
-				err := utils.ClusterLoginEmulator(tui.ClusterID)
-
-				if err != nil {
-					utils.ErrorLogger.Print(err)
-				}
-
-			} else {
-				tui.App.Stop()
-
-				cmd := utils.ClusterLoginShell(tui.ClusterID)
-
-				err := cmd.Start()
-
-				if err != nil {
-					utils.ErrorLogger.Print(err)
-				}
-
-				err = cmd.Wait()
-
-				tui.Init()
-
-				if err != nil {
-					utils.ErrorLogger.Print(err)
-				}
-
-				// Refresh alerts table
-				tui.SeedAlertsUI()
-				utils.InfoLogger.Print("Switching back to alerts view")
-				tui.Pages.SwitchToPage(AlertsPageTitle)
-
-				err = tui.StartApp()
-
-				if err != nil {
-					panic(err)
-				}
+			if err != nil {
+				errMessage := "ocm-container is not found.\nPlease install it via: " + constants.OcmContainerURL
+				utils.ErrorLogger.Print(errMessage)
 			}
+			// Convert the ClusterID into args for ocm-container command
+			clusterIDArgs := []string{tui.ClusterID}
+			AddNewSlide(tui, tui.ClusterID, ocmContainer, clusterIDArgs, true)
 		}
 
 		return event
