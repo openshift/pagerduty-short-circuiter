@@ -191,5 +191,5 @@ func (t *TUI) StartApp() error {
 	t.initFooter()
 	t.initKeyboard()
 
-	return t.App.SetRoot(t.TerminalLayout, true).EnableMouse(false).Run()
+	return t.App.SetRoot(t.TerminalLayout, true).EnableMouse(true).Run()
 }
