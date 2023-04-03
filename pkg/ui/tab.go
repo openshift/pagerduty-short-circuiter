@@ -135,5 +135,6 @@ func InitTerminalMux(tui *TUI, kiteTab *TerminalTab) *tview.Flex {
 	return tview.NewFlex().
 		SetDirection(tview.FlexRow).
 		AddItem(tui.TerminalPages, 0, 1, true).
-		AddItem(tui.TerminalPageBar, 1, 1, false)
+		AddItem(tui.TerminalPageBar, 1, 1, false).
+		AddItem(tui.FixedTerminalPageBar, 1, 1, false)
 }
