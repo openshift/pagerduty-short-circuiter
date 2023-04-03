@@ -1,10 +1,11 @@
 package ui
 
 import (
+	"os/exec"
 	"strconv"
 
 	"github.com/gdamore/tcell/v2"
-
+	"github.com/openshift/pagerduty-short-circuiter/pkg/constants"
 	pdcli "github.com/openshift/pagerduty-short-circuiter/pkg/pdcli/alerts"
 	"github.com/openshift/pagerduty-short-circuiter/pkg/utils"
 )
@@ -50,7 +51,16 @@ func (tui *TUI) initKeyboard() {
 			return nil
 			// Add a new Slide
 		} else if event.Key() == tcell.KeyCtrlA {
-			AddSlide(tui)
+			AddSlide(tui, "bash")
+			return nil
+			// Add a new Slide - ocm-container
+		} else if event.Key() == tcell.KeyCtrlO {
+			_, err := exec.LookPath("ocm-container")
+			if err != nil {
+				utils.ErrorLogger.Println("ocm-container is not found.\nPlease install it via:", constants.OcmContainerURL)
+			} else {
+				AddSlide(tui, "ocm-container")
+			}
 			return nil
 			// Delete the current active Slide
 		} else if event.Key() == tcell.KeyCtrlE {

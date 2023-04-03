@@ -100,8 +100,13 @@ func RemoveSlide(s int, tui *TUI) {
 }
 
 // Adds a slide to the end of currently present slides
-func AddSlide(tui *TUI) {
-	tabSlide := *NewTab("bash", os.Getenv("SHELL"), tui)
+func AddSlide(tui *TUI, name string) {
+	var tabSlide TerminalTab
+	if name == "bash" {
+		tabSlide = *NewTab(name, os.Getenv("SHELL"), tui)
+	} else if name == "ocm-container" {
+		tabSlide = *NewTab(name, "ocm-container", tui)
+	}
 	tui.TerminalTabs = append(tui.TerminalTabs, tabSlide)
 	tui.TerminalPages.AddPage(strconv.Itoa(tabSlide.index), tabSlide.primitive, true, tabSlide.index == 0)
 	fmt.Fprintf(tui.TerminalPageBar, `["%d"]%s[white][""]  `, tabSlide.index, fmt.Sprintf("%d %s", tabSlide.index+1, tabSlide.title))
