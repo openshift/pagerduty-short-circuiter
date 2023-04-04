@@ -76,7 +76,12 @@ func (tui *TUI) initKeyboard() {
 			tui.TerminalInputBuffer = []rune{}
 		}
 
-		if event.Rune() == 'q' || event.Rune() == 'Q' {
+		// Override the default exit behaviour with Ctrl+C
+		if event.Key() == tcell.KeyCtrlC {
+			return nil
+		}
+		// Exit the App on Ctrl + Q
+		if event.Key() == tcell.KeyCtrlQ {
 			utils.InfoLogger.Println("Exiting kite")
 			tui.App.Stop()
 		}

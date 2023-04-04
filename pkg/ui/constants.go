@@ -32,7 +32,7 @@ const (
 	AllTeamsOncallPageTitle  = "All Teams Oncall"
 
 	// Footer
-	FooterText                = "[Q] Quit | [Esc] Go Back"
+	FooterText                = "[Esc] Go Back"
 	FooterTextAlerts          = "[R] Refresh Alerts | [1] Trigerred Alerts | [2] Acknowledged Incidents | [3] Trigerred Incidents\n" + FooterText
 	FooterTextTrigerredAlerts = "[1] Trigerred Alerts | [2] Acknowledged Incidents | [3] Trigerred Incidents\n" + FooterText
 	FooterTextIncidents       = "[ENTER] Select Incident  | [CTRL+A] Acknowledge Incidents\n" + FooterText
