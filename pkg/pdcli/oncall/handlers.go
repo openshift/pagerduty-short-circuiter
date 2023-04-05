@@ -2,6 +2,7 @@ package pdcli
 
 import (
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/PagerDuty/go-pagerduty"
@@ -18,10 +19,15 @@ type OncallUser struct {
 	End              string
 }
 
-//TeamSREOnCall fetches the current roles and names of on-call users.
-func TeamSREOnCall(c client.PagerDutyClient) ([]OncallUser, error) {
+type OncallLayer struct {
+	LayerId string
+	Users   []OncallUser
+}
+
+// TeamSREOnCall fetches the current roles and names of on-call users.
+func TeamSREOnCall(c client.PagerDutyClient) ([]OncallLayer, error) {
 	var callOpts pagerduty.ListOnCallOptions
-	var oncallData []OncallUser
+	var oncallLayers []OncallLayer
 
 	callOpts.ScheduleIDs = []string{
 		constants.PrimaryScheduleID,
@@ -30,7 +36,11 @@ func TeamSREOnCall(c client.PagerDutyClient) ([]OncallUser, error) {
 		constants.OncallIDWeekend,
 		constants.InvestigatorID,
 	}
-
+	since := time.Now().Add(time.Hour * -11)
+	until := time.Now().Add(time.Hour * 13)
+	callOpts.Since = since.String()
+	callOpts.Until = until.String()
+	callOpts.Limit = 100
 	// Fetch the oncall data from pagerduty API
 	oncallListing, err := c.ListOnCalls(callOpts)
 
@@ -38,8 +48,12 @@ func TeamSREOnCall(c client.PagerDutyClient) ([]OncallUser, error) {
 		return nil, err
 	}
 
+	startTime, _ := utils.FormatTimestamp(oncallListing.OnCalls[0].Start)
+	var temp []OncallUser
+	var mgmtUsers []OncallUser
+
 	// OnCalls array contains all information about the API object
-	for _, y := range oncallListing.OnCalls {
+	for ind, y := range oncallListing.OnCalls {
 
 		timeConversionStart, err := utils.FormatTimestamp(y.Start)
 
@@ -54,16 +68,52 @@ func TeamSREOnCall(c client.PagerDutyClient) ([]OncallUser, error) {
 		}
 
 		// Parse the oncall data to OncallUser object
-		temp := OncallUser{}
-		temp.EscalationPolicy = y.EscalationPolicy.Summary
-		temp.OncallRole = y.Schedule.Summary
-		temp.Name = y.User.Summary
-		temp.Start = timeConversionStart
-		temp.End = timeConversionEnd
-		oncallData = append(oncallData, temp)
-	}
+		if strings.Contains(y.Schedule.Summary, "Management") {
+			tempUser := OncallUser{}
+			tempUser.EscalationPolicy = y.EscalationPolicy.Summary
+			tempUser.OncallRole = y.Schedule.Summary
+			tempUser.Name = y.User.Summary
+			tempUser.Start = timeConversionStart
+			tempUser.End = timeConversionEnd
+			mgmtUsers = append(mgmtUsers, tempUser)
+			startTime, _ = utils.FormatTimestamp(oncallListing.OnCalls[ind+1].Start)
+			continue
+		}
 
-	return oncallData, err
+		if timeConversionStart != startTime {
+			temp = append(temp, mgmtUsers...)
+			oncallStartTime := startTime[11:16]
+			var layerId string
+			switch oncallStartTime {
+			case "22:30":
+				layerId = "Layer 1 [ APAC-E ]"
+			case "03:30":
+				layerId = "Layer 2 [ APAC-W ]"
+			case "08:30":
+				layerId = "Layer 3 [ EMEA ]"
+			case "13:30":
+				layerId = "Layer 4 [ NASA-E ]"
+			case "18:00":
+				layerId = "Layer 5 [ NASA-W ]"
+			}
+			oncallLayer := &OncallLayer{
+				LayerId: layerId,
+				Users:   temp,
+			}
+			oncallLayers = append(oncallLayers, *oncallLayer)
+			temp = nil
+			startTime = timeConversionStart
+		}
+
+		tempUser := OncallUser{}
+		tempUser.EscalationPolicy = y.EscalationPolicy.Summary
+		tempUser.OncallRole = y.Schedule.Summary
+		tempUser.Name = y.User.Summary
+		tempUser.Start = timeConversionStart
+		tempUser.End = timeConversionEnd
+		temp = append(temp, tempUser)
+	}
+	return oncallLayers, err
 }
 
 // AllTeamsOncall displays the oncall data of all Red Hat PagerDuty teams.

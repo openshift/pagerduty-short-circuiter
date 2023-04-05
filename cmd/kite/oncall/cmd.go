@@ -14,6 +14,7 @@ limitations under the License.
 package oncall
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/PagerDuty/go-pagerduty"
@@ -35,7 +36,7 @@ var Cmd = &cobra.Command{
 // oncallHandler is the main handler for kite oncall.
 func oncallHandler(cmd *cobra.Command, args []string) (err error) {
 	var (
-		onCallUsers    []pdcli.OncallUser
+		onCallLayers   []pdcli.OncallLayer
 		allTeamsOncall []pdcli.OncallUser
 		nextOncall     []pdcli.OncallUser
 		primary        string
@@ -68,13 +69,12 @@ func oncallHandler(cmd *cobra.Command, args []string) (err error) {
 
 	// Fetch oncall data from Platform-SRE team
 	utils.InfoLogger.Print("GET: fetching on-call data of current user team")
-	onCallUsers, err = pdcli.TeamSREOnCall(client)
-
+	onCallLayers, err = pdcli.TeamSREOnCall(client)
 	if err != nil {
 		return err
 	}
 
-	for _, v := range onCallUsers {
+	for _, v := range onCallLayers[2].Users {
 		if strings.Contains(v.OncallRole, "Primary") {
 			primary = v.Name
 		}
@@ -101,7 +101,10 @@ func oncallHandler(cmd *cobra.Command, args []string) (err error) {
 	}
 
 	utils.InfoLogger.Print("Initializing on-call view")
-	initOncallUI(&tui, onCallUsers)
+	for idx, x := range onCallLayers {
+		initOncallUI(&tui, x, idx)
+	}
+	initOnCallFirstPage(&tui)
 
 	utils.InfoLogger.Print("Initializing all teams on-call view")
 	initAllTeamsOncallUI(&tui, allTeamsOncall)
@@ -123,10 +126,15 @@ func oncallHandler(cmd *cobra.Command, args []string) (err error) {
 
 // initOncallUI initializes TUI table component.
 // It adds the returned table as a new TUI page view.
-func initOncallUI(tui *ui.TUI, onCallData []pdcli.OncallUser) {
-	headers, data := getOncallTableData(onCallData)
-	tui.Table = tui.InitTable(headers, data, false, false, ui.OncallTableTitle)
-	tui.Pages.AddPage(ui.OncallPageTitle, tui.Table, true, true)
+func initOncallUI(tui *ui.TUI, onCallData pdcli.OncallLayer, idx int) {
+	headers, data := getOncallTableData(onCallData.Users)
+	tui.Table = tui.InitTable(headers, data, false, false, fmt.Sprintf("[ %s %s ]", ui.OncallTableTitle, onCallData.LayerId))
+	tui.Pages.AddPage(fmt.Sprintf("%s%d", ui.OncallPageTitle, idx), tui.Table, true, false)
+}
+
+func initOnCallFirstPage(tui *ui.TUI) {
+	tui.CurrentOnCallPage = 2
+	tui.Pages.SwitchToPage(fmt.Sprintf("%s%d", ui.OncallPageTitle, tui.CurrentOnCallPage))
 }
 
 // initOncallUI initializes TUI NextOncall table component.
