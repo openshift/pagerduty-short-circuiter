@@ -49,17 +49,17 @@ func (tui *TUI) initKeyboard() {
 		} else if event.Key() == tcell.KeyCtrlP {
 			PreviousSlide(tui)
 			return nil
-			// Add a new Slide
+			// Add a new Slide - bash
 		} else if event.Key() == tcell.KeyCtrlA {
-			AddSlide(tui, "bash")
+			AddSlide(tui, constants.Bash)
 			return nil
 			// Add a new Slide - ocm-container
 		} else if event.Key() == tcell.KeyCtrlO {
-			_, err := exec.LookPath("ocm-container")
+			_, err := exec.LookPath(constants.OcmContainer)
 			if err != nil {
 				utils.ErrorLogger.Println("ocm-container is not found.\nPlease install it via:", constants.OcmContainerURL)
 			} else {
-				AddSlide(tui, "ocm-container")
+				AddSlide(tui, constants.OcmContainer)
 			}
 			return nil
 			// Delete the current active Slide

@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"git.sr.ht/~rockorager/tterm"
+	"github.com/openshift/pagerduty-short-circuiter/pkg/constants"
 	"github.com/rivo/tview"
 )
 
@@ -102,9 +103,9 @@ func RemoveSlide(s int, tui *TUI) {
 // Adds a slide to the end of currently present slides
 func AddSlide(tui *TUI, name string) {
 	var tabSlide TerminalTab
-	if name == "bash" {
+	if name == constants.Bash {
 		tabSlide = *NewTab(name, os.Getenv("SHELL"), tui)
-	} else if name == "ocm-container" {
+	} else if name == constants.OcmContainer {
 		tabSlide = *NewTab(name, "ocm-container", tui)
 	}
 	tui.TerminalTabs = append(tui.TerminalTabs, tabSlide)
