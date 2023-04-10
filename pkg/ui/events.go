@@ -12,7 +12,6 @@ import (
 // It handles the program flow when a table selection is made.
 func (tui *TUI) SetAlertsTableEvents(alerts []pdcli.Alert) {
 	tui.Table.SetSelectedFunc(func(row int, column int) {
-		var clusterName string
 		var alertData string
 
 		alertID := tui.Table.GetCell(row, 1).Text
@@ -21,7 +20,7 @@ func (tui *TUI) SetAlertsTableEvents(alerts []pdcli.Alert) {
 			if alertID == alert.AlertID {
 				utils.InfoLogger.Printf("GET: fetching alert metadata for alert ID: %s", alertID)
 				alertData = pdcli.ParseAlertMetaData(alert)
-				clusterName = alert.ClusterName
+				tui.ClusterName = alert.ClusterName
 				tui.ClusterID = alert.ClusterID
 				break
 			}
@@ -32,7 +31,7 @@ func (tui *TUI) SetAlertsTableEvents(alerts []pdcli.Alert) {
 
 		// Do not prompt for cluster login if there's no cluster ID associated with the alert (v3 clusters)
 		if tui.ClusterID != "N/A" && tui.ClusterID != "" && alertData != "" {
-			tui.SecondaryWindow.SetText(fmt.Sprintf("Press 'Y' to log into the cluster: %s", clusterName)).SetTextColor(PromptTextColor)
+			tui.SecondaryWindow.SetText(fmt.Sprintf("Press 'Y' to log into the cluster: %s", tui.ClusterName)).SetTextColor(PromptTextColor)
 		}
 	})
 }

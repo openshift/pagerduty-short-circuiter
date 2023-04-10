@@ -109,8 +109,8 @@ func AddNewSlide(tui *TUI, name string, command string, args []string, isCluster
 			}
 		}
 	}
-	tabSlide := *NewTab(name, command, args, tui)
-	tui.TerminalTabs = append(tui.TerminalTabs, tabSlide)
+	tabSlide := NewTab(name, command, args, tui)
+	tui.TerminalTabs = append(tui.TerminalTabs, *tabSlide)
 	tui.TerminalPages.AddPage(strconv.Itoa(tabSlide.index), tabSlide.primitive, true, tabSlide.index == 0)
 	fmt.Fprintf(tui.TerminalPageBar, `["%d"]%s[white][""]  `, tabSlide.index, fmt.Sprintf("%d %s", tabSlide.index+1, tabSlide.title))
 	CurrentActivePage = tabSlide.index

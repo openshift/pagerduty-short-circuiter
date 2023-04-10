@@ -168,10 +168,11 @@ func (tui *TUI) setupAlertDetailsPageInput() {
 			if err != nil {
 				errMessage := "ocm-container is not found.\nPlease install it via: " + constants.OcmContainerURL
 				utils.ErrorLogger.Print(errMessage)
+				return nil
 			}
 			// Convert the ClusterID into args for ocm-container command
 			clusterIDArgs := []string{tui.ClusterID}
-			AddNewSlide(tui, tui.ClusterID, ocmContainer, clusterIDArgs, true)
+			AddNewSlide(tui, tui.ClusterName, ocmContainer, clusterIDArgs, true)
 		}
 
 		return event

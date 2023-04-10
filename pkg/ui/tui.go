@@ -41,6 +41,7 @@ type TUI struct {
 	Role              string
 	Columns           string
 	ClusterID         string
+	ClusterName       string
 
 	// Multi-Window Terminals Related
 	TerminalLayout      *tview.Flex
