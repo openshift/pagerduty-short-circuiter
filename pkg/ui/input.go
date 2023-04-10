@@ -63,6 +63,27 @@ func (tui *TUI) initKeyboard() {
 			}
 			return nil
 			// Delete the current active Slide
+		} else if event.Key() == tcell.KeyCtrlB {
+			// Reset the input buffer
+			tui.TerminalInputBuffer = []rune{}
+			return nil
+		} else if event.Rune() >= '0' && event.Rune() <= '9' && len(tui.TerminalInputBuffer) < 2 {
+			// Append the digit to the input buffer
+			tui.TerminalInputBuffer = append(tui.TerminalInputBuffer, event.Rune())
+			// Check if the input buffer is complete
+			if len(tui.TerminalInputBuffer) == 1 {
+				// Convert the input buffer to a slide number
+				slideNum, err := strconv.Atoi(string(tui.TerminalInputBuffer))
+				if err == nil && slideNum >= 1 && slideNum <= len(tui.TerminalTabs) {
+					// Navigate to the specified slide
+					tui.TerminalPageBar.Highlight(strconv.Itoa(tui.TerminalUIRegionIDs[slideNum-1])).
+						ScrollToHighlight()
+					CurrentActivePage = slideNum - 1
+				}
+				// Reset the input buffer
+				tui.TerminalInputBuffer = []rune{}
+			}
+			return nil
 		} else if event.Key() == tcell.KeyCtrlE {
 			slideNum, _ := strconv.Atoi(tui.TerminalPageBar.GetHighlights()[0])
 			RemoveSlide(slideNum, tui)
@@ -86,7 +107,12 @@ func (tui *TUI) initKeyboard() {
 			tui.TerminalInputBuffer = []rune{}
 		}
 
-		if event.Rune() == 'q' || event.Rune() == 'Q' {
+		// Override the default exit behaviour with Ctrl+C
+		if event.Key() == tcell.KeyCtrlC {
+			return nil
+		}
+		// Exit the App on Ctrl + Q
+		if event.Key() == tcell.KeyCtrlQ {
 			utils.InfoLogger.Println("Exiting kite")
 			tui.App.Stop()
 		}
