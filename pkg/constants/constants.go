@@ -21,6 +21,8 @@ const (
 
 	APIKeyURL       = "https://support.pagerduty.com/docs/generating-api-keys#generating-a-personal-rest-api-key"
 	OcmContainerURL = "https://github.com/openshift/ocm-container"
+	OcmContainer    = "ocm-container"
+	Bash            = "bash"
 
 	// Regex
 	APIKeyRegex     = "^[a-z|A-Z0-9+_-]{20}$"
