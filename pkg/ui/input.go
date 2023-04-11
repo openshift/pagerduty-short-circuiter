@@ -1,10 +1,12 @@
 package ui
 
 import (
+	"os"
 	"os/exec"
 	"strconv"
 
 	"github.com/gdamore/tcell/v2"
+
 	"github.com/openshift/pagerduty-short-circuiter/pkg/constants"
 	pdcli "github.com/openshift/pagerduty-short-circuiter/pkg/pdcli/alerts"
 	"github.com/openshift/pagerduty-short-circuiter/pkg/utils"
@@ -56,16 +58,16 @@ func (tui *TUI) initKeyboard() {
 			return nil
 			// Add a new Slide - bash
 		} else if event.Key() == tcell.KeyCtrlA {
-			AddSlide(tui, constants.Bash)
+			AddNewSlide(tui, constants.Shell, os.Getenv("SHELL"), []string{}, false)
 			return nil
 			// Add a new Slide - ocm-container
 		} else if event.Key() == tcell.KeyCtrlO {
-			_, err := exec.LookPath(constants.OcmContainer)
+			OcmContainerPath, err := exec.LookPath(constants.OcmContainer)
 			if err != nil {
 				utils.ErrorLogger.Println("ocm-container is not found.\nPlease install it via:", constants.OcmContainerURL)
-			} else {
-				AddSlide(tui, constants.OcmContainer)
+				return nil
 			}
+			AddNewSlide(tui, constants.OcmContainer, OcmContainerPath, []string{}, false)
 			return nil
 			// Delete the current active Slide
 		} else if event.Key() == tcell.KeyCtrlB {
@@ -222,44 +224,17 @@ func (tui *TUI) setupAlertDetailsPageInput() {
 	tui.AlertMetadata.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 
 		if event.Rune() == 'Y' || event.Rune() == 'y' {
+			// Get ocm-conatiner executable from PATH
+			ocmContainer, err := exec.LookPath("ocm-container")
 
-			if utils.Emulator != "" {
-				err := utils.ClusterLoginEmulator(tui.ClusterID)
-
-				if err != nil {
-					utils.ErrorLogger.Print(err)
-				}
-
-			} else {
-				tui.App.Stop()
-
-				cmd := utils.ClusterLoginShell(tui.ClusterID)
-
-				err := cmd.Start()
-
-				if err != nil {
-					utils.ErrorLogger.Print(err)
-				}
-
-				err = cmd.Wait()
-
-				tui.Init()
-
-				if err != nil {
-					utils.ErrorLogger.Print(err)
-				}
-
-				// Refresh alerts table
-				tui.SeedAlertsUI()
-				utils.InfoLogger.Print("Switching back to alerts view")
-				tui.Pages.SwitchToPage(AlertsPageTitle)
-
-				err = tui.StartApp()
-
-				if err != nil {
-					panic(err)
-				}
+			if err != nil {
+				errMessage := "ocm-container is not found.\nPlease install it via: " + constants.OcmContainerURL
+				utils.ErrorLogger.Print(errMessage)
+				return nil
 			}
+			// Convert the ClusterID into args for ocm-container command
+			clusterIDArgs := []string{tui.ClusterID}
+			AddNewSlide(tui, tui.ClusterName, ocmContainer, clusterIDArgs, true)
 		}
 
 		return event
