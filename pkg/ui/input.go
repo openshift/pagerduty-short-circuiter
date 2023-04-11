@@ -41,8 +41,13 @@ func (tui *TUI) initKeyboard() {
 
 			return nil
 		}
-
-		if event.Key() == tcell.KeyCtrlN {
+		if event.Key() == tcell.KeyLeft && CursorPos > 0 {
+			CursorPos--
+			return event
+		} else if event.Key() == tcell.KeyRight && CursorPos < len(tui.TerminalInputBuffer) {
+			CursorPos++
+			return event
+		} else if event.Key() == tcell.KeyCtrlN {
 			NextSlide(tui)
 			return nil
 			// Move to the Previous Slide
@@ -88,23 +93,45 @@ func (tui *TUI) initKeyboard() {
 			slideNum, _ := strconv.Atoi(tui.TerminalPageBar.GetHighlights()[0])
 			RemoveSlide(slideNum, tui)
 			return nil
-			// TODO : Handle the buffer with more edge cases
-			// Handling Backspace with input buffer
 		} else if event.Key() == tcell.KeyBackspace || event.Key() == tcell.KeyBackspace2 {
 			if len(tui.TerminalInputBuffer) > 0 {
-				tui.TerminalInputBuffer = tui.TerminalInputBuffer[:len(tui.TerminalInputBuffer)-1]
+				if CursorPos > 0 {
+					tui.TerminalInputBuffer = append(tui.TerminalInputBuffer[:CursorPos-1], tui.TerminalInputBuffer[CursorPos:]...)
+					CursorPos--
+				} else {
+					tui.TerminalInputBuffer = tui.TerminalInputBuffer[:len(tui.TerminalInputBuffer)-1]
+				}
+			}
+			if len(tui.TerminalLastChars) > len("exit") {
+				tui.TerminalLastChars = tui.TerminalLastChars[len(tui.TerminalLastChars)-len("exit"):]
 			}
 			// Working on the input buffer
 		} else if event.Key() == tcell.KeyRune {
-			tui.TerminalInputBuffer = append(tui.TerminalInputBuffer, event.Rune())
-			// Exit the current slide when exit command is typed
+			if CursorPos >= len(tui.TerminalInputBuffer) {
+				// Append new rune to end of input buffer
+				tui.TerminalInputBuffer = append(tui.TerminalInputBuffer, event.Rune())
+				tui.TerminalLastChars = append(tui.TerminalLastChars, event.Rune())
+				if len(tui.TerminalLastChars) > len("exit") {
+					tui.TerminalLastChars = tui.TerminalLastChars[1:]
+				}
+			} else {
+				// Insert new rune at cursor position in input buffer
+				tui.TerminalInputBuffer = append(tui.TerminalInputBuffer[:CursorPos], append([]rune{event.Rune()}, tui.TerminalInputBuffer[CursorPos:]...)...)
+				tui.TerminalLastChars = append(tui.TerminalLastChars[:CursorPos], append([]rune{event.Rune()}, tui.TerminalLastChars[CursorPos:]...)...)
+				if len(tui.TerminalLastChars) > len("exit") {
+					tui.TerminalLastChars = tui.TerminalLastChars[1:]
+				}
+			}
+			CursorPos++
+
 		} else if event.Key() == tcell.KeyEnter {
-			if string(tui.TerminalInputBuffer) == "exit" {
-				tui.TerminalInputBuffer = []rune{}
+			if string(tui.TerminalInputBuffer) == "exit" || string(tui.TerminalLastChars) == "exit" {
 				slideNum, _ := strconv.Atoi(tui.TerminalPageBar.GetHighlights()[0])
 				RemoveSlide(slideNum, tui)
 			}
 			tui.TerminalInputBuffer = []rune{}
+			tui.TerminalLastChars = []rune{}
+			CursorPos = 0
 		}
 
 		// Override the default exit behaviour with Ctrl+C

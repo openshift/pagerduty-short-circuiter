@@ -20,6 +20,7 @@ type TerminalTab struct {
 
 var CurrentActivePage int = 0
 var TotalPageCount int = -1
+var CursorPos int
 
 // Creates and return a new tab
 func InitKiteTab(tui *TUI, layout *tview.Flex) *TerminalTab {
