@@ -43,43 +43,105 @@ func (tui *TUI) initKeyboard() {
 
 			return nil
 		}
-
-		if event.Key() == tcell.KeyCtrlN {
+		if event.Key() == tcell.KeyLeft && CursorPos > 0 {
+			CursorPos--
+			return event
+		} else if event.Key() == tcell.KeyRight && CursorPos < len(tui.TerminalInputBuffer) {
+			CursorPos++
+			return event
+		} else if event.Key() == tcell.KeyCtrlN {
 			NextSlide(tui)
 			return nil
 			// Move to the Previous Slide
 		} else if event.Key() == tcell.KeyCtrlP {
 			PreviousSlide(tui)
 			return nil
-			// Add a new Slide
+			// Add a new Slide - bash
 		} else if event.Key() == tcell.KeyCtrlA {
-			AddNewSlide(tui, "SHELL", os.Getenv("SHELL"), []string{}, false)
+			AddNewSlide(tui, constants.Shell, os.Getenv("SHELL"), []string{}, false)
+			return nil
+			// Add a new Slide - ocm-container
+		} else if event.Key() == tcell.KeyCtrlO {
+			OcmContainerPath, err := exec.LookPath(constants.OcmContainer)
+			if err != nil {
+				utils.ErrorLogger.Println("ocm-container is not found.\nPlease install it via:", constants.OcmContainerURL)
+				return nil
+			}
+			AddNewSlide(tui, constants.OcmContainer, OcmContainerPath, []string{}, false)
 			return nil
 			// Delete the current active Slide
+		} else if event.Key() == tcell.KeyCtrlB {
+			// Reset the input buffer
+			tui.TerminalInputBuffer = []rune{}
+			return nil
+		} else if event.Rune() >= '0' && event.Rune() <= '9' && len(tui.TerminalInputBuffer) < 2 {
+			// Append the digit to the input buffer
+			tui.TerminalInputBuffer = append(tui.TerminalInputBuffer, event.Rune())
+			// Check if the input buffer is complete
+			if len(tui.TerminalInputBuffer) == 1 {
+				// Convert the input buffer to a slide number
+				slideNum, err := strconv.Atoi(string(tui.TerminalInputBuffer))
+				if err == nil && slideNum >= 1 && slideNum <= len(tui.TerminalTabs) {
+					// Navigate to the specified slide
+					tui.TerminalPageBar.Highlight(strconv.Itoa(tui.TerminalUIRegionIDs[slideNum-1])).
+						ScrollToHighlight()
+					CurrentActivePage = slideNum - 1
+				}
+				// Reset the input buffer
+				tui.TerminalInputBuffer = []rune{}
+			}
+			return nil
 		} else if event.Key() == tcell.KeyCtrlE {
 			slideNum, _ := strconv.Atoi(tui.TerminalPageBar.GetHighlights()[0])
 			RemoveSlide(slideNum, tui)
 			return nil
-			// TODO : Handle the buffer with more edge cases
-			// Handling Backspace with input buffer
 		} else if event.Key() == tcell.KeyBackspace || event.Key() == tcell.KeyBackspace2 {
 			if len(tui.TerminalInputBuffer) > 0 {
-				tui.TerminalInputBuffer = tui.TerminalInputBuffer[:len(tui.TerminalInputBuffer)-1]
+				if CursorPos > 0 {
+					tui.TerminalInputBuffer = append(tui.TerminalInputBuffer[:CursorPos-1], tui.TerminalInputBuffer[CursorPos:]...)
+					CursorPos--
+				} else {
+					tui.TerminalInputBuffer = tui.TerminalInputBuffer[:len(tui.TerminalInputBuffer)-1]
+				}
+			}
+			if len(tui.TerminalLastChars) > len("exit") {
+				tui.TerminalLastChars = tui.TerminalLastChars[len(tui.TerminalLastChars)-len("exit"):]
 			}
 			// Working on the input buffer
 		} else if event.Key() == tcell.KeyRune {
-			tui.TerminalInputBuffer = append(tui.TerminalInputBuffer, event.Rune())
-			// Exit the current slide when exit command is typed
+			if CursorPos >= len(tui.TerminalInputBuffer) {
+				// Append new rune to end of input buffer
+				tui.TerminalInputBuffer = append(tui.TerminalInputBuffer, event.Rune())
+				tui.TerminalLastChars = append(tui.TerminalLastChars, event.Rune())
+				if len(tui.TerminalLastChars) > len("exit") {
+					tui.TerminalLastChars = tui.TerminalLastChars[1:]
+				}
+			} else {
+				// Insert new rune at cursor position in input buffer
+				tui.TerminalInputBuffer = append(tui.TerminalInputBuffer[:CursorPos], append([]rune{event.Rune()}, tui.TerminalInputBuffer[CursorPos:]...)...)
+				tui.TerminalLastChars = append(tui.TerminalLastChars[:CursorPos], append([]rune{event.Rune()}, tui.TerminalLastChars[CursorPos:]...)...)
+				if len(tui.TerminalLastChars) > len("exit") {
+					tui.TerminalLastChars = tui.TerminalLastChars[1:]
+				}
+			}
+			CursorPos++
+
 		} else if event.Key() == tcell.KeyEnter {
-			if string(tui.TerminalInputBuffer) == "exit" {
-				tui.TerminalInputBuffer = []rune{}
+			if string(tui.TerminalInputBuffer) == "exit" || string(tui.TerminalLastChars) == "exit" {
 				slideNum, _ := strconv.Atoi(tui.TerminalPageBar.GetHighlights()[0])
 				RemoveSlide(slideNum, tui)
 			}
 			tui.TerminalInputBuffer = []rune{}
+			tui.TerminalLastChars = []rune{}
+			CursorPos = 0
 		}
 
-		if event.Rune() == 'q' || event.Rune() == 'Q' {
+		// Override the default exit behaviour with Ctrl+C
+		if event.Key() == tcell.KeyCtrlC {
+			return nil
+		}
+		// Exit the App on Ctrl + Q
+		if event.Key() == tcell.KeyCtrlQ {
 			utils.InfoLogger.Println("Exiting kite")
 			tui.App.Stop()
 		}

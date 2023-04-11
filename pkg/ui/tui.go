@@ -47,9 +47,11 @@ type TUI struct {
 	TerminalLayout      *tview.Flex
 	TerminalPages       *tview.Pages
 	TerminalPageBar     *tview.TextView
+	TerminalFixedFooter *tview.TextView
 	TerminalTabs        []TerminalTab
 	TerminalUIRegionIDs []int
 	TerminalInputBuffer []rune
+	TerminalLastChars   []rune
 }
 
 // InitAlertsUI initializes TUI table component.
@@ -134,6 +136,7 @@ func (tui *TUI) Init() {
 	tui.AlertMetadata = tview.NewTextView()
 	tui.TerminalPages = tview.NewPages()
 	tui.TerminalPageBar = tview.NewTextView()
+	tui.TerminalFixedFooter = tview.NewTextView()
 
 	tui.SecondaryWindow.
 		SetChangedFunc(func() { tui.App.Draw() }).
@@ -158,6 +161,9 @@ func (tui *TUI) Init() {
 		SetTextAlign(tview.AlignLeft).
 		SetTextColor(FooterTextColor).
 		SetBorderPadding(1, 0, 1, 1)
+
+	tui.TerminalFixedFooter.
+		Clear().SetBackgroundColor(tcell.ColorGreen)
 
 	tui.AlertMetadata.
 		SetScrollable(true).

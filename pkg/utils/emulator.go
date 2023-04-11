@@ -55,7 +55,7 @@ func InitTerminalEmulator() string {
 // ClusterLoginShell spawns an instance of ocm-container in the same shell.
 func ClusterLoginShell(clusterID string) *exec.Cmd {
 	// Check if ocm-container is installed locally
-	ocmContainer, err := exec.LookPath("ocm-container")
+	ocmContainer, err := exec.LookPath(constants.OcmContainer)
 
 	if err != nil {
 		fmt.Println("ocm-container is not found.\nPlease install it via:", constants.OcmContainerURL)
@@ -75,7 +75,7 @@ func ClusterLoginEmulator(clusterID string) error {
 	var cmd *exec.Cmd
 
 	// Check if ocm-container is installed locally
-	ocmContainer, err := exec.LookPath("ocm-container")
+	ocmContainer, err := exec.LookPath(constants.OcmContainer)
 
 	if err != nil {
 		return errors.New("ocm-container is not found.\nPlease install it via: " + constants.OcmContainerURL)
