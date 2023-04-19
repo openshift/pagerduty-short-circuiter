@@ -12,24 +12,21 @@ import (
 // Declares the tab struct
 type TerminalTab struct {
 	index     int
+	regionID  int
 	title     string
 	primitive tview.Primitive
 }
 
 var CurrentActivePage int = 0
-var TotalPageCount int = -1
+var TotalPageCount int = 0
 var CursorPos int
 
 // Creates and return a new tab
 func InitKiteTab(tui *TUI, layout *tview.Flex) *TerminalTab {
-	TotalPageCount += 1
 	tui.TerminalUIRegionIDs = append(tui.TerminalUIRegionIDs, TotalPageCount)
-	index := len(tui.TerminalTabs)
-	if len(tui.TerminalTabs) == 0 {
-		index = 0
-	}
 	return &TerminalTab{
-		index:     index,
+		index:     0,
+		regionID:  0,
 		title:     "kite",
 		primitive: layout,
 	}
@@ -40,11 +37,9 @@ func NewTab(name string, command string, args []string, tui *TUI) *TerminalTab {
 	TotalPageCount += 1
 	tui.TerminalUIRegionIDs = append(tui.TerminalUIRegionIDs, TotalPageCount)
 	index := len(tui.TerminalTabs)
-	if len(tui.TerminalTabs) == 0 {
-		index = 0
-	}
 	return &TerminalTab{
 		index:     index,
+		regionID:  TotalPageCount,
 		title:     name,
 		primitive: newTabPrimitive(command, args),
 	}
@@ -62,22 +57,22 @@ func newTabPrimitive(command string, args []string) (content tview.Primitive) {
 // Move to the previous slide
 func PreviousSlide(tui *TUI) {
 	CurrentActivePage = (CurrentActivePage - 1 + len(tui.TerminalTabs)) % len(tui.TerminalTabs)
-	tui.TerminalPageBar.Highlight(strconv.Itoa(tui.TerminalUIRegionIDs[CurrentActivePage])).
+	tui.TerminalPageBar.Highlight(strconv.Itoa(tui.TerminalTabs[CurrentActivePage].regionID)).
 		ScrollToHighlight()
 	tui.TerminalInputBuffer = []rune{}
 }
 
 // Move to the next slide
 func NextSlide(tui *TUI) {
-	CurrentActivePage = (CurrentActivePage + 1) % len(tui.TerminalTabs)
-	tui.TerminalPageBar.Highlight(strconv.Itoa(tui.TerminalUIRegionIDs[CurrentActivePage])).
+	CurrentActivePage = (CurrentActivePage + 1 + len(tui.TerminalTabs)) % len(tui.TerminalTabs)
+	tui.TerminalPageBar.Highlight(strconv.Itoa(tui.TerminalTabs[CurrentActivePage].regionID)).
 		ScrollToHighlight()
 	tui.TerminalInputBuffer = []rune{}
 }
 
-func indexOf(arr []int, ele int) int {
-	for index, item := range arr {
-		if item == ele {
+func indexOf(ele int, tabs []TerminalTab) int {
+	for index, item := range tabs {
+		if item.regionID == ele {
 			return index
 		}
 	}
@@ -86,37 +81,39 @@ func indexOf(arr []int, ele int) int {
 
 // Remove the slide with the given index
 func RemoveSlide(s int, tui *TUI) {
-	index := indexOf(tui.TerminalUIRegionIDs, s)
+	index := indexOf(s, tui.TerminalTabs)
 	tui.TerminalTabs = append(tui.TerminalTabs[:index], tui.TerminalTabs[index+1:]...)
 	tui.TerminalUIRegionIDs = append(tui.TerminalUIRegionIDs[:index], tui.TerminalUIRegionIDs[index+1:]...)
 	tui.TerminalPageBar.Clear()
 	for index, tabSlide := range tui.TerminalTabs {
-		oldIndex := tabSlide.index
 		tabSlide.index = index
-		fmt.Fprintf(tui.TerminalPageBar, `["%d"]%s[white][""]  `, oldIndex, fmt.Sprintf("%d %s", tabSlide.index+1, tabSlide.title))
+		fmt.Fprintf(tui.TerminalPageBar, `["%d"]%s[white][""]  `, tabSlide.regionID, fmt.Sprintf("%d %s", tabSlide.index+1, tabSlide.title))
 	}
 	tui.TerminalPages.RemovePage(strconv.Itoa(s))
 	PreviousSlide(tui)
+	tui.TerminalInputBuffer = []rune{}
 }
 
 // Adds a slide to the end of currently present slides
 func AddNewSlide(tui *TUI, name string, command string, args []string, isCluster bool) {
-	if isCluster {
-		for i, tab := range tui.TerminalTabs {
-			if tab.title == args[0] {
-				tui.TerminalPageBar.Highlight(strconv.Itoa(i)).
-					ScrollToHighlight()
-				return
+	if len(tui.TerminalTabs) < 9 {
+		if isCluster {
+			for i, tab := range tui.TerminalTabs {
+				if tab.primitive != nil && tab.title == args[0] {
+					tui.TerminalPageBar.Highlight(strconv.Itoa(i)).
+						ScrollToHighlight()
+					return
+				}
 			}
 		}
+		tabSlide := NewTab(name, command, args, tui)
+		tui.TerminalTabs = append(tui.TerminalTabs, *tabSlide)
+		tui.TerminalPages.AddPage(strconv.Itoa(tabSlide.regionID), tabSlide.primitive, true, true)
+		fmt.Fprintf(tui.TerminalPageBar, `["%d"]%s[white][""]  `, tabSlide.regionID, fmt.Sprintf("%d %s", tabSlide.index+1, tabSlide.title))
+		CurrentActivePage = tabSlide.index
+		tui.TerminalPageBar.Highlight(strconv.Itoa(tabSlide.regionID)).
+			ScrollToHighlight()
 	}
-	tabSlide := NewTab(name, command, args, tui)
-	tui.TerminalTabs = append(tui.TerminalTabs, *tabSlide)
-	tui.TerminalPages.AddPage(strconv.Itoa(tabSlide.index), tabSlide.primitive, true, tabSlide.index == 0)
-	fmt.Fprintf(tui.TerminalPageBar, `["%d"]%s[white][""]  `, tabSlide.index, fmt.Sprintf("%d %s", tabSlide.index+1, tabSlide.title))
-	CurrentActivePage = tabSlide.index
-	tui.TerminalPageBar.Highlight(strconv.Itoa(CurrentActivePage)).
-		ScrollToHighlight()
 	tui.TerminalInputBuffer = []rune{}
 }
 
@@ -134,7 +131,7 @@ func InitTerminalMux(tui *TUI, kiteTab *TerminalTab) *tview.Flex {
 		})
 
 	for _, slide := range tui.TerminalTabs {
-		tui.TerminalPages.AddPage(strconv.Itoa(slide.index), slide.primitive, true, slide.index == 0)
+		tui.TerminalPages.AddPage(strconv.Itoa(slide.index), slide.primitive, true, true)
 		fmt.Fprintf(tui.TerminalPageBar, `["%d"]%s[white][""]  `, slide.index, fmt.Sprintf("%d %s", slide.index+1, slide.title))
 	}
 	tui.TerminalPageBar.Highlight("0")

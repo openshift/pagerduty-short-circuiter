@@ -69,7 +69,7 @@ func (tui *TUI) initKeyboard() {
 			}
 			AddNewSlide(tui, constants.OcmContainer, OcmContainerPath, []string{}, false)
 			return nil
-			// Delete the current active Slide
+
 		} else if event.Key() == tcell.KeyCtrlB {
 			// Reset the input buffer
 			tui.TerminalInputBuffer = []rune{}
@@ -91,9 +91,11 @@ func (tui *TUI) initKeyboard() {
 				tui.TerminalInputBuffer = []rune{}
 			}
 			return nil
+			// Delete the current active Slide
 		} else if event.Key() == tcell.KeyCtrlE {
 			slideNum, _ := strconv.Atoi(tui.TerminalPageBar.GetHighlights()[0])
 			RemoveSlide(slideNum, tui)
+			tui.TerminalInputBuffer = []rune{}
 			return nil
 		} else if event.Key() == tcell.KeyBackspace || event.Key() == tcell.KeyBackspace2 {
 			if len(tui.TerminalInputBuffer) > 0 {
