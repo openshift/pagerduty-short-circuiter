@@ -23,6 +23,7 @@ func (tui *TUI) SetAlertsTableEvents(alerts []pdcli.Alert) {
 				alertData = pdcli.ParseAlertMetaData(alert)
 				tui.ClusterName = alert.ClusterName
 				tui.ClusterID = alert.ClusterID
+				tui.SOPLink = alert.Sop
 				break
 			}
 		}
@@ -32,7 +33,8 @@ func (tui *TUI) SetAlertsTableEvents(alerts []pdcli.Alert) {
 
 		// Do not prompt for cluster login if there's no cluster ID associated with the alert (v3 clusters)
 		if tui.ClusterID != "N/A" && tui.ClusterID != "" && alertData != "" {
-			tui.InitAlertDataSecondaryView()
+			secondaryWindowText := fmt.Sprintf("Press 'Y' to log into the cluster: %s\nPress 'S' to view the SOP", tui.ClusterName)
+			tui.SecondaryWindow.SetText(secondaryWindowText).SetTextColor(PromptTextColor)
 		}
 	})
 }
