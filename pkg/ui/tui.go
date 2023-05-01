@@ -163,7 +163,7 @@ func (tui *TUI) Init() {
 		SetBorderPadding(1, 0, 1, 1)
 
 	tui.TerminalFixedFooter.
-		Clear().SetBackgroundColor(tcell.ColorGreen)
+		Clear().SetBackgroundColor(TerminalFooterTextColor)
 
 	tui.AlertMetadata.
 		SetScrollable(true).

@@ -14,8 +14,19 @@ import (
 
 // initKeyboard initializes the keyboard event handlers for all the TUI components.
 func (tui *TUI) initKeyboard() {
+	var isEscapeSequence bool = false
 	tui.App.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
-
+		if isEscapeSequence {
+			if event.Rune() >= '0' && event.Rune() <= '9' {
+				slideNum, _ := strconv.Atoi(string(event.Rune()))
+				SwitchToSlide(slideNum, tui)
+			}
+			tui.TerminalFixedFooter.
+				SetText(TerminalFooterText).
+				SetBackgroundColor(TerminalFooterTextColor)
+			isEscapeSequence = false
+			return nil
+		}
 		if event.Key() == tcell.KeyEscape {
 			// Check if alerts command is executed
 			if tui.Pages.HasPage(AlertsPageTitle) {
@@ -72,24 +83,10 @@ func (tui *TUI) initKeyboard() {
 
 		} else if event.Key() == tcell.KeyCtrlB {
 			// Reset the input buffer
-			tui.TerminalInputBuffer = []rune{}
-			return nil
-		} else if event.Rune() >= '0' && event.Rune() <= '9' && len(tui.TerminalInputBuffer) < 2 {
-			// Append the digit to the input buffer
-			tui.TerminalInputBuffer = append(tui.TerminalInputBuffer, event.Rune())
-			// Check if the input buffer is complete
-			if len(tui.TerminalInputBuffer) == 1 {
-				// Convert the input buffer to a slide number
-				slideNum, err := strconv.Atoi(string(tui.TerminalInputBuffer))
-				if err == nil && slideNum >= 1 && slideNum <= len(tui.TerminalTabs) {
-					// Navigate to the specified slide
-					tui.TerminalPageBar.Highlight(strconv.Itoa(tui.TerminalUIRegionIDs[slideNum-1])).
-						ScrollToHighlight()
-					CurrentActivePage = slideNum - 1
-				}
-				// Reset the input buffer
-				tui.TerminalInputBuffer = []rune{}
-			}
+			tui.TerminalFixedFooter.
+				SetText(TerminalFooterEscapeState).
+				SetBackgroundColor(TerminalFooterEscapeStateColor)
+			isEscapeSequence = true
 			return nil
 			// Delete the current active Slide
 		} else if event.Key() == tcell.KeyCtrlE {

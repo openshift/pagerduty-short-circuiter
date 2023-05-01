@@ -117,6 +117,18 @@ func AddNewSlide(tui *TUI, name string, command string, args []string, isCluster
 	tui.TerminalInputBuffer = []rune{}
 }
 
+// Navigate to the specified slide
+func SwitchToSlide(slideNum int, tui *TUI) {
+	if slideNum > 0 && slideNum <= len(tui.TerminalTabs) {
+		slideNum = slideNum - 1
+		regionID := tui.TerminalTabs[slideNum].regionID
+		tui.TerminalPageBar.Highlight(strconv.Itoa(regionID)).
+			ScrollToHighlight()
+		CurrentActivePage = slideNum
+	}
+}
+
+// Init the Layout for Terminal Multiplexer
 func InitTerminalMux(tui *TUI, kiteTab *TerminalTab) *tview.Flex {
 	// Initial Slides
 	tui.TerminalTabs = append(tui.TerminalTabs, *kiteTab)
