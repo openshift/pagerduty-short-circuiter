@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/gdamore/tcell/v2"
+	"github.com/openshift/pagerduty-short-circuiter/pkg/ocm"
 	pdcli "github.com/openshift/pagerduty-short-circuiter/pkg/pdcli/alerts"
 	"github.com/openshift/pagerduty-short-circuiter/pkg/utils"
 )
@@ -31,7 +32,7 @@ func (tui *TUI) SetAlertsTableEvents(alerts []pdcli.Alert) {
 
 		// Do not prompt for cluster login if there's no cluster ID associated with the alert (v3 clusters)
 		if tui.ClusterID != "N/A" && tui.ClusterID != "" && alertData != "" {
-			tui.SecondaryWindow.SetText(fmt.Sprintf("Press 'Y' to log into the cluster: %s", tui.ClusterName)).SetTextColor(PromptTextColor)
+			tui.InitAlertDataSecondaryView()
 		}
 	})
 }
@@ -89,4 +90,24 @@ func (tui *TUI) ackowledgeSelectedIncidents() {
 	// Refresh Page
 	tui.SetIncidentsTableEvents()
 	tui.Pages.SwitchToPage(IncidentsPageTitle)
+}
+
+// fetchClusterServiceLogs returns the given cluster's service logs
+// It initializes a text view and displays the parsed service log data
+func (tui *TUI) fetchClusterServiceLogs() {
+	var responseStr string
+	serviceLogsItems, err := ocm.GetClusterServiceLogs(tui.ClusterID)
+	if err != nil {
+		utils.InfoLogger.Printf("%v", err)
+		return
+	}
+
+	if serviceLogsItems.Empty() {
+		responseStr = fmt.Sprintf("No service logs found for the cluster: %s/%s", tui.ClusterID, tui.ClusterName)
+	} else {
+		responseStr = ocm.ParseServiceLogItems(serviceLogsItems)
+	}
+
+	tui.ServiceLogView.SetText(responseStr)
+	tui.Pages.AddAndSwitchToPage(ServiceLogsPageTitle, tui.ServiceLogView, true)
 }

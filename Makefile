@@ -48,7 +48,7 @@ getlint:
 
 .PHONY: lint
 lint: getlint
-	$(GOPATH)/bin/golangci-lint run
+	$(GOPATH)/bin/golangci-lint run --timeout 5m
 
 .PHONY: fmt
 fmt:

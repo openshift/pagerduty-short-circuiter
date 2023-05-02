@@ -127,6 +127,8 @@ kite alerts <Incident ID>
 ```
 This will list all the alerts belonging to that incident.
 
+### View Service Logs
+An alerting cluster's service logs can be viewed while viewing the alert data by pressing `L/l`.
 
 ### Options
 ```

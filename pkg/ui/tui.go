@@ -26,6 +26,7 @@ type TUI struct {
 	LogWindow           *tview.TextView
 	Layout              *tview.Flex
 	Footer              *tview.TextView
+	ServiceLogView      *tview.TextView
 	FrontPage           string
 
 	// API related
@@ -103,6 +104,16 @@ func (tui *TUI) InitAlertsSecondaryView() {
 		SetTextColor(InfoTextColor)
 }
 
+func (tui *TUI) InitAlertDataSecondaryView() {
+	var secondaryViewText string
+
+	PromptClusterLogin := fmt.Sprintf("Press 'Y' to log into the cluster: %s\n", tui.ClusterName)
+	PromptServiceLogs := "Press 'L' to view service logs"
+
+	secondaryViewText = PromptClusterLogin + PromptServiceLogs
+	tui.SecondaryWindow.SetText(secondaryViewText).SetTextColor(PromptTextColor)
+}
+
 func (tui *TUI) InitOnCallSecondaryView(user string, primary string, secondary string) {
 	tui.SecondaryWindow.SetText(
 		fmt.Sprintf("Logged in user: %s\nCurrent Primary on-call: %s\nCurrent Secondary on-call: %s",
@@ -137,6 +148,7 @@ func (tui *TUI) Init() {
 	tui.LogWindow = tview.NewTextView()
 	tui.Footer = tview.NewTextView()
 	tui.AlertMetadata = tview.NewTextView()
+	tui.ServiceLogView = tview.NewTextView()
 	tui.TerminalPages = tview.NewPages()
 	tui.TerminalPageBar = tview.NewTextView()
 	tui.TerminalFixedFooter = tview.NewTextView()
@@ -175,6 +187,14 @@ func (tui *TUI) Init() {
 		SetBorderPadding(1, 1, 1, 1).
 		SetBorderAttributes(tcell.AttrDim).
 		SetTitle(fmt.Sprintf(TitleFmt, AlertMetadataViewTitle))
+
+	tui.ServiceLogView.
+		SetScrollable(true).
+		SetBorder(true).
+		SetBorderColor(BorderColor).
+		SetBorderPadding(1, 1, 1, 1).
+		SetBorderAttributes(tcell.AttrDim).
+		SetTitle(fmt.Sprintf(TitleFmt, ServiceLogsPageTitle))
 
 	// Initialize logger to output to log view
 	utils.InitLogger(tui.LogWindow)

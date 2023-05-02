@@ -36,13 +36,14 @@ func (tui *TUI) initKeyboard() {
 				tui.InitAlertsSecondaryView()
 				page, _ := tui.Pages.GetFrontPage()
 
-				// If the user is viewing the alert metadata
-				if page == AlertDataPageTitle {
+				// Handle page traversal
+				switch page {
+				case AlertDataPageTitle:
 					tui.Pages.SwitchToPage(tui.FrontPage)
-				} else if page == HighAlertsPageTitle || page == LowAlertsPageTitle {
-					tui.Pages.SwitchToPage(TrigerredAlertsPageTitle)
-					tui.Footer.SetText(FooterTextTrigerredAlerts)
-				} else {
+				case ServiceLogsPageTitle:
+					tui.Pages.SwitchToPage(AlertDataPageTitle)
+					tui.InitAlertDataSecondaryView()
+				default:
 					tui.InitAlertsUI(tui.Alerts, AlertsTableTitle, AlertsPageTitle)
 					tui.Pages.SwitchToPage(AlertsPageTitle)
 					tui.Footer.SetText(FooterTextAlerts)
@@ -234,9 +235,15 @@ func (tui *TUI) setupAlertDetailsPageInput() {
 				utils.ErrorLogger.Print(errMessage)
 				return nil
 			}
+
 			// Convert the ClusterID into args for ocm-container command
 			clusterIDArgs := []string{tui.ClusterID}
 			AddNewSlide(tui, tui.ClusterName, ocmContainer, clusterIDArgs, true)
+		}
+
+		if event.Rune() == 'L' || event.Rune() == 'l' {
+			utils.InfoLogger.Print("Retrieving service logs for cluster")
+			tui.fetchClusterServiceLogs()
 		}
 
 		return event
