@@ -2,6 +2,7 @@ package ui
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/PagerDuty/go-pagerduty"
 	"github.com/gdamore/tcell/v2"
@@ -42,6 +43,7 @@ type TUI struct {
 	Columns           string
 	ClusterID         string
 	ClusterName       string
+	CurrentOnCallPage int
 
 	// Multi-Window Terminals Related
 	TerminalLayout      *tview.Flex
@@ -103,7 +105,7 @@ func (tui *TUI) InitAlertsSecondaryView() {
 
 func (tui *TUI) InitOnCallSecondaryView(user string, primary string, secondary string) {
 	tui.SecondaryWindow.SetText(
-		fmt.Sprintf("Logged in user: %s\n\nPrimary on-call: %s\n\nSecondary on-call: %s",
+		fmt.Sprintf("Logged in user: %s\nCurrent Primary on-call: %s\nCurrent Secondary on-call: %s",
 			user,
 			primary,
 			secondary),
@@ -118,11 +120,12 @@ func (t *TUI) initFooter() {
 	case AlertsPageTitle:
 		t.Footer.SetText(FooterTextAlerts)
 
-	case OncallPageTitle:
-		t.Footer.SetText(FooterTextOncall)
-
 	default:
 		t.Footer.SetText(FooterText)
+	}
+
+	if strings.Contains(name, OncallPageTitle) {
+		t.Footer.SetText(FooterTextOncall)
 	}
 }
 

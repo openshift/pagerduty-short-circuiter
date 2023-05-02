@@ -1,6 +1,9 @@
 package ui
 
 import (
+	"fmt"
+	"strings"
+
 	"os"
 	"os/exec"
 	"strconv"
@@ -47,8 +50,8 @@ func (tui *TUI) initKeyboard() {
 			}
 
 			// Check if oncall command is executed
-			if tui.Pages.HasPage(OncallPageTitle) {
-				tui.Pages.SwitchToPage(OncallPageTitle)
+			if title, _ := tui.Pages.GetFrontPage(); strings.Contains(title, "Oncall") {
+				tui.Pages.SwitchToPage(fmt.Sprintf("%s%d", OncallPageTitle, 2))
 				tui.Footer.SetText(FooterTextOncall)
 			}
 
@@ -241,8 +244,8 @@ func (tui *TUI) setupAlertDetailsPageInput() {
 }
 
 func (tui *TUI) setupOncallPageInput() {
-	if title, _ := tui.Pages.GetFrontPage(); title == OncallPageTitle {
-		tui.Table.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+	if title, _ := tui.Pages.GetFrontPage(); strings.Contains(title, OncallPageTitle) {
+		tui.Pages.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 
 			if tui.NextOncallTable != nil {
 				if event.Rune() == 'N' || event.Rune() == 'n' {
@@ -263,7 +266,18 @@ func (tui *TUI) setupOncallPageInput() {
 					tui.Footer.SetText(FooterText)
 				}
 			}
-
+			if event.Key() == tcell.KeyLeft {
+				if tui.CurrentOnCallPage > 0 {
+					tui.CurrentOnCallPage -= 1
+				}
+				tui.Pages.SwitchToPage(fmt.Sprintf("%s%d", OncallPageTitle, tui.CurrentOnCallPage))
+			}
+			if event.Key() == tcell.KeyRight {
+				if tui.CurrentOnCallPage < 4 {
+					tui.CurrentOnCallPage += 1
+				}
+				tui.Pages.SwitchToPage(fmt.Sprintf("%s%d", OncallPageTitle, tui.CurrentOnCallPage))
+			}
 			return event
 		})
 	}

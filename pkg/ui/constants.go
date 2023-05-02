@@ -15,7 +15,7 @@ const (
 	AlertMetadataViewTitle    = "[ ALERT DATA ]"
 	IncidentsTableTitle       = "[ TRIGERRED INCIDENTS ]"
 	AckIncidentsTableTitle    = "[ ACKNOWLEDGED INCIDENTS ]"
-	OncallTableTitle          = "[ ONCALL ]"
+	OncallTableTitle          = "ONCALL"
 	NextOncallTableTitle      = "[ NEXT ONCALL ]"
 	AllTeamsOncallTableTitle  = "[ ALL TEAMS ONCALL ]"
 
@@ -27,7 +27,7 @@ const (
 	LowAlertsPageTitle       = "Low Alerts"
 	IncidentsPageTitle       = "Incidents"
 	AckIncidentsPageTitle    = "AckIncidents"
-	OncallPageTitle          = "Oncall"
+	OncallPageTitle          = "Oncall Layer"
 	NextOncallPageTitle      = "Next Oncall"
 	AllTeamsOncallPageTitle  = "All Teams Oncall"
 
@@ -36,7 +36,7 @@ const (
 	FooterTextAlerts          = "[R] Refresh Alerts | [1] Trigerred Alerts | [2] Acknowledged Incidents | [3] Trigerred Incidents\n" + FooterText
 	FooterTextTrigerredAlerts = "[1] Trigerred Alerts | [2] Acknowledged Incidents | [3] Trigerred Incidents\n" + FooterText
 	FooterTextIncidents       = "[ENTER] Select Incident | [CTRL+A] Acknowledge Incidents\n" + FooterText
-	FooterTextOncall          = "[N] Your Next Oncall Schedule | [A] All Teams Oncall\n" + FooterText
+	FooterTextOncall          = "[N] Your Next Oncall Schedule | [A] All Teams Oncall | [<-] Previous Layer Oncall | [->] Next Layer Oncall \n" + FooterText
 	TerminalFooterText        = "[CTRL + N] Next Slide | [CTRL + P] Previous Slide | [CTRL + A] Add Slide | [CTRL + E] Exit Slide | [CTRL + B] + [Num] Change to Slide with [Num]  | [CTRL + Q] Quit "
 	TerminalFooterEscapeState = "Enter the Slide Number to Switch To : "
 
