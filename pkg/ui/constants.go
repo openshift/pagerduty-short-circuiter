@@ -30,6 +30,7 @@ const (
 	OncallPageTitle          = "Oncall"
 	NextOncallPageTitle      = "Next Oncall"
 	AllTeamsOncallPageTitle  = "All Teams Oncall"
+	ServiceLogsPageTitle     = "Service Logs"
 
 	// Footer
 	FooterText                = "[Esc] Go Back"
