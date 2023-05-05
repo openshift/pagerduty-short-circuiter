@@ -21,6 +21,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/PagerDuty/go-pagerduty"
 	"github.com/openshift/pagerduty-short-circuiter/cmd/kite/teams"
@@ -31,7 +32,8 @@ import (
 )
 
 var loginArgs struct {
-	apiKey string
+	apiKey      string
+	accessToken string
 }
 
 var Cmd = &cobra.Command{
@@ -50,6 +52,12 @@ func init() {
 		"api-key",
 		"",
 		"Access API key/token generated from "+constants.APIKeyURL+"\nUse this option to overwrite the existing API key.",
+	)
+	Cmd.Flags().StringVar(
+		&loginArgs.accessToken,
+		"access-token",
+		"",
+		"GitHub Personal Access Token generated from "+constants.AccessTokenURL+"\nUse this option to overwrite the existing Access Token.",
 	)
 }
 
@@ -88,6 +96,17 @@ func loginHandler(cmd *cobra.Command, args []string) error {
 
 		// Create a new API key and store it in the config file
 		err = generateNewKey(cfg)
+
+		if err != nil {
+			return err
+		}
+	}
+
+	// API key is not found in the config file
+	if len(cfg.AccessToken) == 0 {
+
+		// Create a new API key and store it in the config file
+		err = generateNewAccessToken(cfg)
 
 		if err != nil {
 			return err
@@ -151,6 +170,26 @@ func generateNewKey(cfg *config.Config) (err error) {
 	fmt.Print("API Key: ")
 
 	cfg.ApiKey, err = reader.ReadString('\n')
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// generateNewKey prompts the user to create a new API key and saves it to the config file.
+func generateNewAccessToken(cfg *config.Config) (err error) {
+	//prompts the user to generate an API Key
+	fmt.Println("\nIn order to view SOP it is mandatory to provide an GitHub Access Token.\nThe recommended way is to generate a token via: " + constants.AccessTokenURL)
+
+	//Takes standard input from the user and stores it in a variable
+	reader := bufio.NewReader(os.Stdin)
+
+	fmt.Print("GitHub Access Token: ")
+
+	cfg.AccessToken, err = reader.ReadString('\n')
+	cfg.AccessToken = strings.TrimSuffix(cfg.AccessToken, "\n")
 
 	if err != nil {
 		return err

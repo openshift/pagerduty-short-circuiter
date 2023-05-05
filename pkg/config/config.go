@@ -17,23 +17,26 @@ limitations under the License.
 package config
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
 
+	"github.com/google/go-github/v50/github"
 	"github.com/openshift/pagerduty-short-circuiter/pkg/constants"
+	"golang.org/x/oauth2"
 )
 
 // Configuration struct to store user configuration.
 type Config struct {
-	ApiKey   string `json:"api_key,omitempty"`
-	TeamID   string `json:"team_id,omitempty"`
-	Team     string `json:"team,omitempty"`
-	Terminal string `json:"terminal,omitempty"`
+	ApiKey      string `json:"api_key,omitempty"`
+	AccessToken string `json:"gh_token,omitempty"`
+	TeamID      string `json:"team_id,omitempty"`
+	Team        string `json:"team,omitempty"`
+	Terminal    string `json:"terminal,omitempty"`
 }
 
 // Find returns the pdcli configuration filepath.
@@ -74,6 +77,13 @@ func Save(cfg *Config) error {
 		return err
 	}
 
+	// Check if the GitHub key is valid
+	cfg.AccessToken, err = validateGHToken(cfg.AccessToken)
+
+	if err != nil {
+		return err
+	}
+
 	if cfg.TeamID != "" {
 
 		// Check if the team ID is valid
@@ -98,7 +108,7 @@ func Save(cfg *Config) error {
 		return fmt.Errorf("cannot marshal configuration file: %v", err)
 	}
 
-	err = ioutil.WriteFile(file, data, 0600)
+	err = os.WriteFile(file, data, 0600)
 
 	if err != nil {
 		return fmt.Errorf("cannot save configuration file '%s': %v", file, err)
@@ -122,7 +132,7 @@ func Load() (config *Config, err error) {
 		return nil, err
 	}
 
-	configData, err := ioutil.ReadFile(configFile)
+	configData, err := os.ReadFile(configFile)
 
 	if err != nil {
 		err = fmt.Errorf("cannot read config file")
@@ -144,6 +154,12 @@ func Load() (config *Config, err error) {
 	}
 
 	_, err = validateKey(config.ApiKey)
+
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = validateGHToken(config.AccessToken)
 
 	if err != nil {
 		return nil, err
@@ -177,4 +193,22 @@ func validateTeamID(teamID string) (string, error) {
 	}
 
 	return teamID, nil
+}
+
+// Validate Access of GH Token to ops-sop
+func validateGHToken(ghToken string) (string, error) {
+	ctx := context.Background()
+	ts := oauth2.StaticTokenSource(
+		&oauth2.Token{AccessToken: ghToken},
+	)
+	tc := oauth2.NewClient(ctx, ts)
+
+	client := github.NewClient(tc)
+
+	_, _, err := client.Repositories.Get(ctx, "openshift", "ops-sop")
+
+	if err != nil {
+		return "", err
+	}
+	return ghToken, nil
 }

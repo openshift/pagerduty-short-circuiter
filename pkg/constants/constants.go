@@ -20,6 +20,7 @@ const (
 	ConfigFilepath = "kite/config.json"
 
 	APIKeyURL       = "https://support.pagerduty.com/docs/generating-api-keys#generating-a-personal-rest-api-key"
+	AccessTokenURL  = "https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token"
 	OcmContainerURL = "https://github.com/openshift/ocm-container"
 	OcmContainer    = "ocm-container"
 	Shell           = "SHELL"

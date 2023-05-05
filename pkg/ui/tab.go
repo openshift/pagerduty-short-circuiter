@@ -21,13 +21,26 @@ var CurrentActivePage int = 0
 var TotalPageCount int = 0
 var CursorPos int
 
-// Creates and return a new tab
+// Creates and return a new kite tab
 func InitKiteTab(tui *TUI, layout *tview.Flex) *TerminalTab {
 	tui.TerminalUIRegionIDs = append(tui.TerminalUIRegionIDs, TotalPageCount)
 	return &TerminalTab{
 		index:     0,
 		regionID:  0,
 		title:     "kite",
+		primitive: layout,
+	}
+}
+
+// Creates and returns a SOP tab
+func InitSOPTab(name string, layout *tview.TextView, tui *TUI) *TerminalTab {
+	TotalPageCount += 1
+	tui.TerminalUIRegionIDs = append(tui.TerminalUIRegionIDs, TotalPageCount)
+	index := len(tui.TerminalTabs)
+	return &TerminalTab{
+		index:     index,
+		regionID:  TotalPageCount,
+		title:     name,
 		primitive: layout,
 	}
 }
@@ -107,6 +120,28 @@ func AddNewSlide(tui *TUI, name string, command string, args []string, isCluster
 			}
 		}
 		tabSlide := NewTab(name, command, args, tui)
+		tui.TerminalTabs = append(tui.TerminalTabs, *tabSlide)
+		tui.TerminalPages.AddPage(strconv.Itoa(tabSlide.regionID), tabSlide.primitive, true, true)
+		fmt.Fprintf(tui.TerminalPageBar, `["%d"]%s[white][""]  `, tabSlide.regionID, fmt.Sprintf("%d %s", tabSlide.index+1, tabSlide.title))
+		CurrentActivePage = tabSlide.index
+		tui.TerminalPageBar.Highlight(strconv.Itoa(tabSlide.regionID)).
+			ScrollToHighlight()
+	}
+	tui.TerminalInputBuffer = []rune{}
+}
+
+// Adds a SOP slide to the end of currently present slides
+func AddSOPSlide(name string, textView *tview.TextView, tui *TUI) {
+	if len(tui.TerminalTabs) < 9 {
+		for i, tab := range tui.TerminalTabs {
+			if tab.primitive != nil && tab.title == name {
+				CurrentActivePage = tab.index
+				tui.TerminalPageBar.Highlight(strconv.Itoa(i)).
+					ScrollToHighlight()
+				return
+			}
+		}
+		tabSlide := InitSOPTab(name, textView, tui)
 		tui.TerminalTabs = append(tui.TerminalTabs, *tabSlide)
 		tui.TerminalPages.AddPage(strconv.Itoa(tabSlide.regionID), tabSlide.primitive, true, true)
 		fmt.Fprintf(tui.TerminalPageBar, `["%d"]%s[white][""]  `, tabSlide.regionID, fmt.Sprintf("%d %s", tabSlide.index+1, tabSlide.title))

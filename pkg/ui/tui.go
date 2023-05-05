@@ -46,6 +46,11 @@ type TUI struct {
 	ClusterName       string
 	CurrentOnCallPage int
 
+	// SOP Related
+	SOPLink  string
+	NumLinks int
+	SOPView  *tview.TextView
+
 	// Multi-Window Terminals Related
 	TerminalLayout      *tview.Flex
 	TerminalPages       *tview.Pages
@@ -152,6 +157,13 @@ func (tui *TUI) Init() {
 	tui.TerminalPages = tview.NewPages()
 	tui.TerminalPageBar = tview.NewTextView()
 	tui.TerminalFixedFooter = tview.NewTextView()
+
+	tui.SOPView = tview.NewTextView().
+		SetDynamicColors(true).
+		SetRegions(true).
+		SetChangedFunc(func() {
+			tui.App.Draw()
+		})
 
 	tui.SecondaryWindow.
 		SetChangedFunc(func() { tui.App.Draw() }).

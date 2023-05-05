@@ -246,6 +246,10 @@ func (tui *TUI) setupAlertDetailsPageInput() {
 			tui.fetchClusterServiceLogs()
 		}
 
+		if event.Rune() == 'S' || event.Rune() == 's' {
+			ViewAlertSOP(tui, tui.SOPLink)
+		}
+
 		return event
 	})
 }
