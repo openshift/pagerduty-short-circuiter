@@ -222,6 +222,50 @@ var _ = Describe("view alerts", func() {
 		})
 	})
 
+	When("the triggered incidents are fetched", func() {
+		It("gives the alert metadata page for triggered incidents", func() {
+
+			var alertData pdcli.Alert
+
+			alertResponse := &pdApi.ListAlertsResponse{
+				Alerts: []pdApi.IncidentAlert{
+					alert(
+						"incident-id-1",
+						"my-service-id",
+						"alert-name",
+						"cluster-id",
+						"triggered",
+					),
+				},
+			}
+
+			// Set the mock cluster name
+			serviceResponse := &pdApi.Service{
+				Description: "my-cluster-name",
+			}
+
+			expectedAlertData := pdcli.Alert{
+				IncidentID:  "incident-id-1",
+				Name:        "alert-name",
+				ClusterID:   "cluster-id",
+				ClusterName: "my-cluster-name",
+				Status:      "triggered",
+				Console:     "<nil>",
+				Labels:      "<nil>",
+				Sop:         "<nil>",
+			}
+
+			mockClient.EXPECT().GetService("my-service-id", gomock.Any()).Return(serviceResponse, nil).Times(1)
+
+			err := alertData.ParseAlertData(mockClient, &alertResponse.Alerts[0])
+
+			Expect(err).ShouldNot(HaveOccurred())
+
+			Expect(alertData).To(Equal(expectedAlertData))
+
+		})
+	})
+
 	When("a user acknowledges an incident(s)", func() {
 		It("it changes the incident status to acknowledged and returns the incident(s)", func() {
 
