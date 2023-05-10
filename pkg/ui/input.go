@@ -11,7 +11,6 @@ import (
 	"github.com/gdamore/tcell/v2"
 
 	"github.com/openshift/pagerduty-short-circuiter/pkg/constants"
-	pdcli "github.com/openshift/pagerduty-short-circuiter/pkg/pdcli/alerts"
 	"github.com/openshift/pagerduty-short-circuiter/pkg/utils"
 )
 
@@ -43,19 +42,20 @@ func (tui *TUI) initKeyboard() {
 				case ServiceLogsPageTitle:
 					tui.Pages.SwitchToPage(AlertDataPageTitle)
 					tui.InitAlertDataSecondaryView()
+
+				case AlertMetadata:
+					tui.Pages.SwitchToPage(IncidentsPageTitle)
 				default:
 					tui.InitAlertsUI(tui.Alerts, AlertsTableTitle, AlertsPageTitle)
 					tui.Pages.SwitchToPage(AlertsPageTitle)
 					tui.Footer.SetText(FooterTextAlerts)
 				}
 			}
-
 			// Check if oncall command is executed
 			if title, _ := tui.Pages.GetFrontPage(); strings.Contains(title, "Oncall") {
 				tui.Pages.SwitchToPage(fmt.Sprintf("%s%d", OncallPageTitle, 2))
 				tui.Footer.SetText(FooterTextOncall)
 			}
-
 			return nil
 		}
 		if event.Key() == tcell.KeyLeft && CursorPos > 0 {
@@ -164,11 +164,6 @@ func (tui *TUI) setupAlertsPageInput() {
 		tui.Pages.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 
 			if event.Rune() == '1' {
-				utils.InfoLogger.Print("Switching to trigerred alerts view")
-				tui.InitAlertsUI(pdcli.TrigerredAlerts, TrigerredAlertsTableTitle, TrigerredAlertsPageTitle)
-			}
-
-			if event.Rune() == '2' {
 				utils.InfoLogger.Print("Switching to acknowledged incidents view")
 				tui.SeedAckIncidentsUI()
 
@@ -179,7 +174,7 @@ func (tui *TUI) setupAlertsPageInput() {
 				tui.Pages.SwitchToPage(AckIncidentsPageTitle)
 			}
 
-			if event.Rune() == '3' {
+			if event.Rune() == '2' {
 				utils.InfoLogger.Print("Switching to incidents view")
 				tui.SeedIncidentsUI()
 
@@ -195,7 +190,6 @@ func (tui *TUI) setupAlertsPageInput() {
 				utils.InfoLogger.Print("Refreshing alerts...")
 				tui.SeedAlertsUI()
 			}
-
 			return event
 		})
 	}
@@ -217,7 +211,6 @@ func (tui *TUI) setupIncidentsPageInput() {
 					tui.ackowledgeSelectedIncidents()
 				}
 			}
-
 			return event
 		})
 	}
@@ -262,7 +255,6 @@ func (tui *TUI) setupOncallPageInput() {
 				if event.Rune() == 'N' || event.Rune() == 'n' {
 					utils.InfoLogger.Print("Viewing user next on-call schedule")
 					tui.Pages.SwitchToPage(NextOncallPageTitle)
-					tui.Footer.SetText(FooterText)
 
 					if len(tui.AckIncidents) == 0 {
 						utils.InfoLogger.Print("You are not scheduled for any oncall duties for the next 3 months. Cheer up!")
@@ -274,7 +266,6 @@ func (tui *TUI) setupOncallPageInput() {
 				if event.Rune() == 'A' || event.Rune() == 'a' {
 					utils.InfoLogger.Print("Switching to all team on-call view")
 					tui.Pages.SwitchToPage(AllTeamsOncallPageTitle)
-					tui.Footer.SetText(FooterText)
 				}
 			}
 			if event.Key() == tcell.KeyLeft {
