@@ -93,7 +93,12 @@ func indexOf(ele int, tabs []TerminalTab) int {
 }
 
 // Remove the slide with the given index
+// Exit the app if only one slide is present
 func RemoveSlide(s int, tui *TUI) {
+	if len(tui.TerminalTabs) == 1 {
+		tui.App.Stop()
+		return
+	}
 	index := indexOf(s, tui.TerminalTabs)
 	tui.TerminalTabs = append(tui.TerminalTabs[:index], tui.TerminalTabs[index+1:]...)
 	tui.TerminalUIRegionIDs = append(tui.TerminalUIRegionIDs[:index], tui.TerminalUIRegionIDs[index+1:]...)

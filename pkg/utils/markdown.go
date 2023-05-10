@@ -14,6 +14,7 @@ func getGitHubMdURL(URL string) (owner, repo, path string) {
 	end := URL[len(URL)-3:]
 	host := URL[8:18]
 	if host == "github.com" && end == ".md" {
+		URL = strings.Replace(URL, "tree", "blob", -1)
 		owner, repo := GetOwnerAndRepoName(URL)
 		path := GetReadmePath(URL)
 		return owner, repo, path

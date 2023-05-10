@@ -240,6 +240,11 @@ func (tui *TUI) setupAlertDetailsPageInput() {
 		}
 
 		if event.Rune() == 'S' || event.Rune() == 's' {
+			if tui.SOPLink == "" || tui.SOPLink == "<nil>" {
+				utils.InfoLogger.Print("No SOP mentioned for the alert")
+				return nil
+			}
+			utils.InfoLogger.Print("Opening SOP in a new tab")
 			ViewAlertSOP(tui, tui.SOPLink)
 		}
 
