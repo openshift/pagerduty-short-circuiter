@@ -6,7 +6,10 @@ GOARCH?=amd64
 GOENV=GOOS=${GOOS} GOARCH=${GOARCH} CGO_ENABLED=0 GOFLAGS=
 GOPATH := $(shell go env GOPATH)
 HOME=$(shell mktemp -d)
+
+
 GOLANGCI_LINT_VERSION=v1.51.2
+GORELEASER_VERSION=v1.14.1
 
 # Ensure go modules are enabled:
 export GO111MODULE=on
@@ -49,6 +52,12 @@ getlint:
 .PHONY: lint
 lint: getlint
 	$(GOPATH)/bin/golangci-lint run --timeout 5m
+
+ensure-goreleaser:
+	@ls $(GOPATH)/bin/goreleaser 1>/dev/null || go install github.com/goreleaser/goreleaser@${GORELEASER_VERSION}
+
+release: ensure-goreleaser
+	goreleaser release --rm-dist
 
 .PHONY: fmt
 fmt:

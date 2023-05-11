@@ -1,11 +1,8 @@
-# This is an example .goreleaser.yml file with some sensible defaults.
-# Make sure to check the documentation at https://goreleaser.com
+project_name: kite
+
 before:
   hooks:
-    # You may remove this if you don't use go modules.
     - go mod tidy
-    # you may remove this if you don't need go generate
-    # - go generate ./...
 builds:
   - env:
       - CGO_ENABLED=0
@@ -15,17 +12,18 @@ builds:
     main: ./cmd/kite
     binary: kite
 archives:
-  - replacements:
-      darwin: Darwin
-      linux: Linux
-      amd64: x86_64
+  - name_template: '{{ .ProjectName }}_{{- .Version }}_{{- title .Os }}_{{- if eq .Arch "amd64" }}x86_64{{- else }}{{ .Arch }}{{ end}}'
 checksum:
   name_template: 'checksums.txt'
 snapshot:
-  name_template: "{{ incpatch .Version }}-next"
+  name_template: "{{ .Tag }}-next"
 changelog:
   sort: asc
   filters:
     exclude:
       - '^docs:'
       - '^test:'
+release:
+  github:
+    owner: "openshift"
+    name: "pagerduty-short-circuiter"
