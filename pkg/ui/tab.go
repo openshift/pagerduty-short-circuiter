@@ -5,7 +5,6 @@ import (
 	"os/exec"
 	"strconv"
 
-	"git.sr.ht/~rockorager/tterm"
 	"github.com/rivo/tview"
 )
 
@@ -54,16 +53,16 @@ func NewTab(name string, command string, args []string, tui *TUI) *TerminalTab {
 		index:     index,
 		regionID:  TotalPageCount,
 		title:     name,
-		primitive: newTabPrimitive(command, args),
+		primitive: newTabPrimitive(command, args, index, tui),
 	}
 }
 
 // Returns the primitive for a new tab
-func newTabPrimitive(command string, args []string) (content tview.Primitive) {
+func newTabPrimitive(command string, args []string, index int, tui *TUI) (content tview.Primitive) {
 	cmd := exec.Command(command, args...)
-	term := tterm.NewTerminal(cmd)
+	term := NewTerminal(cmd, index, tui)
 	term.SetBorder(true)
-	term.SetTitle(fmt.Sprintf(" Welcome to %s ", command))
+	term.SetTitle(fmt.Sprintf(" Welcome to %s ", cmd))
 	return term
 }
 
@@ -108,6 +107,22 @@ func RemoveSlide(s int, tui *TUI) {
 		fmt.Fprintf(tui.TerminalPageBar, `["%d"]%s[white][""]  `, tabSlide.regionID, fmt.Sprintf("%d %s", tabSlide.index+1, tabSlide.title))
 	}
 	tui.TerminalPages.RemovePage(strconv.Itoa(s))
+	PreviousSlide(tui)
+	tui.TerminalInputBuffer = []rune{}
+}
+
+// Remove the slide with the given index
+// Exit the app if only one slide is present
+func ExitSlide(index int, tui *TUI) {
+	regionId := tui.TerminalTabs[index].regionID
+	tui.TerminalTabs = append(tui.TerminalTabs[:index], tui.TerminalTabs[index+1:]...)
+	tui.TerminalUIRegionIDs = append(tui.TerminalUIRegionIDs[:index], tui.TerminalUIRegionIDs[index+1:]...)
+	tui.TerminalPageBar.Clear()
+	for index, tabSlide := range tui.TerminalTabs {
+		tabSlide.index = index
+		fmt.Fprintf(tui.TerminalPageBar, `["%d"]%s[white][""]  `, tabSlide.regionID, fmt.Sprintf("%d %s", tabSlide.index+1, tabSlide.title))
+	}
+	tui.TerminalPages.RemovePage(strconv.Itoa(regionId))
 	PreviousSlide(tui)
 	tui.TerminalInputBuffer = []rune{}
 }

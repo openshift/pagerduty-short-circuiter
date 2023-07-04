@@ -3,9 +3,9 @@ module github.com/openshift/pagerduty-short-circuiter
 go 1.18
 
 require (
-	git.sr.ht/~rockorager/tterm v0.0.0-20220917134430-ae28b592488e
+	git.sr.ht/~rockorager/tcell-term v0.9.0
 	github.com/PagerDuty/go-pagerduty v1.4.1
-	github.com/gdamore/tcell/v2 v2.5.3
+	github.com/gdamore/tcell/v2 v2.5.4
 	github.com/golang/mock v1.6.0
 	github.com/gomarkdown/markdown v0.0.0-20230322041520-c84983bdbf2a
 	github.com/google/go-github/v50 v50.2.0
@@ -20,7 +20,6 @@ require (
 )
 
 require (
-	git.sr.ht/~rockorager/tcell-term v0.1.0 // indirect
 	github.com/ProtonMail/go-crypto v0.0.0-20230217124315-7d5c6f04bbb8 // indirect
 	github.com/aymerick/douceur v0.2.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
@@ -41,7 +40,7 @@ require (
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
-	github.com/mattn/go-runewidth v0.0.13 // indirect
+	github.com/mattn/go-runewidth v0.0.14 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.2 // indirect
 	github.com/microcosm-cc/bluemonday v1.0.21 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
