@@ -85,14 +85,15 @@ func (tui *TUI) InitAlertsUI(alerts []pdcli.Alert, tableTitle string, pageTitle 
 
 // InitIncidentsUI initializes TUI table component.
 // It adds the returned table as a new TUI page view.
-func (tui *TUI) InitIncidentsUI(incidents [][]string, tableTitle string, pageTitle string, isSelectable bool) {
+func (tui *TUI) InitIncidentsUI(incidents [][]string, tableTitle string, pageTitle string, isAckTable bool) {
 	incidentHeaders := []string{"INCIDENT ID", "NAME", "SEVERITY", "STATUS", "SERVICE", "ASSIGNED TO"}
 
-	if isSelectable {
+	if isAckTable {
 		tui.IncidentsTable = tui.InitTable(incidentHeaders, incidents, true, true, tableTitle)
 		tui.SetIncidentsTableEvents()
 	} else {
-		tui.IncidentsTable = tui.InitTable(incidentHeaders, incidents, false, false, tableTitle)
+		tui.IncidentsTable = tui.InitTable(incidentHeaders, incidents, true, true, tableTitle)
+		tui.SetAckTableEvents()
 	}
 
 	if !tui.Pages.HasPage(pageTitle) {

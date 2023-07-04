@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	pdApi "github.com/PagerDuty/go-pagerduty"
+	"github.com/gdamore/tcell/v2"
 	"github.com/openshift/pagerduty-short-circuiter/pkg/client"
 	"github.com/openshift/pagerduty-short-circuiter/pkg/ocm"
 	pdcli "github.com/openshift/pagerduty-short-circuiter/pkg/pdcli/alerts"
@@ -40,12 +41,11 @@ func (tui *TUI) SetAlertsTableEvents(alerts []pdcli.Alert) {
 	})
 }
 
-// SetIncidentsTableEvents is the event handler for the incidents table in ack mode.
-// It handles the program flow when a table selection is made.
-func (tui *TUI) SetIncidentsTableEvents() {
+// SetAcknowledgeTableEvents is the event handler for the acknowledged incidents table.
+// It handles the program flow when a Enter is pressed on a incident is made.
+func (tui *TUI) SetAckTableEvents() {
 	tui.SelectedIncidents = make(map[string]string)
 	tui.IncidentsTable.SetSelectedFunc(func(row, column int) {
-
 		var incident pdApi.Incident
 		client, _ := client.NewClient().Connect()
 		incidentID := tui.IncidentsTable.GetCell(row, 0).Text
@@ -67,18 +67,37 @@ func (tui *TUI) SetIncidentsTableEvents() {
 		if len(alerts) == 1 {
 			alertData = pdcli.ParseAlertMetaData(Alert)
 			tui.AlertMetadata.SetText(alertData)
-			tui.Pages.AddAndSwitchToPage(AlertMetadata, tui.AlertMetadata, true)
+			tui.Pages.AddAndSwitchToPage(AckAlertDataPage, tui.AlertMetadata, true)
+			tui.Footer.SetText(FooterText)
 
 		} else {
 			tui.SetAlertsTableEvents(alerts)
-			tui.InitAlertsUI(alerts, AlertMetadata, AlertMetadata)
+			tui.InitAlertsUI(alerts, AckAlertDataPage, AckAlertDataPage)
 
 		}
 		// Do not prompt for cluster login if there's no cluster ID associated with the alert (v3 clusters)
 		if tui.ClusterID != "N/A" && tui.ClusterID != "" && alertData != "" {
-			tui.SecondaryWindow.SetText(fmt.Sprintf("Press 'Y' to log into the cluster: %s", clusterName)).SetTextColor(PromptTextColor)
+			secondaryWindowText := fmt.Sprintf("Press 'Y' to log into the cluster: %s\nPress 'S' to view the SOP\nPress 'L' to view service logs", clusterName)
+			tui.SecondaryWindow.SetText(secondaryWindowText)
 		}
+	})
+}
 
+// SetIncidentsTableEvents is the event handler for the incidents table in ack mode.
+// It handles the program flow when a table selection is made.
+func (tui *TUI) SetIncidentsTableEvents() {
+	tui.SelectedIncidents = make(map[string]string)
+	tui.IncidentsTable.SetSelectedFunc(func(row, column int) {
+		incidentID := tui.IncidentsTable.GetCell(row, 0).Text
+		if _, ok := tui.SelectedIncidents[incidentID]; !ok || tui.SelectedIncidents[incidentID] == "" {
+			tui.IncidentsTable.GetCell(row, 0).SetTextColor(tcell.ColorLimeGreen)
+			tui.SelectedIncidents[incidentID] = incidentID
+			utils.InfoLogger.Printf("Selected incident: %s", incidentID)
+		} else {
+			tui.IncidentsTable.GetCell(row, 0).SetTextColor(tcell.ColorWhite)
+			tui.SelectedIncidents[incidentID] = ""
+			utils.InfoLogger.Printf("Deselected incident: %s", incidentID)
+		}
 	})
 }
 
