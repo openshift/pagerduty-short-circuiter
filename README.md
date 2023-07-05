@@ -229,5 +229,5 @@ There are a few bugs that have crawled up during the development. These are list
 ## Feedback
 Please help us improve. Contact the Red Hat SRE-P team via:
 
-- @sd-sre-platform in slack channel #sd-sre-platform (CoreOS workspace)
+- @pagerduty-short-circuiter in slack channel #forum-kite or #sd-sre-platform (CoreOS workspace)
 - Or reach out to the [OWNERS](https://github.com/openshift/pagerduty-short-circuiter/blob/main/OWNERS).
