@@ -23,6 +23,7 @@ const (
 	AlertsPageTitle          = "Alerts"
 	AlertDataPageTitle       = "Metadata"
 	AlertMetadata            = "AlertData"
+	AckAlertDataPage         = "AckAlertData"
 	TrigerredAlertsPageTitle = "Trigerred"
 	HighAlertsPageTitle      = "High Alerts"
 	LowAlertsPageTitle       = "Low Alerts"
@@ -37,9 +38,10 @@ const (
 	FooterText                = "[Esc] Go Back"
 	FooterTextAlerts          = "[R] Refresh Alerts | [1] Acknowledged Incidents | [2] Trigerred Incidents\n" + FooterText
 	FooterTextTrigerredAlerts = "[1] Acknowledged Incidents | [2] Trigerred Incidents\n" + FooterText
-	FooterTextIncidents       = "[ENTER] Select Incident | [CTRL+A] Acknowledge Incidents\n" + FooterText
+	FooterTextAckIncidents    = "[ENTER] View Incident \n " + FooterText
+	FooterTextIncidents       = "[ENTER] Select Incident | [CTRL+A] Acknowledge Incidents | [V] View Incident Alerts\n" + FooterText
 	FooterTextOncall          = "[N] Your Next Oncall Schedule | [A] All Teams Oncall | [<-] Previous Layer Oncall | [->] Next Layer Oncall \n" + FooterText
-	TerminalFooterText        = "[CTRL + N] Next Slide | [CTRL + P] Previous Slide | [CTRL + A] Add Slide | [CTRL + E] Exit Slide | [CTRL + B] + [Num] Change to Slide with [Num]  | [CTRL + Q] Quit "
+	TerminalFooterText        = "[CTRL + N] Next Slide | [CTRL + P] Previous Slide | [CTRL + S] Add Slide | [CTRL + E] Exit Slide | [CTRL + B] + [Num] Change to Slide with [Num]  | [CTRL + Q] Quit "
 	TerminalFooterEscapeState = "Enter the Slide Number to Switch To : "
 
 	// Colors

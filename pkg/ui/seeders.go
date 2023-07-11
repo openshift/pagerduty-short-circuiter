@@ -31,7 +31,7 @@ func (tui *TUI) SeedAckIncidentsUI() {
 	tui.Incidents = ackIncidents
 
 	tui.InitIncidentsUI(tui.Incidents, AckIncidentsTableTitle, AckIncidentsPageTitle, false)
-	tui.Footer.SetText(FooterTextAlerts)
+	tui.Footer.SetText(FooterTextAckIncidents)
 	tui.Pages.SwitchToPage(AckIncidentsPageTitle)
 }
 

@@ -8,9 +8,12 @@ import (
 	"os/exec"
 	"strconv"
 
+	pdApi "github.com/PagerDuty/go-pagerduty"
 	"github.com/gdamore/tcell/v2"
 
+	"github.com/openshift/pagerduty-short-circuiter/pkg/client"
 	"github.com/openshift/pagerduty-short-circuiter/pkg/constants"
+	pdcli "github.com/openshift/pagerduty-short-circuiter/pkg/pdcli/alerts"
 	"github.com/openshift/pagerduty-short-circuiter/pkg/utils"
 )
 
@@ -42,9 +45,10 @@ func (tui *TUI) initKeyboard() {
 				case ServiceLogsPageTitle:
 					tui.Pages.SwitchToPage(AlertDataPageTitle)
 					tui.InitAlertDataSecondaryView()
-
 				case AlertMetadata:
 					tui.Pages.SwitchToPage(IncidentsPageTitle)
+				case AckAlertDataPage:
+					tui.Pages.SwitchToPage(AckIncidentsPageTitle)
 				default:
 					tui.InitAlertsUI(tui.Alerts, AlertsTableTitle, AlertsPageTitle)
 					tui.Pages.SwitchToPage(AlertsPageTitle)
@@ -72,7 +76,7 @@ func (tui *TUI) initKeyboard() {
 			PreviousSlide(tui)
 			return nil
 			// Add a new Slide - bash
-		} else if event.Key() == tcell.KeyCtrlA {
+		} else if event.Key() == tcell.KeyCtrlS {
 			AddNewSlide(tui, constants.Shell, os.Getenv("SHELL"), []string{}, false)
 			return nil
 			// Add a new Slide - ocm-container
@@ -209,6 +213,42 @@ func (tui *TUI) setupIncidentsPageInput() {
 					utils.ErrorLogger.Print("Please select atleast one incident to acknowledge")
 				} else {
 					tui.ackowledgeSelectedIncidents()
+				}
+			}
+			if event.Rune() == 'V' || event.Rune() == 'v' {
+				row, _ := tui.IncidentsTable.GetSelection()
+				var incident pdApi.Incident
+				client, _ := client.NewClient().Connect()
+				incidentID := tui.IncidentsTable.GetCell(row, 0).Text
+				incident.Id = incidentID
+				var clusterName string
+				var alertData string
+
+				alerts, _ := pdcli.GetIncidentAlerts(client, incident)
+				Alert := alerts[0]
+
+				for _, alert := range alerts {
+					if incidentID == alert.IncidentID {
+						alertData = pdcli.ParseAlertMetaData(alert)
+						clusterName = alert.ClusterName
+						tui.ClusterID = alert.ClusterID
+						break
+					}
+				}
+				if len(alerts) == 1 {
+					alertData = pdcli.ParseAlertMetaData(Alert)
+					tui.AlertMetadata.SetText(alertData)
+					tui.Pages.AddAndSwitchToPage(AlertMetadata, tui.AlertMetadata, true)
+
+				} else {
+					tui.SetAlertsTableEvents(alerts)
+					tui.InitAlertsUI(alerts, AlertMetadata, AlertMetadata)
+
+				}
+				// Do not prompt for cluster login if there's no cluster ID associated with the alert (v3 clusters)
+				if tui.ClusterID != "N/A" && tui.ClusterID != "" && alertData != "" {
+					secondaryWindowText := fmt.Sprintf("Press 'Y' to log into the cluster: %s\nPress 'S' to view the SOP\nPress 'L' to view service logs", clusterName)
+					tui.SecondaryWindow.SetText(secondaryWindowText)
 				}
 			}
 			return event
