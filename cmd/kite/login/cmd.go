@@ -78,22 +78,10 @@ func loginHandler(cmd *cobra.Command, args []string) error {
 		cfg = new(config.Config)
 	}
 
-	// If the key arg is not empty
+	// Set PagerDuty API key from cmd args or ask interactively
 	if loginArgs.apiKey != "" {
-
 		cfg.ApiKey = loginArgs.apiKey
-
-		// Save the key in the config file
-		err = config.Save(cfg)
-
-		if err != nil {
-			return err
-		}
-	}
-
-	// API key is not found in the config file
-	if len(cfg.ApiKey) == 0 {
-
+	} else {
 		// Create a new API key and store it in the config file
 		err = generateNewKey(cfg)
 
@@ -102,22 +90,23 @@ func loginHandler(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	// API key is not found in the config file
-	if len(cfg.AccessToken) == 0 {
-
+	// Set Github Access key from cmd args or ask interactively
+	if loginArgs.accessToken != "" {
+		cfg.AccessToken = loginArgs.accessToken
+	} else {
 		// Create a new API key and store it in the config file
 		err = generateNewAccessToken(cfg)
 
 		if err != nil {
 			return err
 		}
+	}
 
-		// Save the key in the config file
-		err = config.Save(cfg)
+	// Save the config
+	err = config.Save(cfg)
 
-		if err != nil {
-			return err
-		}
+	if err != nil {
+		return err
 	}
 
 	// Connect to PagerDuty API client
