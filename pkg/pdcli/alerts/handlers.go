@@ -29,6 +29,7 @@ type Alert struct {
 	Token       string
 	Tags        string
 	WebURL      string
+	Notes       string
 }
 
 var (
@@ -75,7 +76,7 @@ func GetIncidentAlerts(c client.PagerDutyClient, incident pdApi.Incident) ([]Ale
 	var alerts []Alert
 
 	// Fetch alerts related to an incident via pagerduty API
-	incidentAlerts, err := c.ListIncidentAlerts(incident.Id)
+	incidentAlerts, err := c.ListIncidentAlerts(incident.APIObject.ID)
 
 	if err != nil {
 		var aerr pdApi.APIError

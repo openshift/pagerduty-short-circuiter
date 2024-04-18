@@ -128,10 +128,12 @@ func alertsHandler(cmd *cobra.Command, args []string) error {
 
 		// Create PD Incident Object with given ID
 		incident := pdApi.Incident{
-			Id: incidentID,
+			APIObject: pdApi.APIObject{
+				ID: incidentID,
+			},
 		}
 
-		utils.InfoLogger.Printf("GET: fetching incident alerts for incident ID: %s", incident.Id)
+		utils.InfoLogger.Printf("GET: fetching incident alerts for incident ID: %s", incident.APIObject.ID)
 		alerts, err := pdcli.GetIncidentAlerts(client, incident)
 
 		if err != nil {

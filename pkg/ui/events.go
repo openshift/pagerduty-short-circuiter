@@ -49,7 +49,7 @@ func (tui *TUI) SetAckTableEvents() {
 		var incident pdApi.Incident
 		client, _ := client.NewClient().Connect()
 		incidentID := tui.IncidentsTable.GetCell(row, 0).Text
-		incident.Id = incidentID
+		incident.APIObject.ID = incidentID
 		var clusterName string
 		var alertData string
 
@@ -113,7 +113,7 @@ func (tui *TUI) ackowledgeSelectedIncidents() {
 	}
 
 	for _, v := range ackIncidents {
-		utils.InfoLogger.Printf("Incident %s has been acknowledged", v.Id)
+		utils.InfoLogger.Printf("Incident %s has been acknowledged", v.APIObject.ID)
 	}
 
 	var i int

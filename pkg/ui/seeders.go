@@ -24,7 +24,7 @@ func (tui *TUI) SeedAckIncidentsUI() {
 	for _, i := range incidents {
 		// Added columns 'Id', 'Title', 'Status', 'Service', 'Assigned To' to acknlowedged incidents table
 		assignment := i.Assignments[0]
-		incident := []string{i.Id, i.Title, i.Urgency, i.Status, i.Service.Summary, assignment.Assignee.Summary}
+		incident := []string{i.APIObject.ID, i.Title, i.Urgency, i.Status, i.Service.Summary, assignment.Assignee.Summary}
 		ackIncidents = append(ackIncidents, incident)
 	}
 
@@ -57,7 +57,7 @@ func (tui *TUI) SeedIncidentsUI() {
 	for _, i := range incidents {
 		// Added columns 'Id', 'Title', 'Status', 'Service', 'Assigned To' to triggered incidents table
 		assignment := i.Assignments[0]
-		incident := []string{i.Id, i.Title, i.Urgency, i.Status, i.Service.Summary, assignment.Assignee.Summary}
+		incident := []string{i.APIObject.ID, i.Title, i.Urgency, i.Status, i.Service.Summary, assignment.Assignee.Summary}
 		incidentsData = append(incidentsData, incident)
 	}
 

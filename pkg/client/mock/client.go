@@ -5,7 +5,6 @@
 package mock_client
 
 import (
-	http "net/http"
 	reflect "reflect"
 
 	pagerduty "github.com/PagerDuty/go-pagerduty"
@@ -51,13 +50,12 @@ func (mr *MockPagerDutyClientMockRecorder) GetCurrentUser(arg0 interface{}) *gom
 }
 
 // GetIncidentAlert mocks base method.
-func (m *MockPagerDutyClient) GetIncidentAlert(incidentID, alertID string) (*pagerduty.IncidentAlertResponse, *http.Response, error) {
+func (m *MockPagerDutyClient) GetIncidentAlert(incidentID, alertID string) (*pagerduty.IncidentAlertResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetIncidentAlert", incidentID, alertID)
 	ret0, _ := ret[0].(*pagerduty.IncidentAlertResponse)
-	ret1, _ := ret[1].(*http.Response)
-	ret2, _ := ret[2].(error)
-	return ret0, ret1, ret2
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // GetIncidentAlert indicates an expected call of GetIncidentAlert.

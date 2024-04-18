@@ -29,7 +29,9 @@ import (
 // incident retuns a pagerduty incident object with pre-configured data.
 func incident(incidentID string) pdApi.Incident {
 	return pdApi.Incident{
-		Id:      incidentID,
+		APIObject: pdApi.APIObject{
+			ID: incidentID,
+		},
 		Urgency: "high",
 	}
 }
@@ -95,8 +97,19 @@ var _ = Describe("view alerts", func() {
 			}
 
 			expectedIncidents := []pdApi.Incident{
-				{Id: "incident-id-1", Urgency: "high"},
-				{Id: "incident-id-2", Urgency: "high"},
+
+				{
+					APIObject: pdApi.APIObject{
+						ID: "incident-id-1",
+					},
+					Urgency: "high",
+				},
+				{
+					APIObject: pdApi.APIObject{
+						ID: "incident-id-2",
+					},
+					Urgency: "high",
+				},
 			}
 
 			mockClient.EXPECT().ListIncidents(gomock.Any()).Return(incidentsResponse, nil).Times(1)
@@ -279,7 +292,9 @@ var _ = Describe("view alerts", func() {
 			incidentResponse := &pdApi.ListIncidentsResponse{
 				Incidents: []pdApi.Incident{
 					{
-						Id:     "ABC123",
+						APIObject: pdApi.APIObject{
+							ID: "ABC123",
+						},
 						Status: "acknowledged",
 						Acknowledgements: []pdApi.Acknowledgement{
 							{
@@ -292,7 +307,9 @@ var _ = Describe("view alerts", func() {
 
 			expectedResponse := []pdApi.Incident{
 				{
-					Id:     "ABC123",
+					APIObject: pdApi.APIObject{
+						ID: "ABC123",
+					},
 					Status: "acknowledged",
 					Acknowledgements: []pdApi.Acknowledgement{
 						{

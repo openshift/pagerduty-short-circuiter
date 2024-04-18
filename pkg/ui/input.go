@@ -221,7 +221,7 @@ func (tui *TUI) setupIncidentsPageInput() {
 				var incident pdApi.Incident
 				client, _ := client.NewClient().Connect()
 				incidentID := tui.IncidentsTable.GetCell(row, 0).Text
-				incident.Id = incidentID
+				incident.APIObject.ID = incidentID
 				var clusterName string
 				var alertData string
 

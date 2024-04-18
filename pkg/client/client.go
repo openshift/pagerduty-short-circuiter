@@ -18,7 +18,6 @@ package client
 
 import (
 	"fmt"
-	"net/http"
 
 	pdApi "github.com/PagerDuty/go-pagerduty"
 	"github.com/openshift/pagerduty-short-circuiter/pkg/config"
@@ -29,7 +28,7 @@ type PagerDutyClient interface {
 	ListIncidents(pdApi.ListIncidentsOptions) (*pdApi.ListIncidentsResponse, error)
 	ListIncidentAlerts(incidentId string) (*pdApi.ListAlertsResponse, error)
 	GetCurrentUser(pdApi.GetCurrentUserOptions) (*pdApi.User, error)
-	GetIncidentAlert(incidentID, alertID string) (*pdApi.IncidentAlertResponse, *http.Response, error)
+	GetIncidentAlert(incidentID, alertID string) (*pdApi.IncidentAlertResponse, error)
 	GetService(serviceID string, opts *pdApi.GetServiceOptions) (*pdApi.Service, error)
 	ListOnCalls(opts pdApi.ListOnCallOptions) (*pdApi.ListOnCallsResponse, error)
 	ManageIncidents(from string, incidents []pdApi.ManageIncidentsOptions) (*pdApi.ListIncidentsResponse, error)
@@ -87,7 +86,7 @@ func (c *PDClient) GetCurrentUser(opts pdApi.GetCurrentUserOptions) (*pdApi.User
 	return c.PdClient.GetCurrentUser(opts)
 }
 
-func (c *PDClient) GetIncidentAlert(incidentID, alertID string) (*pdApi.IncidentAlertResponse, *http.Response, error) {
+func (c *PDClient) GetIncidentAlert(incidentID, alertID string) (*pdApi.IncidentAlertResponse, error) {
 	return c.PdClient.GetIncidentAlert(incidentID, alertID)
 }
 
